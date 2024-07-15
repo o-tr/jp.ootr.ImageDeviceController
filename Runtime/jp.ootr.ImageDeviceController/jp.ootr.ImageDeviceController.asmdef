@@ -1,0 +1,19 @@
+{
+  "name": "jp.ootr.ImageDeviceController",
+  "references": [
+    "UdonSharp.Runtime",
+    "VRC.Udon",
+    "VRC.Udon.Serialization.OdinSerializer",
+    "jp.ootr.common",
+    "jp.ootr.UdonZip"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
