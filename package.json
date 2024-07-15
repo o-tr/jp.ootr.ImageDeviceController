@@ -14,5 +14,8 @@
   "vpmDependencies": {
     "com.vrchat.base": "3.6.1",
     "com.vrchat.worlds": "3.6.1"
+  },
+  "legacyFolders": {
+    "Assets\\jp.ootr\\ImageDeviceController": "b079956195804767b1ea082cc4b20650"
   }
 }
