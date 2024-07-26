@@ -6,26 +6,26 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
     public class BaseMethods : BaseClass
     {
         [SerializeField] public string deviceName;
+        [SerializeField] public Texture2D deviceIcon;
         [SerializeField] protected Animator animator;
-        protected DeviceController Controller;
-        protected int DeviceId;
-        protected CommonDevice[] Devices;
-
+        [SerializeField] public CommonDevice[] devices;
+        [SerializeField] public DeviceController controller;
+        public string deviceUuid = null;
+        
         public virtual string GetName()
         {
             return deviceName;
         }
 
-        public virtual int GetDeviceId()
+        public virtual string GetDeviceUuid()
         {
-            return DeviceId;
+            return deviceUuid;
         }
 
-        public virtual void InitController(DeviceController controller, int deviceId, CommonDevice[] devices)
+        public virtual void InitController(DeviceController controller, CommonDevice[] devices)
         {
-            Controller = controller;
-            DeviceId = deviceId;
-            Devices = devices;
+            this.controller = controller;
+            this.devices = devices;
         }
 
         public virtual bool IsCastableDevice()

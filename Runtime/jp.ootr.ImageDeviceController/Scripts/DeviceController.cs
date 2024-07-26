@@ -13,11 +13,10 @@ namespace jp.ootr.ImageDeviceController
 
         private void Init()
         {
-            for (var i = 0; i < devices.Length; i++)
+            foreach (var device in devices)
             {
-                var device = devices[i];
                 if (device == null) continue;
-                device.InitController(this, i, devices);
+                device.InitController(this, devices);
             }
         }
     }

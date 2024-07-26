@@ -20,7 +20,7 @@
          */
         public virtual void FetchImageInternal()
         {
-            if (Controller.LoadFilesFromUrl((IControlledDevice)this, _fetchTargetSource, _fetchTargetType)) return;
+            if (controller.LoadFilesFromUrl((IControlledDevice)this, _fetchTargetSource, _fetchTargetType)) return;
             if (_retryCount >= SyncURLRetryCountLimit)
             {
                 OnFilesLoadFailed(LoadError.URLNotSynced);
