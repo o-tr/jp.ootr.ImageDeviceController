@@ -16,7 +16,7 @@ namespace jp.ootr.ImageDeviceController
             foreach (var device in devices)
             {
                 if (device == null) continue;
-                device.InitController(this, devices);
+                device.InitController();
             }
         }
     }

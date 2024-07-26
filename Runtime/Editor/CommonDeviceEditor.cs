@@ -130,6 +130,7 @@ namespace jp.ootr.ImageDeviceController.Editor
             {
                 if (device.controller.devices.Has(device))
                 {
+                    device.devices = device.controller.devices;
                     return true;
                 }
                 device.controller = null;
@@ -138,6 +139,7 @@ namespace jp.ootr.ImageDeviceController.Editor
             {
                 if (!controller.devices.Has(device)) continue;
                 device.controller = controller;
+                device.devices = controller.devices;
                 return true;
             }
             return false;

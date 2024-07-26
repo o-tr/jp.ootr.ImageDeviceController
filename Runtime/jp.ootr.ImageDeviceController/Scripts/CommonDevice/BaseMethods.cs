@@ -10,7 +10,7 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
         [SerializeField] protected Animator animator;
         [SerializeField] public CommonDevice[] devices;
         [SerializeField] public DeviceController controller;
-        public string deviceUuid = null;
+        [SerializeField] public string deviceUuid = null;
         
         public virtual string GetName()
         {
@@ -22,10 +22,8 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
             return deviceUuid;
         }
 
-        public virtual void InitController(DeviceController controller, CommonDevice[] devices)
+        public virtual void InitController()
         {
-            this.controller = controller;
-            this.devices = devices;
         }
 
         public virtual bool IsCastableDevice()
