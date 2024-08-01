@@ -1,4 +1,5 @@
 using UdonSharp;
+using UnityEngine;
 using VRC.SDKBase;
 using static jp.ootr.common.ArrayUtils;
 using static jp.ootr.common.Network;
@@ -9,10 +10,10 @@ namespace jp.ootr.ImageDeviceController
     public class URLStore : CacheController
     {
         [UdonSynced] protected URLStoreSyncAction UsSyncAction = URLStoreSyncAction.None;
-
         [UdonSynced] protected VRCUrl[] UsSyncUrl = new VRCUrl[0];
-        protected VRCUrl[] UsUrls = new VRCUrl[0];
-        protected string[] UsUrlStrings = new string[0];
+        
+        [SerializeField] public VRCUrl[] usUrls = new VRCUrl[0];
+        [SerializeField] public string[] usUrlStrings = new string[0];
 
         public VRCUrl UsGetUrl(string url)
         {
@@ -21,13 +22,13 @@ namespace jp.ootr.ImageDeviceController
                 url = tmpUrl;
             }
 
-            if (!UsUrlStrings.Has(url, out var urlIndex)) return null;
-            return UsUrls[urlIndex];
+            if (!usUrlStrings.Has(url, out var urlIndex)) return null;
+            return usUrls[urlIndex];
         }
 
         public void UsAddUrl(VRCUrl url)
         {
-            if (UsUrlStrings.Has(url.ToString())) return;
+            if (usUrlStrings.Has(url.ToString())) return;
             UsSyncAction = URLStoreSyncAction.AddUrl;
             UsSyncUrl = new[] { url };
             Sync();
@@ -35,9 +36,9 @@ namespace jp.ootr.ImageDeviceController
 
         public void UsAddUrlLocal(VRCUrl url)
         {
-            if (UsUrlStrings.Has(url.ToString())) return;
-            UsUrls = UsUrls.Append(url);
-            UsUrlStrings = UsUrlStrings.Append(url.ToString());
+            if (usUrlStrings.Has(url.ToString())) return;
+            usUrls = usUrls.Append(url);
+            usUrlStrings = usUrlStrings.Append(url.ToString());
         }
 
         public bool UsHasUrl(string url)
@@ -47,7 +48,7 @@ namespace jp.ootr.ImageDeviceController
                 url = tmpUrl;
             }
 
-            return UsUrlStrings.Has(url, out var tmp);
+            return usUrlStrings.Has(url, out var tmp);
         }
 
         public override void _OnDeserialization()
@@ -55,15 +56,15 @@ namespace jp.ootr.ImageDeviceController
             switch (UsSyncAction)
             {
                 case URLStoreSyncAction.AddUrl:
-                    if (UsUrlStrings.Has(UsSyncUrl[0].ToString())) return;
+                    if (usUrlStrings.Has(UsSyncUrl[0].ToString())) return;
                     ConsoleDebug($"URLStore: url added to store: {UsSyncUrl[0]}");
-                    UsUrls = UsUrls.Append(UsSyncUrl[0]);
-                    UsUrlStrings = UsUrlStrings.Append(UsSyncUrl[0].ToString());
+                    usUrls = usUrls.Append(UsSyncUrl[0]);
+                    usUrlStrings = usUrlStrings.Append(UsSyncUrl[0].ToString());
                     break;
                 case URLStoreSyncAction.SyncAll:
                     ConsoleDebug($"URLStore: urls synced: {UsSyncUrl.Length}");
-                    UsUrls = UsSyncUrl;
-                    UsUrlStrings = UsSyncUrl.ToStrings();
+                    usUrls = UsSyncUrl;
+                    usUrlStrings = UsSyncUrl.ToStrings();
                     break;
             }
 
@@ -74,7 +75,7 @@ namespace jp.ootr.ImageDeviceController
         {
             if (!Networking.IsOwner(gameObject)) return;
             UsSyncAction = URLStoreSyncAction.SyncAll;
-            UsSyncUrl = UsUrls;
+            UsSyncUrl = usUrls;
             Sync();
         }
     }

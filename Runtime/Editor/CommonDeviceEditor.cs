@@ -2,7 +2,6 @@
 using jp.ootr.common;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using VRC.SDKBase.Editor.BuildPipeline;
 
 namespace jp.ootr.ImageDeviceController.Editor
@@ -23,11 +22,11 @@ namespace jp.ootr.ImageDeviceController.Editor
             var script = (CommonDevice.CommonDevice)target;
             
             SetController(script);
-            
             if (script.deviceUuid.IsNullOrEmpty())
             {
-                script.deviceUuid = System.Guid.NewGuid().ToString();
+                CommonDeviceUtils.GenerateUuid(script);
             }
+            
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Device UUID",script.deviceUuid);
             
@@ -50,6 +49,28 @@ namespace jp.ootr.ImageDeviceController.Editor
             EditorGUILayout.LabelField("CommonDevice", EditorStyle.UiTitle);
         }
     }
+    
+    
+    [InitializeOnLoad]
+    public class PlayModeNotifier
+    {
+        static PlayModeNotifier()
+        {
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+            
+            var scripts = ComponentUtils.GetAllComponents<CommonDevice.CommonDevice>();
+            CommonDeviceUtils.ValidateUuids(scripts.ToArray());
+        }
+
+        private static void OnPlayModeStateChanged(PlayModeStateChange state)
+        {
+            if (state == PlayModeStateChange.EnteredPlayMode)
+            {
+                var scripts = ComponentUtils.GetAllComponents<CommonDevice.CommonDevice>();
+                CommonDeviceUtils.ValidateUuids(scripts.ToArray());
+            }
+        }
+    }
 
     public class SetObjectReferences : UnityEditor.Editor, IVRCSDKBuildRequestedCallback
     {
@@ -64,8 +85,8 @@ namespace jp.ootr.ImageDeviceController.Editor
     {
         public static bool SetupDevices()
         {
-            var scripts = GetAllScripts<CommonDevice.CommonDevice>();
-            var controllers = GetAllScripts<ImageDeviceController>().ToArray();
+            var scripts = ComponentUtils.GetAllComponents<CommonDevice.CommonDevice>();
+            var controllers = ComponentUtils.GetAllComponents<ImageDeviceController>().ToArray();
             if (!SetEachReference(scripts, controllers) || !ValidateDuplicateReferencedDevices(controllers))
             {
                 return false;
@@ -79,17 +100,33 @@ namespace jp.ootr.ImageDeviceController.Editor
             var usedUuids = new List<string>();
             foreach (var script in scripts)
             {
-                if (script.deviceUuid.IsNullOrEmpty())
+                var uuid = script.deviceUuid;
+                if (uuid.IsNullOrEmpty())
                 {
-                    script.deviceUuid = System.Guid.NewGuid().ToString();
+                    uuid = System.Guid.NewGuid().ToString();
                 }
-                if (usedUuids.Contains(script.deviceUuid))
+
+                while (usedUuids.Contains(uuid))
                 {
                     Console.Warn($"Device {script.name}({script.GetInstanceID()})'s UUID is regenerated because it is duplicated","jp.ootr.ImageDeviceController");
-                    script.deviceUuid = System.Guid.NewGuid().ToString();
+                    uuid = System.Guid.NewGuid().ToString();
                 }
-                usedUuids.Add(script.deviceUuid);
+                usedUuids.Add(uuid);
+                if (script.deviceUuid == uuid) continue;
+                SerializedObject so = new SerializedObject(script);
+                so.FindProperty("deviceUuid").stringValue = uuid;
+                so.ApplyModifiedProperties();
+                EditorUtility.SetDirty(script);
             }
+        }
+        
+        public static void GenerateUuid(CommonDevice.CommonDevice script)
+        {
+            var uuid = System.Guid.NewGuid().ToString();
+            SerializedObject so = new SerializedObject(script);
+            so.FindProperty("deviceUuid").stringValue = uuid;
+            so.ApplyModifiedProperties();
+            EditorUtility.SetDirty(script);
         }
         
         public static bool ValidateDuplicateReferencedDevices(ImageDeviceController[] controllers)
@@ -143,18 +180,6 @@ namespace jp.ootr.ImageDeviceController.Editor
                 return true;
             }
             return false;
-        }
-        
-        public static List<T> GetAllScripts<T>()
-        {
-            var controllers = new List<T>();
-            var scene = SceneManager.GetActiveScene();
-            var rootObjects = scene.GetRootGameObjects();
-            foreach (var rootObject in rootObjects)
-            {
-                controllers.AddRange(rootObject.GetComponentsInChildren<T>());
-            }
-            return controllers;
         }
     }
 }

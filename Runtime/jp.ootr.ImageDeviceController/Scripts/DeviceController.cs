@@ -19,5 +19,18 @@ namespace jp.ootr.ImageDeviceController
                 device.InitController();
             }
         }
+        
+        public bool IsUuidUsed(string uuid)
+        {
+            foreach (var device in devices)
+            {
+                if (device.GetDeviceUuid() == uuid)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }

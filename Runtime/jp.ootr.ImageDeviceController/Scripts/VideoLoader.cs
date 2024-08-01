@@ -30,6 +30,7 @@ namespace jp.ootr.ImageDeviceController
         protected int VlProcessIndex;
 
         protected string[] VlQueuedUrls = new string[0];
+        protected string[] VlQueuedOptions = new string[0];
         protected int VlRetryCount;
         protected string VlSourceUrl;
         protected string VlSourceRawUrl;
@@ -37,7 +38,7 @@ namespace jp.ootr.ImageDeviceController
 
         protected int VlTextureWidth;
 
-        protected virtual void VlLoadVideo(string url)
+        protected virtual void VlLoadVideo(string url, string options = "")
         {
             if (vlVideoPlayer == null)
             {
@@ -45,15 +46,8 @@ namespace jp.ootr.ImageDeviceController
                 VlOnLoadError(url, LoadError.MissingVRCAVProVideoPlayer);
                 return;
             }
-
-            if (!UrlUtil.ParseVideo(url, out var videoUrl, out var duration, out var offset))
-            {
-                ConsoleError($"[VLLoadVideo] Failed to parse video url: {url}");
-                VlOnLoadError(url, LoadError.InvalidURL);
-                return;
-            }
-
             VlQueuedUrls = VlQueuedUrls.Append(url);
+            VlQueuedOptions = VlQueuedOptions.Append(options);
             if (VlIsLoading) return;
             VlLoadNext();
         }
@@ -68,22 +62,19 @@ namespace jp.ootr.ImageDeviceController
             }
 
             VlQueuedUrls = VlQueuedUrls.__Shift(out var url);
-            if (!UrlUtil.ParseVideo(url, out var videoUrl, out var duration, out var offset))
-            {
-                ConsoleError($"[VLLoadVideoInternal] Failed to parse video url: {url}");
-                VlOnLoadError(url, LoadError.InvalidURL);
-                return;
-            }
+            VlQueuedOptions = VlQueuedOptions.__Shift(out var options);
+            
+            options.ParseSourceOptions(out var type, out var offset, out var duration);
 
-            ConsoleDebug($"[VLLoadVideoInternal] Loading video: {videoUrl}");
+            ConsoleDebug($"[VLLoadVideoInternal] Loading video: {url}");
             VlIsLoading = true;
             VlInterval = duration;
             VlCurrentTime = offset;
             VlOffset = offset;
-            VlSourceUrl = videoUrl;
+            VlSourceUrl = url;
             VlSourceRawUrl = url;
             vlVideoPlayer.Stop();
-            vlVideoPlayer.LoadURL(UsGetUrl(videoUrl));
+            vlVideoPlayer.LoadURL(UsGetUrl(url));
         }
 
         public override void OnVideoReady()
@@ -152,13 +143,22 @@ namespace jp.ootr.ImageDeviceController
         {
             var data = new byte[VlTextureWidth * VlTextureHeight * 4];
             request.TryGetData(data);
-            if (VlRetryCount * VlDelaySeconds < vlLoadTimeout &&
-                (data.Similar(VlPreviousTextureBuffer, 1000) || data.MayBlank(1000)))
+            if (VlRetryCount * VlDelaySeconds < vlLoadTimeout)
             {
-                VlRetryCount++;
-                ConsoleDebug($"[VlOnVideoReady] Texture is same as previous. wait for {VlDelaySeconds}s");
-                SendCustomEventDelayedSeconds(nameof(VlOnVideoReady), VlDelaySeconds);
-                return;
+                if (data.Similar(VlPreviousTextureBuffer, 1000))
+                {
+                    VlRetryCount++;
+                    ConsoleDebug($"[VlOnVideoReady] Texture is same as previous. wait for {VlDelaySeconds}s");
+                    SendCustomEventDelayedSeconds(nameof(VlOnVideoReady), VlDelaySeconds);
+                    return;
+                }
+                if (data.MayBlank(1000))
+                {
+                    VlRetryCount++;
+                    ConsoleDebug($"[VlOnVideoReady] Texture may blank. wait for {VlDelaySeconds}s");
+                    SendCustomEventDelayedSeconds(nameof(VlOnVideoReady), VlDelaySeconds);
+                    return;
+                }
             }
 
             var readableText = new Texture2D(VlTextureWidth, VlTextureHeight, TextureFormat.RGBA32, false);

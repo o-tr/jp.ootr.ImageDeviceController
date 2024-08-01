@@ -1,4 +1,6 @@
-﻿using jp.ootr.common;
+﻿using System.Linq;
+using Cinemachine.Editor;
+using jp.ootr.common;
 using UnityEditor;
 using UnityEngine;
 
@@ -8,6 +10,7 @@ namespace jp.ootr.ImageDeviceController.Editor
     public class ImageDeviceControllerEditor : UnityEditor.Editor
     {
         private SerializedProperty devices;
+        protected bool Debug;
 
         private void OnEnable()
         {
@@ -16,6 +19,13 @@ namespace jp.ootr.ImageDeviceController.Editor
 
         public override void OnInspectorGUI()
         {
+            Debug = EditorGUILayout.ToggleLeft("Debug", Debug);
+            if (Debug)
+            {
+                base.OnInspectorGUI();
+                return;
+            }
+            EditorGUI.BeginChangeCheck();
             var script = (ImageDeviceController)target;
 
             EditorGUILayout.LabelField("ImageDeviceController", EditorStyle.UiTitle);
@@ -25,6 +35,7 @@ namespace jp.ootr.ImageDeviceController.Editor
             serializedObject.Update();
 
             EditorGUILayout.PropertyField(devices, new GUIContent("Device List"), true);
+            script.devices = script.devices.Where((v)=>v != null).ToArray();
 
             serializedObject.ApplyModifiedProperties();
 
@@ -38,7 +49,23 @@ namespace jp.ootr.ImageDeviceController.Editor
             EditorGUILayout.LabelField("Base64 Decode Part Size");
             script.zlPartLength = EditorGUILayout.IntSlider(script.zlPartLength, 1024, 1024000);
 
-            EditorUtility.SetDirty(script);
+            if (EditorGUI.EndChangeCheck())
+            {
+                foreach (var device in script.devices)
+                {
+                    var so = new SerializedObject(device);
+                    so.FindProperty("controller").objectReferenceValue = script;
+                    var property = so.FindProperty("devices");
+                    property.arraySize = script.devices.Length;
+                    for (var i = 0; i < script.devices.Length; i++)
+                    {
+                        property.GetArrayElementAtIndex(i).objectReferenceValue = script.devices[i];
+                    }
+                    so.ApplyModifiedProperties();
+                    EditorUtility.SetDirty(device);
+                }
+                EditorUtility.SetDirty(script);
+            }
         }
     }
 }

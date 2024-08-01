@@ -10,7 +10,8 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
         [SerializeField] protected Animator animator;
         [SerializeField] public CommonDevice[] devices;
         [SerializeField] public DeviceController controller;
-        [SerializeField] public string deviceUuid = null;
+
+        public string deviceUuid = null;
         
         public virtual string GetName()
         {

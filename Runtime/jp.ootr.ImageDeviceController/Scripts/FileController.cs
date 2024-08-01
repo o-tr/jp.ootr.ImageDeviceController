@@ -10,52 +10,52 @@ namespace jp.ootr.ImageDeviceController
         protected CommonDevice.CommonDevice[][] LoadingDevices = new CommonDevice.CommonDevice[0][];
         protected string[] LoadingUrls = new string[0];
 
-        public virtual bool LoadFilesFromUrl(IControlledDevice _self, string url, URLType type)
+        public virtual bool LoadFilesFromUrl(IControlledDevice _self, string source, URLType type, string options = "")
         {
-            if (!UsHasUrl(url))
+            if (!UsHasUrl(source))
             {
-                ConsoleError($"FileController: url not found in store: {url}");
+                ConsoleError($"FileController: url not found in store: {source}");
                 return false;
             }
 
             var self = (CommonDevice.CommonDevice)_self;
-            if (LoadedUrls.Has(url, out var loadedIndex) && FileSources.Has(url))
+            if (LoadedUrls.Has(source, out var loadedIndex) && FileSources.Has(source))
             {
-                ConsoleDebug($"FileController: {url} already loaded.");
-                self.OnFilesLoadSuccess(url, CachedData[loadedIndex]);
+                ConsoleDebug($"FileController: {source} already loaded.");
+                self.OnFilesLoadSuccess(source, CachedData[loadedIndex]);
                 return true;
             }
 
-            if (LoadingUrls.Has(url, out var loadingIndex))
+            if (LoadingUrls.Has(source, out var loadingIndex))
             {
-                ConsoleDebug($"FileController: {url} is already loading.");
+                ConsoleDebug($"FileController: {source} is already loading.");
                 LoadingDevices[loadingIndex] = LoadingDevices[loadingIndex].Append(self);
                 return true;
             }
 
-            ConsoleDebug($"FileController: loading {url}.");
-            LoadingUrls = LoadingUrls.Append(url);
+            ConsoleDebug($"FileController: loading {source}.");
+            LoadingUrls = LoadingUrls.Append(source);
             LoadingDevices = LoadingDevices.Append(new[] { self });
             switch (type)
             {
                 case URLType.Image:
-                    IlLoadImage(url);
+                    IlLoadImage(source);
                     break;
                 case URLType.TextZip:
-                    ZlLoadZip(url);
+                    ZlLoadZip(source);
                     break;
                 case URLType.Video:
-                    VlLoadVideo(url);
+                    VlLoadVideo(source, options);
                     break;
             }
 
             return true;
         }
 
-        public virtual void UnloadFilesFromUrl(IControlledDevice _self, string url)
+        public virtual void UnloadFilesFromUrl(IControlledDevice _self, string source)
         {
             var self = (CommonDevice.CommonDevice)_self;
-            if (LoadingUrls.Has(url, out var loadingIndex))
+            if (LoadingUrls.Has(source, out var loadingIndex))
             {
                 if (!LoadingDevices[loadingIndex].Has(self, out var deviceIndex)) return;
                 {
@@ -67,6 +67,7 @@ namespace jp.ootr.ImageDeviceController
                     }
                 }
             }
+            CcOnRelease(source);
         }
 
         #region EventReceiver
