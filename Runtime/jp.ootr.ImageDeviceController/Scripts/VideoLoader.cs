@@ -92,6 +92,7 @@ namespace jp.ootr.ImageDeviceController
         public override void OnVideoError(VideoError videoError)
         {
             VlOnLoadError(VlSourceUrl, ToLoadError(videoError));
+            SendCustomEventDelayedSeconds(nameof(VlLoadNext), VlDelaySeconds);
         }
 
         public virtual void VlWaitForVideLoad()
@@ -145,18 +146,18 @@ namespace jp.ootr.ImageDeviceController
             request.TryGetData(data);
             if (VlRetryCount * VlDelaySeconds < vlLoadTimeout)
             {
-                if (data.Similar(VlPreviousTextureBuffer, 1000))
+                if (data.Similar(VlPreviousTextureBuffer, 5000))
                 {
                     VlRetryCount++;
                     ConsoleDebug($"[VlOnVideoReady] Texture is same as previous. wait for {VlDelaySeconds}s");
-                    SendCustomEventDelayedSeconds(nameof(VlOnVideoReady), VlDelaySeconds);
+                    SendCustomEventDelayedFrames(nameof(VlOnVideoReady), 1);
                     return;
                 }
                 if (data.MayBlank(1000))
                 {
                     VlRetryCount++;
                     ConsoleDebug($"[VlOnVideoReady] Texture may blank. wait for {VlDelaySeconds}s");
-                    SendCustomEventDelayedSeconds(nameof(VlOnVideoReady), VlDelaySeconds);
+                    SendCustomEventDelayedFrames(nameof(VlOnVideoReady), 1);
                     return;
                 }
             }
