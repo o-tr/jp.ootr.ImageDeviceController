@@ -1,5 +1,6 @@
 ﻿using jp.ootr.common;
 using UnityEngine;
+using UnityEngine.UI;
 using VRC.SDK3.Components.Video;
 using VRC.SDK3.Rendering;
 using VRC.SDK3.Video.Components.AVPro;
@@ -144,20 +145,20 @@ namespace jp.ootr.ImageDeviceController
         {
             var data = new byte[VlTextureWidth * VlTextureHeight * 4];
             request.TryGetData(data);
+            if (data.MayBlank(100))
+            {
+                VlRetryCount++;
+                ConsoleDebug($"[VlOnVideoReady] Texture may blank. wait for {VlDelaySeconds}s");
+                SendCustomEventDelayedFrames(nameof(VlOnVideoReady), 1);
+                return;
+            }
             if (VlRetryCount * VlDelaySeconds < vlLoadTimeout)
             {
                 if (data.Similar(VlPreviousTextureBuffer, 5000))
                 {
                     VlRetryCount++;
                     ConsoleDebug($"[VlOnVideoReady] Texture is same as previous. wait for {VlDelaySeconds}s");
-                    SendCustomEventDelayedFrames(nameof(VlOnVideoReady), 1);
-                    return;
-                }
-                if (data.MayBlank(1000))
-                {
-                    VlRetryCount++;
-                    ConsoleDebug($"[VlOnVideoReady] Texture may blank. wait for {VlDelaySeconds}s");
-                    SendCustomEventDelayedFrames(nameof(VlOnVideoReady), 1);
+                    SendCustomEventDelayedSeconds(nameof(VlOnVideoReady), VlDelaySeconds);
                     return;
                 }
             }
