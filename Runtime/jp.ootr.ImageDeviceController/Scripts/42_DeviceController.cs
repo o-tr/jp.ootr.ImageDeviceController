@@ -19,7 +19,7 @@ namespace jp.ootr.ImageDeviceController
                 device.InitController();
             }
         }
-        
+
         public bool IsUuidUsed(string uuid)
         {
             foreach (var device in devices)

@@ -17,7 +17,8 @@ namespace jp.ootr.ImageDeviceController.Editor
 
             EditorGUILayout.LabelField("Target Device");
             script.commonDevice =
-                (CommonDevice.CommonDevice)EditorGUILayout.ObjectField(script.commonDevice, typeof(CommonDevice.CommonDevice), true);
+                (CommonDevice.CommonDevice)EditorGUILayout.ObjectField(script.commonDevice,
+                    typeof(CommonDevice.CommonDevice), true);
         }
     }
 }

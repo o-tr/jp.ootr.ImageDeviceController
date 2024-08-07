@@ -67,6 +67,7 @@ namespace jp.ootr.ImageDeviceController
                     }
                 }
             }
+
             CcOnRelease(source);
         }
 

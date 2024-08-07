@@ -60,8 +60,9 @@ namespace jp.ootr.ImageDeviceController
             error = LoadError.Unknown;
             return true;
         }
-        
-        public static void ParseSourceOptions(this string options, out URLType type, out float offset, out float interval)
+
+        public static void ParseSourceOptions(this string options, out URLType type, out float offset,
+            out float interval)
         {
             var split = options.Split(',');
             type = (URLType)int.Parse(split[0]);
@@ -71,14 +72,16 @@ namespace jp.ootr.ImageDeviceController
                 interval = 0;
                 return;
             }
+
             offset = float.Parse(split[1]);
             interval = float.Parse(split[2]);
         }
+
         public static void ParseSourceOptions(this string options, out URLType type)
         {
             options.ParseSourceOptions(out type, out var v1, out var v2);
         }
-        
+
         public static string BuildSourceOptions(URLType type, float offset, float interval)
         {
             return $"{(int)type},{offset},{interval}";

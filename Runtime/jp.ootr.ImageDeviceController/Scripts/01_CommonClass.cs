@@ -1,6 +1,7 @@
 ﻿using jp.ootr.common;
 
-namespace jp.ootr.ImageDeviceController {
+namespace jp.ootr.ImageDeviceController
+{
     public class CommonClass : BaseClass
     {
         protected virtual LoadError ParseStringDownloadError(string message, int code)

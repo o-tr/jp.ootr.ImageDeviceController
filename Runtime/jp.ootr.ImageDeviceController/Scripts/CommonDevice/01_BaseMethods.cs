@@ -12,7 +12,7 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
         [SerializeField] public DeviceController controller;
 
         public string deviceUuid = null;
-        
+
         public virtual string GetName()
         {
             return deviceName;

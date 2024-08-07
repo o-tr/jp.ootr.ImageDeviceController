@@ -7,15 +7,15 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
         private string[] _fetchTargetSources = new string[0];
         private URLType[] _fetchTargetTypes = new URLType[0];
         private string[] _fetchTargetOptions = new string[0];
-        
+
         private int _retryCount;
-        
+
         protected virtual void LLIFetchImage(string source, URLType type, string options = "")
         {
             _fetchTargetSources = _fetchTargetSources.Append(source);
             _fetchTargetTypes = _fetchTargetTypes.Append(type);
             _fetchTargetOptions = _fetchTargetOptions.Append(options);
-            
+
             if (_fetchTargetSources.Length > 1) return;
             FetchImageInternal();
         }
@@ -26,7 +26,8 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
          */
         public virtual void FetchImageInternal()
         {
-            if (controller.LoadFilesFromUrl((IControlledDevice)this, _fetchTargetSources[0], _fetchTargetTypes[0], _fetchTargetOptions[0])) return;
+            if (controller.LoadFilesFromUrl((IControlledDevice)this, _fetchTargetSources[0], _fetchTargetTypes[0],
+                    _fetchTargetOptions[0])) return;
             if (_retryCount >= SyncURLRetryCountLimit)
             {
                 OnFilesLoadFailed(LoadError.URLNotSynced);
@@ -36,7 +37,7 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
             _retryCount++;
             SendCustomEventDelayedSeconds(nameof(FetchImageInternal), SyncURLRetryInterval);
         }
-        
+
         private void FetchNextImage()
         {
             _fetchTargetSources = _fetchTargetSources.__Shift();

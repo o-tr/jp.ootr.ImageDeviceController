@@ -24,6 +24,7 @@ namespace jp.ootr.ImageDeviceController.Editor
                 base.OnInspectorGUI();
                 return;
             }
+
             EditorGUI.BeginChangeCheck();
             var script = (ImageDeviceController)target;
 
@@ -34,7 +35,7 @@ namespace jp.ootr.ImageDeviceController.Editor
             serializedObject.Update();
 
             EditorGUILayout.PropertyField(devices, new GUIContent("Device List"), true);
-            script.devices = script.devices.Where((v)=>v != null).ToArray();
+            script.devices = script.devices.Where((v) => v != null).ToArray();
 
             serializedObject.ApplyModifiedProperties();
 
@@ -60,9 +61,11 @@ namespace jp.ootr.ImageDeviceController.Editor
                     {
                         property.GetArrayElementAtIndex(i).objectReferenceValue = script.devices[i];
                     }
+
                     so.ApplyModifiedProperties();
                     EditorUtility.SetDirty(device);
                 }
+
                 EditorUtility.SetDirty(script);
             }
         }

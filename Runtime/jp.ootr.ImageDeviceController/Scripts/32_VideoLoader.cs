@@ -1,6 +1,5 @@
 ﻿using jp.ootr.common;
 using UnityEngine;
-using UnityEngine.UI;
 using VRC.SDK3.Components.Video;
 using VRC.SDK3.Rendering;
 using VRC.SDK3.Video.Components.AVPro;
@@ -47,6 +46,7 @@ namespace jp.ootr.ImageDeviceController
                 VlOnLoadError(url, LoadError.MissingVRCAVProVideoPlayer);
                 return;
             }
+
             VlQueuedUrls = VlQueuedUrls.Append(url);
             VlQueuedOptions = VlQueuedOptions.Append(options);
             if (VlIsLoading) return;
@@ -64,7 +64,7 @@ namespace jp.ootr.ImageDeviceController
 
             VlQueuedUrls = VlQueuedUrls.__Shift(out var url);
             VlQueuedOptions = VlQueuedOptions.__Shift(out var options);
-            
+
             options.ParseSourceOptions(out var type, out var offset, out var duration);
 
             ConsoleDebug($"[VLLoadVideoInternal] Loading video: {url}");
@@ -152,6 +152,7 @@ namespace jp.ootr.ImageDeviceController
                 SendCustomEventDelayedFrames(nameof(VlOnVideoReady), 1);
                 return;
             }
+
             if (VlRetryCount * VlDelaySeconds < vlLoadTimeout)
             {
                 if (data.Similar(VlPreviousTextureBuffer, 5000))

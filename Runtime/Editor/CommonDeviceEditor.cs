@@ -10,6 +10,7 @@ namespace jp.ootr.ImageDeviceController.Editor
     public class CommonDeviceEditor : UnityEditor.Editor
     {
         protected bool Debug;
+
         public override void OnInspectorGUI()
         {
             Debug = EditorGUILayout.ToggleLeft("Debug", Debug);
@@ -18,46 +19,49 @@ namespace jp.ootr.ImageDeviceController.Editor
                 base.OnInspectorGUI();
                 return;
             }
+
             ShowScriptName();
             var script = (CommonDevice.CommonDevice)target;
-            
+
             SetController(script);
             if (script.deviceUuid.IsNullOrEmpty())
             {
                 CommonDeviceUtils.GenerateUuid(script);
             }
-            
+
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Device UUID",script.deviceUuid);
-            
+            EditorGUILayout.LabelField("Device UUID", script.deviceUuid);
         }
-        
+
         private void SetController(CommonDevice.CommonDevice script)
         {
             if (CommonDeviceUtils.UpdateDeviceControl(script, FindObjectsOfType<ImageDeviceController>()))
             {
                 return;
             }
+
             EditorGUILayout.Space();
-            GUIContent content = new GUIContent("Please assign this device to ImageDeviceController\n\nこのデバイスをImageDeviceControllerの管理対象に追加してください");
+            GUIContent content =
+                new GUIContent(
+                    "Please assign this device to ImageDeviceController\n\nこのデバイスをImageDeviceControllerの管理対象に追加してください");
             content.image = EditorGUIUtility.IconContent("console.erroricon").image;
             EditorGUILayout.HelpBox(content);
         }
-        
+
         public virtual void ShowScriptName()
         {
             EditorGUILayout.LabelField("CommonDevice", EditorStyle.UiTitle);
         }
     }
-    
-    
+
+
     [InitializeOnLoad]
     public class PlayModeNotifier
     {
         static PlayModeNotifier()
         {
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
-            
+
             var scripts = ComponentUtils.GetAllComponents<CommonDevice.CommonDevice>();
             CommonDeviceUtils.ValidateUuids(scripts.ToArray());
         }
@@ -75,6 +79,7 @@ namespace jp.ootr.ImageDeviceController.Editor
     public class SetObjectReferences : UnityEditor.Editor, IVRCSDKBuildRequestedCallback
     {
         public int callbackOrder => 10;
+
         public bool OnBuildRequested(VRCSDKRequestedBuildType requestedBuildType)
         {
             return CommonDeviceUtils.SetupDevices();
@@ -91,10 +96,11 @@ namespace jp.ootr.ImageDeviceController.Editor
             {
                 return false;
             }
+
             ValidateUuids(scripts.ToArray());
             return true;
         }
-        
+
         public static void ValidateUuids(CommonDevice.CommonDevice[] scripts)
         {
             var usedUuids = new List<string>();
@@ -108,9 +114,12 @@ namespace jp.ootr.ImageDeviceController.Editor
 
                 while (usedUuids.Contains(uuid))
                 {
-                    Console.Warn($"Device {script.name}({script.GetInstanceID()})'s UUID is regenerated because it is duplicated","jp.ootr.ImageDeviceController");
+                    Console.Warn(
+                        $"Device {script.name}({script.GetInstanceID()})'s UUID is regenerated because it is duplicated",
+                        "jp.ootr.ImageDeviceController");
                     uuid = System.Guid.NewGuid().ToString();
                 }
+
                 usedUuids.Add(uuid);
                 if (script.deviceUuid == uuid) continue;
                 SerializedObject so = new SerializedObject(script);
@@ -119,7 +128,7 @@ namespace jp.ootr.ImageDeviceController.Editor
                 EditorUtility.SetDirty(script);
             }
         }
-        
+
         public static void GenerateUuid(CommonDevice.CommonDevice script)
         {
             var uuid = System.Guid.NewGuid().ToString();
@@ -128,7 +137,7 @@ namespace jp.ootr.ImageDeviceController.Editor
             so.ApplyModifiedProperties();
             EditorUtility.SetDirty(script);
         }
-        
+
         public static bool ValidateDuplicateReferencedDevices(ImageDeviceController[] controllers)
         {
             var usedDevices = new List<CommonDevice.CommonDevice>();
@@ -139,28 +148,36 @@ namespace jp.ootr.ImageDeviceController.Editor
                 {
                     if (usedDevices.Contains(device))
                     {
-                        Console.Error($"Device {device.name}({device.GetInstanceID()}) is referenced by multiple ImageDeviceControllers","jp.ootr.ImageDeviceController");
+                        Console.Error(
+                            $"Device {device.name}({device.GetInstanceID()}) is referenced by multiple ImageDeviceControllers",
+                            "jp.ootr.ImageDeviceController");
                         flag = false;
                     }
+
                     usedDevices.Add(device);
                 }
             }
+
             return flag;
         }
-        
-        public static bool SetEachReference(List<CommonDevice.CommonDevice> scripts, ImageDeviceController[] controllers)
+
+        public static bool SetEachReference(List<CommonDevice.CommonDevice> scripts,
+            ImageDeviceController[] controllers)
         {
             foreach (var script in scripts)
             {
                 if (!UpdateDeviceControl(script, controllers))
                 {
-                    Console.Error($"Device {script.name}({script.GetInstanceID()}) is not assigned to any ImageDeviceController","jp.ootr.ImageDeviceController");
+                    Console.Error(
+                        $"Device {script.name}({script.GetInstanceID()}) is not assigned to any ImageDeviceController",
+                        "jp.ootr.ImageDeviceController");
                     return false;
                 }
             }
+
             return true;
         }
-        
+
         public static bool UpdateDeviceControl(CommonDevice.CommonDevice device, ImageDeviceController[] controllers)
         {
             if (device.controller)
@@ -170,8 +187,10 @@ namespace jp.ootr.ImageDeviceController.Editor
                     device.devices = device.controller.devices;
                     return true;
                 }
+
                 device.controller = null;
             }
+
             foreach (var controller in controllers)
             {
                 if (!controller.devices.Has(device)) continue;
@@ -179,6 +198,7 @@ namespace jp.ootr.ImageDeviceController.Editor
                 device.devices = controller.devices;
                 return true;
             }
+
             return false;
         }
     }

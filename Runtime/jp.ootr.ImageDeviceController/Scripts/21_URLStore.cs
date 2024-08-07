@@ -6,12 +6,11 @@ using static jp.ootr.common.Network;
 
 namespace jp.ootr.ImageDeviceController
 {
-    [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
     public class URLStore : CacheController
     {
         [UdonSynced] protected URLStoreSyncAction UsSyncAction = URLStoreSyncAction.None;
         [UdonSynced] protected VRCUrl[] UsSyncUrl = new VRCUrl[0];
-        
+
         [SerializeField] public VRCUrl[] usUrls = new VRCUrl[0];
         [SerializeField] public string[] usUrlStrings = new string[0];
 
