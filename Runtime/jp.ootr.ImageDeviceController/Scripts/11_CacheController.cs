@@ -6,6 +6,19 @@ namespace jp.ootr.ImageDeviceController
 {
     public class CacheController : CommonClass
     {
+        /**
+        type CacheFiles = {
+            [source: string]: {
+                files: {
+                    [fileName: string]: {
+                        texture: Texture2D;
+                        usedCount: number;
+                    }
+                }
+                usedCount: number;
+            }
+        }
+         */
         protected Cache CacheFiles;//Hack: 初期値を入れるとコンパイルエラーになるので、Startで初期化する
         
         protected byte[][] CacheBinary = new byte[0][];//DataDictionaryにbyte[]が入らないので別で取り扱う
@@ -53,14 +66,20 @@ namespace jp.ootr.ImageDeviceController
             return true;
         }
 
-        public virtual void CcReleaseTexture(string source, string fileName)
+        public virtual void CcReleaseTexture(string sourceName, string fileName)
         {
-            if (!CcHasTexture(source, fileName)) return;
-            var files = CacheFiles.GetSource(source);
-            var file = files.GetFile(fileName);
-            if (files.DecreaseUsedCount() < 1)
+            if (!CcHasTexture(sourceName, fileName)) return;
+            var source = CacheFiles.GetSource(sourceName);
+            var file = source.GetFile(fileName);
+            if (source.DecreaseUsedCount() < 1)
             {
-                CacheFiles.RemoveSource(source);
+                var keys = CacheFiles.RemoveSource(sourceName);
+                foreach (var key in keys)
+                {
+                    if (!CacheBinaryNames.Has(key, out var index)) continue;
+                    CacheBinary = CacheBinary.Remove(index);
+                    CacheBinaryNames = CacheBinaryNames.Remove(index);
+                }
                 return;
             }
 

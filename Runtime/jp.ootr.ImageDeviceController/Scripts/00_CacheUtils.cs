@@ -50,14 +50,19 @@ namespace jp.ootr.ImageDeviceController
             return (File)fileData;
         }
         
-        public static void RemoveSource(this Cache sources, string source)
+        public static string[] RemoveSource(this Cache sources, string source)
         {
             var sourceData = sources.GetSource(source);
-            foreach (var fileName in sourceData.GetFileNames())
+            var fileNames = sourceData.GetFileNames();
+            var keys = new string[fileNames.Length];
+            var index = 0;
+            foreach (var fileName in fileNames)
             {
+                keys[index++] = sourceData.GetFile(fileName).GetCacheKey();
                 sourceData.RemoveFile(fileName);
             }
             sources.Remove(source);
+            return keys;
         }
         
         public static string[] GetFileNames(this Source files)
