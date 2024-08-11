@@ -1,70 +1,99 @@
+using jp.ootr.common;
 using UnityEngine;
-using static jp.ootr.common.ArrayUtils;
+using VRC.SDK3.Data;
 
 namespace jp.ootr.ImageDeviceController
 {
     public class CacheController : CommonClass
     {
-        protected string[][] FileNames = new string[0][];
-        protected string[] FileSources = new string[0];
-        protected Texture2D[][] FileTextures = new Texture2D[0][];
-        protected int[] FileUsedCount = new int[0];
+        protected Cache CacheFiles;//Hack: 初期値を入れるとコンパイルエラーになるので、Startで初期化する
+        
+        protected byte[][] CacheBinary = new byte[0][];//DataDictionaryにbyte[]が入らないので別で取り扱う
+        protected string[] CacheBinaryNames = new string[0];
+
+        public virtual void Start()
+        {
+            CacheFiles = (Cache)new DataDictionary();
+        }
 
         public virtual Texture2D CcGetTexture(string source, string fileName)
         {
-            if (!CcHasTexture(source, fileName, out var sourceIndex, out var fileIndex)) return null;
-            FileUsedCount[sourceIndex]++;
-            return FileTextures[sourceIndex][fileIndex];
+            if (!CcHasTexture(source, fileName)) return null;
+            var files = CacheFiles.GetSource(source);
+            var file = files.GetFile(fileName);
+            files.IncreaseUsedCount();
+            file.IncreaseUsedCount();
+            var texture = file.GetTexture();
+            if (texture == null)
+            {
+                return TryRegenerateTexture(file);
+            }
+            return texture;
+        }
+        
+        private Texture2D TryRegenerateTexture(File file)
+        {
+            var key = file.GetCacheKey();
+            if (!CacheBinaryNames.Has(key, out var index)) return null;
+            var bytes = CacheBinary[index];
+            var texture = new Texture2D(file["width"].Int, file["height"].Int);
+            texture.LoadRawTextureData(bytes);
+            texture.Apply();
+            file.SetTexture(texture);
+            return texture;
         }
 
 
         public virtual bool CcHasTexture(string source, string fileName)
         {
-            return CcHasTexture(source, fileName, out var sourceIndex, out var fileIndex);
-        }
-
-        public virtual bool CcHasTexture(string source, string fileName, out int sourceIndex, out int fileIndex)
-        {
-            fileIndex = -1;
-            sourceIndex = -1;
-            if (!FileSources.Has(source, out sourceIndex)) return false;
-            return FileNames[sourceIndex].Has(fileName, out fileIndex);
+            if (
+                !CacheFiles.HasSource(source)||
+                !CacheFiles.GetSource(source).HasFile(fileName)
+            ) return false;
+            return true;
         }
 
         public virtual void CcReleaseTexture(string source, string fileName)
         {
-            if (!FileSources.Has(source, out var sourceIndex)) return;
-            if (!FileNames[sourceIndex].Has(fileName)) return;
-            FileUsedCount[sourceIndex]--;
-            if (FileUsedCount[sourceIndex] <= 0)
+            if (!CcHasTexture(source, fileName)) return;
+            var files = CacheFiles.GetSource(source);
+            var file = files.GetFile(fileName);
+            if (files.DecreaseUsedCount() < 1)
             {
-                FileSources = FileSources.Remove(sourceIndex);
-                FileNames = FileNames.Remove(sourceIndex);
-                FileTextures = FileTextures.Remove(sourceIndex);
-                FileUsedCount = FileUsedCount.Remove(sourceIndex);
+                CacheFiles.RemoveSource(source);
+                return;
+            }
+
+            if (file.DecreaseUsedCount() < 1)
+            {
+                file.DestroyTexture();
             }
         }
 
-        protected virtual void CcSetTexture(string source, string fileName, Texture2D texture)
+        protected virtual void CcSetTexture(string source, string fileName, Texture2D texture, byte[] bytes = null)
         {
-            if (!FileSources.Has(source, out var sourceIndex))
+            if (!CacheFiles.HasSource(source))
             {
-                FileSources = FileSources.Append(source);
-                FileNames = FileNames.Append(new string[0]);
-                FileTextures = FileTextures.Append(new Texture2D[0]);
-                FileUsedCount = FileUsedCount.Append(0);
-                sourceIndex = FileSources.Length - 1;
+                CacheFiles.AddSource(source);
             }
 
-            if (!FileNames[sourceIndex].Has(fileName, out var fileIndex))
+            var files = CacheFiles.GetSource(source);
+            if (files.HasFile(fileName))
             {
-                FileNames[sourceIndex] = FileNames[sourceIndex].Append(fileName);
-                FileTextures[sourceIndex] = FileTextures[sourceIndex].Append(texture);
+                ConsoleError($"CacheController: file already exists: {source}/{fileName}");
+                return;
             }
-            else
+
+            string cacheKey = null;
+            
+            if (bytes != null)
             {
-                FileTextures[sourceIndex][fileIndex] = texture;
+                cacheKey = $"cache://{source}/{fileName}";
+                CacheBinary = CacheBinary.Append(bytes);
+                CacheBinaryNames = CacheBinaryNames.Append(cacheKey);
             }
+            
+            files.AddFile(fileName, texture, cacheKey);
         }
 
         protected virtual void CcOnRelease(string source)

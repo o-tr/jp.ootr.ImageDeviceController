@@ -19,10 +19,12 @@ namespace jp.ootr.ImageDeviceController
             }
 
             var self = (CommonDevice.CommonDevice)_self;
-            if (LoadedUrls.Has(source, out var loadedIndex) && FileSources.Has(source))
+            if (((Cache)CacheFiles).HasSource(source))
             {
+                var files = ((Cache)CacheFiles).GetSource(source);
+                var fileNames = files.GetFileNames();
                 ConsoleDebug($"FileController: {source} already loaded.");
-                self.OnFilesLoadSuccess(source, CachedData[loadedIndex]);
+                self.OnFilesLoadSuccess(source, fileNames);
                 return true;
             }
 

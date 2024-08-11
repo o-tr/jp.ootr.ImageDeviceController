@@ -18,7 +18,7 @@ namespace jp.ootr.ImageDeviceController
         protected int ZlDecodedBytes;
         protected byte[] ZlDecodedData;
         protected string[] ZlFilenames;
-        protected DataToken ZlMetadata;
+        protected DataList ZlMetadata;
         protected object ZlObject;
         protected int ZlProcessIndex;
         protected string[] ZlQueuedUrlStrings = new string[0];
@@ -55,7 +55,7 @@ namespace jp.ootr.ImageDeviceController
         public override void OnStringLoadSuccess(IVRCStringDownload result)
         {
             ConsoleDebug($"ZipLoader: text-zip loaded successfully from {result.Url}.");
-            if (!ZlIsValidZip(result))
+            if (!result.IsValidTextZip())
             {
                 ZlOnLoadError(result.Url.ToString(), LoadError.InvalidZipFile);
                 SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
@@ -110,30 +110,57 @@ namespace jp.ootr.ImageDeviceController
             ZlObject = zlUdonZip.Extract(ZlDecodedData);
             var file = zlUdonZip.GetFile(ZlObject, "metadata.json");
             var metadata = zlUdonZip.GetFileData(file);
-            VRCJson.TryDeserializeFromJson(Encoding.UTF8.GetString(metadata), out ZlMetadata);
+            VRCJson.TryDeserializeFromJson(Encoding.UTF8.GetString(metadata), out var metadataToken);
+            if(!TextZipUtils.ValidateManifest(metadataToken, out ZlMetadata, out var manifestVersion, out var requiredFeatures, out var extension))
+            {
+                ZlOnLoadError(ZlSourceUrl, LoadError.InvalidManifest);
+                SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
+                return;
+            }
+
+            if (manifestVersion > SupportedManifestVersion)
+            {
+                ZlOnLoadError(ZlSourceUrl, LoadError.UnsupportedManifestVersion);
+                SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
+                return;
+            }
+
+            foreach (var feature in requiredFeatures)
+            {
+                if (SupportedFeatures.Has(feature)) continue;
+                ZlOnLoadError(ZlSourceUrl, LoadError.UnsupportedFeature);
+                SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
+                return;
+            }
+            
             ZlProcessIndex = 0;
-            ZlFilenames = new string[ZlMetadata.DataList.Count];
+            ZlFilenames = new string[ZlMetadata.Count];
             SendCustomEventDelayedFrames(nameof(ZlExtractItem), zlDelayFrames);
         }
 
         public virtual void ZlExtractItem()
         {
-            ZlMetadata.DataList.TryGetValue(ZlProcessIndex, out var image);
-            image.DataDictionary.TryGetValue("path", out var path);
-            var imageFile = zlUdonZip.GetFile(ZlObject, path.String);
+            if (
+                !ZlMetadata.TryGetValue(ZlProcessIndex, TokenType.DataDictionary, out var metadataItem) ||
+                !metadataItem.DataDictionary.TryGetFileMetadata(out var path, out var format, out var width,
+                    out var height, out var ext)
+            )
+            {
+                ZlOnLoadError(ZlSourceUrl, LoadError.InvalidMetadata);
+                SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
+                return;
+            }
+            var imageFile = zlUdonZip.GetFile(ZlObject, path);
             var imageBytes = zlUdonZip.GetFileData(imageFile);
-            image.DataDictionary.TryGetValue("rect", out var rect);
-            rect.DataDictionary.TryGetValue("width", out var width);
-            rect.DataDictionary.TryGetValue("height", out var height);
-            var texture = new Texture2D((int)width.Double, (int)height.Double, TextureFormat.RGBA32, false);
+            var texture = new Texture2D(width, height, format, false);
             texture.LoadRawTextureData(imageBytes);
             texture.Apply();
-            var fileName = $"zip://{ZlSourceUrl.Substring(8)}/{path.String}";
+            var fileName = $"zip://{ZlSourceUrl.Substring(8)}/{path}";
             ZlFilenames[ZlProcessIndex] = fileName;
             CcSetTexture(ZlSourceUrl, fileName, texture);
             ZlProcessIndex++;
-            ZlOnLoadProgress(ZlSourceUrl, 0.5f + (float)ZlProcessIndex / ZlMetadata.DataList.Count / 2);
-            if (ZlProcessIndex < ZlMetadata.DataList.Count)
+            ZlOnLoadProgress(ZlSourceUrl, 0.5f + (float)ZlProcessIndex / ZlMetadata.Count / 2);
+            if (ZlProcessIndex < ZlMetadata.Count)
             {
                 SendCustomEventDelayedFrames(nameof(ZlExtractItem), zlDelayFrames);
                 return;
@@ -141,11 +168,6 @@ namespace jp.ootr.ImageDeviceController
 
             ZlOnLoadSuccess(ZlSourceUrl, ZlFilenames);
             SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
-        }
-
-        protected virtual bool ZlIsValidZip(IVRCStringDownload result)
-        {
-            return result.Result.Substring(0, 6) == "UEsDBA";
         }
 
         protected virtual void ZlOnLoadProgress(string source, float progress)

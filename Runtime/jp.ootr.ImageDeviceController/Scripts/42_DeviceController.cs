@@ -6,8 +6,9 @@ namespace jp.ootr.ImageDeviceController
     {
         [SerializeField] public CommonDevice.CommonDevice[] devices = new CommonDevice.CommonDevice[0];
 
-        protected virtual void Start()
+        public override void Start()
         {
+            base.Start();
             Init();
         }
 

@@ -4,6 +4,10 @@ namespace jp.ootr.ImageDeviceController
 {
     public class CommonClass : BaseClass
     {
+        public readonly int SupportedManifestVersion = 1;
+        public readonly string[] SupportedFeatures = {"textzip:rgb24", "textzip:rgba32"};
+        public readonly string[] SupportedExtensions = {"note"};
+        
         protected virtual LoadError ParseStringDownloadError(string message, int code)
         {
             if (message == "Client has too many requests (limit is 1000)." && code == 429)

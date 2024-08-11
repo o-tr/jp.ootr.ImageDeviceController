@@ -31,6 +31,10 @@ namespace jp.ootr.ImageDeviceController
         //UdonZip
         MissingUdonZip,
         InvalidZipFile,
+        InvalidManifest,
+        InvalidMetadata,
+        UnsupportedManifestVersion,
+        UnsupportedFeature,
 
         //VideoLoader
         MissingVRCAVProVideoPlayer,
