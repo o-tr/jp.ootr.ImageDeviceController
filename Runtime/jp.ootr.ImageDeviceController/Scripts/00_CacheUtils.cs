@@ -87,7 +87,7 @@ namespace jp.ootr.ImageDeviceController
         public static void RemoveFile(this Source files, string fileName)
         {
             var file = files.GetFile(fileName);
-            Object.DestroyImmediate(file.GetTexture());
+            file.DestroyTexture();
             files["files"].DataDictionary.Remove(fileName);
         }
         
@@ -117,7 +117,7 @@ namespace jp.ootr.ImageDeviceController
         
         public static void DestroyTexture(this File file)
         {
-            Object.DestroyImmediate(file.GetTexture());
+            Object.Destroy(file.GetTexture());
         }
         
         public static string GetCacheKey(this File file)

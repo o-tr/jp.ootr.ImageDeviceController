@@ -8,6 +8,7 @@ namespace jp.ootr.ImageDeviceController
     public static class TextZipUtils {
         public static bool ValidateManifest(DataToken manifest, out DataList files, out int manifestVersion, out string[] requiredFeatures, out string[] extension)
         {
+            Debug.Log($"ValidateManifest {manifest.TokenType}");
             switch (manifest.TokenType)
             {
                 case TokenType.DataList:
@@ -35,7 +36,6 @@ namespace jp.ootr.ImageDeviceController
                 if (
                     !files.TryGetValue(i, TokenType.DataDictionary, out var file) ||
                     !file.DataDictionary.TryGetValue("path", TokenType.String, out var path) ||
-                    !file.DataDictionary.TryGetValue("format", TokenType.String, out var format) ||
                     !file.DataDictionary.TryGetValue("rect",TokenType.DataDictionary, out var rect) ||
                     !rect.DataDictionary.TryGetValue("width", TokenType.Double, out var width) ||
                     !rect.DataDictionary.TryGetValue("height", TokenType.Double, out var height) ||
@@ -99,8 +99,7 @@ namespace jp.ootr.ImageDeviceController
                 !file.TryGetValue("path", TokenType.String, out var pathToken) ||
                 !file.TryGetValue("rect", TokenType.DataDictionary, out var rectToken) ||
                 !rectToken.DataDictionary.TryGetValue("width", TokenType.Double, out var widthToken) ||
-                !rectToken.DataDictionary.TryGetValue("height", TokenType.Double, out var heightToken) ||
-                !file.TryGetValue("ext", TokenType.DataDictionary, out var extToken)
+                !rectToken.DataDictionary.TryGetValue("height", TokenType.Double, out var heightToken)
             )
             {
                 path = null;
@@ -110,6 +109,8 @@ namespace jp.ootr.ImageDeviceController
                 ext = null;
                 return false;
             }
+
+            ext = file.TryGetValue("ext", TokenType.DataDictionary, out var extToken) ? extToken.DataDictionary : new DataDictionary();
 
             path = pathToken.String;
             if (file.TryGetValue("format", TokenType.String, out var formatToken))
@@ -133,7 +134,6 @@ namespace jp.ootr.ImageDeviceController
             }
             width = (int) widthToken.Double;
             height = (int) heightToken.Double;
-            ext = extToken.DataDictionary;
             return true;
         }
 
