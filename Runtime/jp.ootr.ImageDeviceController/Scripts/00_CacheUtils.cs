@@ -7,6 +7,7 @@ namespace jp.ootr.ImageDeviceController
     public abstract class Cache : DataDictionary{}
     public abstract class Source : DataDictionary{}
     public abstract class File : DataDictionary{}
+    public abstract class Metadata : DataDictionary{}
 
     public static class CacheUtils {
         public static Source GetSource(this Cache sources, string source)
@@ -38,7 +39,7 @@ namespace jp.ootr.ImageDeviceController
             return files["files"].DataDictionary.ContainsKey(fileName);
         }
         
-        public static File AddFile(this Source files, string fileName, Texture2D texture, string cacheKey = null)
+        public static File AddFile(this Source files, string fileName, Texture2D texture, DataDictionary metadata, string cacheKey = null)
         {
             var fileData = new DataDictionary();
             fileData["texture"] = texture;
@@ -46,6 +47,7 @@ namespace jp.ootr.ImageDeviceController
             fileData["cacheKey"] = cacheKey ?? "";
             fileData["width"] = texture.width;
             fileData["height"] = texture.height;
+            fileData["metadata"] = metadata;
             files["files"].DataDictionary[fileName] = fileData;
             return (File)fileData;
         }
@@ -123,6 +125,16 @@ namespace jp.ootr.ImageDeviceController
         public static string GetCacheKey(this File file)
         {
             return file["cacheKey"].String;
+        }
+        
+        public static Metadata GetMetadata(this File file)
+        {
+            return (Metadata)file["metadata"].DataDictionary;
+        }
+        
+        public static DataDictionary GetExtensions(this Metadata metadata)
+        {
+            return metadata.TryGetValue("extensions", TokenType.DataDictionary, out var ext) ? ext.DataDictionary : new DataDictionary();
         }
     }
 }

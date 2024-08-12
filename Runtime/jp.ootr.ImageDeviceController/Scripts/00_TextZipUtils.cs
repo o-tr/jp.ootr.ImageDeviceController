@@ -38,8 +38,7 @@ namespace jp.ootr.ImageDeviceController
                     !file.DataDictionary.TryGetValue("path", TokenType.String, out var path) ||
                     !file.DataDictionary.TryGetValue("rect",TokenType.DataDictionary, out var rect) ||
                     !rect.DataDictionary.TryGetValue("width", TokenType.Double, out var width) ||
-                    !rect.DataDictionary.TryGetValue("height", TokenType.Double, out var height) ||
-                    (file.DataDictionary.TryGetValue("ext", TokenType.DataDictionary, out var ext) && !ext.IsStringDictionary())
+                    !rect.DataDictionary.TryGetValue("height", TokenType.Double, out var height)
                 )
                     return false;
             }
@@ -55,11 +54,12 @@ namespace jp.ootr.ImageDeviceController
                 !manifest.DataDictionary.TryGetValue("requiredFeatures", TokenType.DataList,
                     out var requiredFeaturesToken) ||
                 !requiredFeaturesToken.TryToStringArray(out requiredFeatures) ||
-                !manifest.DataDictionary.TryGetValue("extension", TokenType.DataList, out var extensionToken) ||
+                !manifest.DataDictionary.TryGetValue("extensions", TokenType.DataList, out var extensionToken) ||
                 !extensionToken.TryToStringArray(out extension) ||
                 !IsValidFilesV1(filesToken.DataList)
             ) 
             {
+                Debug.Log("Invalid manifest");
                 files = null;
                 manifestVersion = -1;
                 requiredFeatures = null;
@@ -85,9 +85,12 @@ namespace jp.ootr.ImageDeviceController
                     !file.DataDictionary.TryGetValue("rect",TokenType.DataDictionary, out var rect) ||
                     !rect.DataDictionary.TryGetValue("width", TokenType.Double, out var width) ||
                     !rect.DataDictionary.TryGetValue("height", TokenType.Double, out var height) ||
-                    (file.DataDictionary.TryGetValue("ext", TokenType.DataDictionary, out var ext) && !ext.IsStringDictionary())
+                    (file.DataDictionary.TryGetValue("extensions", TokenType.DataDictionary, out var ext) && !ext.IsStringDictionary())
                 )
+                {
+                    Debug.Log($"Invalid file {i}");
                     return false;
+                }
             }
 
             return true;
@@ -110,7 +113,7 @@ namespace jp.ootr.ImageDeviceController
                 return false;
             }
 
-            ext = file.TryGetValue("ext", TokenType.DataDictionary, out var extToken) ? extToken.DataDictionary : new DataDictionary();
+            ext = file.TryGetValue("extensions", TokenType.DataDictionary, out var extToken) ? extToken.DataDictionary : new DataDictionary();
 
             path = pathToken.String;
             if (file.TryGetValue("format", TokenType.String, out var formatToken))

@@ -5,7 +5,7 @@ namespace jp.ootr.ImageDeviceController
     public class CommonClass : BaseClass
     {
         public readonly int SupportedManifestVersion = 1;
-        public readonly string[] SupportedFeatures = {"textzip:rgb24", "textzip:rgba32"};
+        public readonly string[] SupportedFeatures = {"Format:RGBA32", "Format:RGB24"};
         public readonly string[] SupportedExtensions = {"note"};
         
         protected virtual LoadError ParseStringDownloadError(string message, int code)

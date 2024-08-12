@@ -89,7 +89,17 @@ namespace jp.ootr.ImageDeviceController
             }
         }
 
+        public virtual Metadata CcGetMetadata(string source, string fileName)
+        {
+            if (!CcHasTexture(source, fileName)) return null;
+            return CacheFiles.GetSource(source).GetFile(fileName).GetMetadata();
+        }
+        
         protected virtual void CcSetTexture(string source, string fileName, Texture2D texture, byte[] bytes = null)
+        {
+            CcSetTexture(source, fileName, texture, new DataDictionary(), bytes);
+        }
+        protected virtual void CcSetTexture(string source, string fileName, Texture2D texture, DataDictionary metadata, byte[] bytes = null)
         {
             if (!CacheFiles.HasSource(source))
             {
@@ -112,7 +122,7 @@ namespace jp.ootr.ImageDeviceController
                 CacheBinaryNames = CacheBinaryNames.Append(cacheKey);
             }
             
-            files.AddFile(fileName, texture, cacheKey);
+            files.AddFile(fileName, texture, metadata, cacheKey);
         }
 
         protected virtual void CcOnRelease(string source)
