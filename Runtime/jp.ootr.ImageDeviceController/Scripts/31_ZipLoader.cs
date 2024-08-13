@@ -24,6 +24,7 @@ namespace jp.ootr.ImageDeviceController
         protected string[] ZlQueuedUrlStrings = new string[0];
         protected string[] ZlSource;
         protected string ZlSourceUrl;
+        protected bool ZlIsLoading;
 
         public virtual void ZlLoadZip(string url)
         {
@@ -34,20 +35,25 @@ namespace jp.ootr.ImageDeviceController
                 return;
             }
 
-            if (ZlQueuedUrlStrings.Length > 0)
+            if (ZlIsLoading)
             {
                 ZlQueuedUrlStrings = ZlQueuedUrlStrings.Append(url);
                 return;
             }
 
             ZlSourceUrl = url;
+            ZlIsLoading = true;
             VRCStringDownloader.LoadUrl(UsGetUrl(url), (IUdonEventReceiver)this);
         }
 
 
         public virtual void ZlLoadNext()
         {
-            if (ZlQueuedUrlStrings.Length < 1) return;
+            if (ZlQueuedUrlStrings.Length < 1)
+            {
+                ZlIsLoading = false;
+                return;
+            }
             ZlQueuedUrlStrings = ZlQueuedUrlStrings.__Shift(out ZlSourceUrl);
             VRCStringDownloader.LoadUrl(UsGetUrl(ZlSourceUrl), (IUdonEventReceiver)this);
         }
