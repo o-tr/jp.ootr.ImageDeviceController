@@ -128,5 +128,24 @@ namespace jp.ootr.ImageDeviceController
         protected virtual void CcOnRelease(string source)
         {
         }
+        
+        public virtual string DumpCache()
+        {
+            var result = "";
+            var cacheKeys = CacheFiles.GetKeys().ToStringArray();
+            for (var i = 0; i < cacheKeys.Length; i++)
+            {
+                var source = CacheFiles.GetSource(cacheKeys[i]);
+                var fileNames = source.GetFileNames();
+                result += $"{cacheKeys[i]}: {source["usedCount"].Int}\n";
+                for (var j = 0; j < fileNames.Length; j++)
+                {
+                    var file = source.GetFile(fileNames[j]);
+                    result += $"{cacheKeys[i]}/{fileNames[j]}: {file["usedCount"].Int}\n";
+                }
+                result += "\n";
+            }
+            return result;
+        }
     }
 }
