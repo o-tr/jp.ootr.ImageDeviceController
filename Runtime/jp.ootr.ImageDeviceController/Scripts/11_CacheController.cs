@@ -6,9 +6,6 @@ namespace jp.ootr.ImageDeviceController
 {
     public class CacheController : CommonClass
     {
-        private byte[][] _cacheBinary = new byte[0][]; //DataDictionaryにbyte[]が入らないので別で取り扱う
-        private string[] _cacheBinaryNames = new string[0];
-
         /**
          * type CacheFiles = {
          * [source: string]: {
@@ -23,6 +20,9 @@ namespace jp.ootr.ImageDeviceController
          * }
          */
         private readonly DataDictionary _cacheFiles = new DataDictionary();
+
+        private byte[][] _cacheBinary = new byte[0][]; //DataDictionaryにbyte[]が入らないので別で取り扱う
+        private string[] _cacheBinaryNames = new string[0];
 
         public virtual Texture2D CcGetTexture(string source, string fileName)
         {
@@ -53,7 +53,7 @@ namespace jp.ootr.ImageDeviceController
         {
             return ((Cache)_cacheFiles).HasSource(source);
         }
-        
+
         protected Source CcGetCache(string source)
         {
             return ((Cache)_cacheFiles).GetSource(source);

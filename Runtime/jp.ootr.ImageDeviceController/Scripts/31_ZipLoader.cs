@@ -58,7 +58,7 @@ namespace jp.ootr.ImageDeviceController
             if (_zlQueuedUrlStrings.Length < 1)
             {
                 _zlIsLoading = false;
-                ConsoleDebug($"ZipLoader: no more urls to load.");
+                ConsoleDebug("ZipLoader: no more urls to load.");
                 return;
             }
 

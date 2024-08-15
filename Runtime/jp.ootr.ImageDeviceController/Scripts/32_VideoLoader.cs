@@ -10,11 +10,10 @@ namespace jp.ootr.ImageDeviceController
 {
     public class VideoLoader : ZipLoader
     {
+        private const float VlDelaySeconds = 0.05f;
         [SerializeField] protected VRCAVProVideoPlayer vlVideoPlayer;
         [SerializeField] protected MeshRenderer vlVideoRenderer;
-        [SerializeField] public float vlLoadTimeout = 5;
-
-        private const float VlDelaySeconds = 0.05f;
+        [SerializeField] [Range(1, 60)] public float vlLoadTimeout = 5;
         private float _vlCurrentTime;
         private float _vlDuration;
 

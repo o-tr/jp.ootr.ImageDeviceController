@@ -9,9 +9,9 @@ namespace jp.ootr.ImageDeviceController.Editor
     {
         private bool _debug;
         private SerializedProperty _devices;
+        private SerializedProperty _vlLoadTimeout;
         private SerializedProperty _zlDelayFrames;
         private SerializedProperty _zlPartLength;
-        private SerializedProperty _vlLoadTimeout;
 
         private void OnEnable()
         {
@@ -52,9 +52,9 @@ namespace jp.ootr.ImageDeviceController.Editor
             EditorGUILayout.Space();
 
             EditorGUILayout.PropertyField(_zlPartLength, new GUIContent("Base64 Decode Part Size"));
-            
+
             EditorGUILayout.Space();
-            
+
             EditorGUILayout.PropertyField(_vlLoadTimeout, new GUIContent("Video Frame Load Timeout"));
 
             serializedObject.ApplyModifiedProperties();
