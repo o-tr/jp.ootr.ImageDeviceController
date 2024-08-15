@@ -50,7 +50,7 @@ namespace jp.ootr.ImageDeviceController.Editor
             ShowContent();
             EditorGUILayout.Space();
 
-            _foldoutState = EditorGUILayout.Foldout(_foldoutState, "My Foldout Section", true);
+            _foldoutState = EditorGUILayout.Foldout(_foldoutState, "Other", true);
 
             if (!_foldoutState) return;
             EditorGUI.BeginChangeCheck();
