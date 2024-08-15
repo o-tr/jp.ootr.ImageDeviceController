@@ -4,7 +4,7 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
 {
     public class LogicLoadImage : BaseMethods
     {
-        private DataList _queueList = new DataList();
+        private readonly DataList _queueList = new DataList();
 
         private int _retryCount;
 
@@ -25,7 +25,7 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
         public virtual void FetchImageInternal()
         {
             ((QueueList)_queueList).GetQueue(0).Get(out var source, out var options, out var type);
-            if (controller.LoadFilesFromUrl((IControlledDevice)this, source,type, options)) return;
+            if (controller.LoadFilesFromUrl((IControlledDevice)this, source, type, options)) return;
             if (_retryCount >= SyncURLRetryCountLimit)
             {
                 OnFilesLoadFailed(LoadError.URLNotSynced);

@@ -22,7 +22,7 @@ namespace jp.ootr.ImageDeviceController
          * }
          * }
          */
-        protected DataDictionary CacheFiles = new DataDictionary();
+        protected readonly DataDictionary CacheFiles = new DataDictionary();
 
         public virtual Texture2D CcGetTexture(string source, string fileName)
         {
