@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using jp.ootr.common;
 using UnityEditor;
 using UnityEngine;
 using VRC.SDKBase.Editor.BuildPipeline;
+using Console = jp.ootr.common.Console;
 
 namespace jp.ootr.ImageDeviceController.Editor
 {
@@ -10,7 +12,8 @@ namespace jp.ootr.ImageDeviceController.Editor
     public class CommonDeviceEditor : UnityEditor.Editor
     {
         private bool _debug;
-        private bool _foldoutState = false;
+        private bool _foldoutState;
+
         public override void OnInspectorGUI()
         {
             _debug = EditorGUILayout.ToggleLeft("Debug", _debug);
@@ -22,59 +25,50 @@ namespace jp.ootr.ImageDeviceController.Editor
 
             ShowScriptName();
             var script = (CommonDevice.CommonDevice)target;
-            SerializedObject so = new SerializedObject(script);
+            var so = new SerializedObject(script);
 
             SetController(script);
-            if (script.deviceUuid.IsNullOrEmpty())
-            {
-                CommonDeviceUtils.GenerateUuid(so);
-            }
+            if (script.deviceUuid.IsNullOrEmpty()) CommonDeviceUtils.GenerateUuid(so);
 
             EditorGUILayout.Space();
-            
+
             EditorGUILayout.LabelField("Device UUID", script.deviceUuid);
-            
+
             EditorGUILayout.Space();
 
-            
             EditorGUILayout.PropertyField(so.FindProperty("deviceName"));
 
             so.ApplyModifiedProperties();
             EditorGUILayout.Space();
             ShowContent();
             EditorGUILayout.Space();
-            
+
             _foldoutState = EditorGUILayout.Foldout(_foldoutState, "My Foldout Section", true);
 
             if (!_foldoutState) return;
             EditorGUI.BeginChangeCheck();
             if (script.splashImage != null)
-            {
                 script.splashImage.texture = (Texture)EditorGUILayout.ObjectField("Splash Image",
                     script.splashImage.texture, typeof(Texture), false);
-            }
 
             if (!EditorGUI.EndChangeCheck()) return;
             if (script.splashImageFitter != null && script.splashImage.texture != null)
-            {
                 script.splashImageFitter.aspectRatio =
                     script.splashImage.texture.width / (float)script.splashImage.texture.height;
-            }
 
             EditorUtility.SetDirty(script);
         }
-        
-        protected virtual void ShowContent(){}
+
+        protected virtual void ShowContent()
+        {
+        }
 
         private void SetController(CommonDevice.CommonDevice script)
         {
-            if (CommonDeviceUtils.UpdateDeviceControl(script, FindObjectsOfType<ImageDeviceController>()))
-            {
-                return;
-            }
+            if (CommonDeviceUtils.UpdateDeviceControl(script, FindObjectsOfType<ImageDeviceController>())) return;
 
             EditorGUILayout.Space();
-            GUIContent content =
+            var content =
                 new GUIContent(
                     "Please assign this device to ImageDeviceController\n\nこのデバイスをImageDeviceControllerの管理対象に追加してください");
             content.image = EditorGUIUtility.IconContent("console.erroricon").image;
@@ -126,9 +120,7 @@ namespace jp.ootr.ImageDeviceController.Editor
             var scripts = ComponentUtils.GetAllComponents<CommonDevice.CommonDevice>();
             var controllers = ComponentUtils.GetAllComponents<ImageDeviceController>().ToArray();
             if (!SetEachReference(scripts, controllers) || !ValidateDuplicateReferencedDevices(controllers))
-            {
                 return false;
-            }
 
             ValidateUuids(scripts.ToArray());
             return true;
@@ -140,22 +132,19 @@ namespace jp.ootr.ImageDeviceController.Editor
             foreach (var script in scripts)
             {
                 var uuid = script.deviceUuid;
-                if (uuid.IsNullOrEmpty())
-                {
-                    uuid = System.Guid.NewGuid().ToString();
-                }
+                if (uuid.IsNullOrEmpty()) uuid = Guid.NewGuid().ToString();
 
                 while (usedUuids.Contains(uuid))
                 {
                     Console.Warn(
                         $"Device {script.name}({script.GetInstanceID()})'s UUID is regenerated because it is duplicated",
                         "jp.ootr.ImageDeviceController");
-                    uuid = System.Guid.NewGuid().ToString();
+                    uuid = Guid.NewGuid().ToString();
                 }
 
                 usedUuids.Add(uuid);
                 if (script.deviceUuid == uuid) continue;
-                SerializedObject so = new SerializedObject(script);
+                var so = new SerializedObject(script);
                 so.FindProperty("deviceUuid").stringValue = uuid;
                 so.ApplyModifiedProperties();
                 EditorUtility.SetDirty(script);
@@ -164,7 +153,7 @@ namespace jp.ootr.ImageDeviceController.Editor
 
         public static void GenerateUuid(SerializedObject so)
         {
-            var uuid = System.Guid.NewGuid().ToString();
+            var uuid = Guid.NewGuid().ToString();
             so.FindProperty("deviceUuid").stringValue = uuid;
         }
 
@@ -173,19 +162,17 @@ namespace jp.ootr.ImageDeviceController.Editor
             var usedDevices = new List<CommonDevice.CommonDevice>();
             var flag = true;
             foreach (var controller in controllers)
+            foreach (var device in controller.devices)
             {
-                foreach (var device in controller.devices)
+                if (usedDevices.Contains(device))
                 {
-                    if (usedDevices.Contains(device))
-                    {
-                        Console.Error(
-                            $"Device {device.name}({device.GetInstanceID()}) is referenced by multiple ImageDeviceControllers",
-                            "jp.ootr.ImageDeviceController");
-                        flag = false;
-                    }
-
-                    usedDevices.Add(device);
+                    Console.Error(
+                        $"Device {device.name}({device.GetInstanceID()}) is referenced by multiple ImageDeviceControllers",
+                        "jp.ootr.ImageDeviceController");
+                    flag = false;
                 }
+
+                usedDevices.Add(device);
             }
 
             return flag;
@@ -195,7 +182,6 @@ namespace jp.ootr.ImageDeviceController.Editor
             ImageDeviceController[] controllers)
         {
             foreach (var script in scripts)
-            {
                 if (!UpdateDeviceControl(script, controllers))
                 {
                     Console.Error(
@@ -203,7 +189,6 @@ namespace jp.ootr.ImageDeviceController.Editor
                         "jp.ootr.ImageDeviceController");
                     return false;
                 }
-            }
 
             return true;
         }

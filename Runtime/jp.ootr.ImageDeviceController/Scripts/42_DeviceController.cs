@@ -24,12 +24,8 @@ namespace jp.ootr.ImageDeviceController
         public bool IsUuidUsed(string uuid)
         {
             foreach (var device in devices)
-            {
                 if (device.GetDeviceUuid() == uuid)
-                {
                     return true;
-                }
-            }
 
             return false;
         }

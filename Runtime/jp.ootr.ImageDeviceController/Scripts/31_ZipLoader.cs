@@ -13,18 +13,20 @@ namespace jp.ootr.ImageDeviceController
     {
         [SerializeField] protected UdonZip.UdonZip zlUdonZip;
 
-        [SerializeField][Range(1024,1024000)]public int zlPartLength = 102400;
-        [SerializeField][Range(1,100)]public int zlDelayFrames = 1;
+        [SerializeField] [Range(1024, 1024000)]
+        public int zlPartLength = 102400;
+
+        [SerializeField] [Range(1, 100)] public int zlDelayFrames = 1;
         protected int ZlDecodedBytes;
         protected byte[] ZlDecodedData;
         protected string[] ZlFilenames;
+        protected bool ZlIsLoading;
         protected DataList ZlMetadata;
         protected object ZlObject;
         protected int ZlProcessIndex;
         protected string[] ZlQueuedUrlStrings = new string[0];
         protected string[] ZlSource;
         protected string ZlSourceUrl;
-        protected bool ZlIsLoading;
 
         public virtual void ZlLoadZip(string url)
         {
@@ -54,6 +56,7 @@ namespace jp.ootr.ImageDeviceController
                 ZlIsLoading = false;
                 return;
             }
+
             ZlQueuedUrlStrings = ZlQueuedUrlStrings.__Shift(out ZlSourceUrl);
             VRCStringDownloader.LoadUrl(UsGetUrl(ZlSourceUrl), (IUdonEventReceiver)this);
         }
@@ -117,7 +120,8 @@ namespace jp.ootr.ImageDeviceController
             var file = zlUdonZip.GetFile(ZlObject, "metadata.json");
             var metadata = zlUdonZip.GetFileData(file);
             VRCJson.TryDeserializeFromJson(Encoding.UTF8.GetString(metadata), out var metadataToken);
-            if(!TextZipUtils.ValidateManifest(metadataToken, out ZlMetadata, out var manifestVersion, out var requiredFeatures, out var extension))
+            if (!TextZipUtils.ValidateManifest(metadataToken, out ZlMetadata, out var manifestVersion,
+                    out var requiredFeatures, out var extension))
             {
                 ZlOnLoadError(ZlSourceUrl, LoadError.InvalidManifest);
                 SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
@@ -138,7 +142,7 @@ namespace jp.ootr.ImageDeviceController
                 SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
                 return;
             }
-            
+
             ZlProcessIndex = 0;
             ZlFilenames = new string[ZlMetadata.Count];
             SendCustomEventDelayedFrames(nameof(ZlExtractItem), zlDelayFrames);
@@ -156,6 +160,7 @@ namespace jp.ootr.ImageDeviceController
                 SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
                 return;
             }
+
             var imageFile = zlUdonZip.GetFile(ZlObject, path);
             var imageBytes = zlUdonZip.GetFileData(imageFile);
             var texture = new Texture2D(width, height, format, false);

@@ -4,9 +4,9 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
 {
     public class LogicLoadImage : BaseMethods
     {
+        private string[] _fetchTargetOptions = new string[0];
         private string[] _fetchTargetSources = new string[0];
         private URLType[] _fetchTargetTypes = new URLType[0];
-        private string[] _fetchTargetOptions = new string[0];
 
         private int _retryCount;
 

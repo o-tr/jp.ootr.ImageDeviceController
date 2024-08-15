@@ -5,10 +5,11 @@ using VRC.SDK3.StringLoading;
 
 namespace jp.ootr.ImageDeviceController
 {
-    public static class TextZipUtils {
-        public static bool ValidateManifest(DataToken manifest, out DataList files, out int manifestVersion, out string[] requiredFeatures, out string[] extension)
+    public static class TextZipUtils
+    {
+        public static bool ValidateManifest(DataToken manifest, out DataList files, out int manifestVersion,
+            out string[] requiredFeatures, out string[] extension)
         {
-            Debug.Log($"ValidateManifest {manifest.TokenType}");
             switch (manifest.TokenType)
             {
                 case TokenType.DataList:
@@ -16,8 +17,9 @@ namespace jp.ootr.ImageDeviceController
                     requiredFeatures = new string[0];
                     extension = new string[0];
                     return ValidateManifestV0(manifest.DataList, out files);
-                case TokenType.DataDictionary: 
-                    return ValidateManifestV1(manifest.DataDictionary, out files, out manifestVersion, out requiredFeatures, out extension);
+                case TokenType.DataDictionary:
+                    return ValidateManifestV1(manifest.DataDictionary, out files, out manifestVersion,
+                        out requiredFeatures, out extension);
             }
 
             files = null;
@@ -26,40 +28,39 @@ namespace jp.ootr.ImageDeviceController
             extension = null;
             return false;
         }
-        
+
         private static bool ValidateManifestV0(DataList manifest, out DataList files)
         {
             files = manifest;
             var length = files.Count;
             for (var i = 0; i < length; i++)
-            {
                 if (
                     !files.TryGetValue(i, TokenType.DataDictionary, out var file) ||
                     !file.DataDictionary.TryGetValue("path", TokenType.String, out var path) ||
-                    !file.DataDictionary.TryGetValue("rect",TokenType.DataDictionary, out var rect) ||
+                    !file.DataDictionary.TryGetValue("rect", TokenType.DataDictionary, out var rect) ||
                     !rect.DataDictionary.TryGetValue("width", TokenType.Double, out var width) ||
                     !rect.DataDictionary.TryGetValue("height", TokenType.Double, out var height)
                 )
                     return false;
-            }
 
             return true;
         }
-        
-        private static bool ValidateManifestV1(DataToken manifest, out DataList files, out int manifestVersion, out string[] requiredFeatures, out string[] extension)
+
+        private static bool ValidateManifestV1(DataToken manifest, out DataList files, out int manifestVersion,
+            out string[] requiredFeatures, out string[] extension)
         {
             if (
                 !manifest.DataDictionary.TryGetValue("files", TokenType.DataList, out var filesToken) ||
-                !manifest.DataDictionary.TryGetValue("manifestVersion", TokenType.Double, out var manifestVersionToken) ||
+                !manifest.DataDictionary.TryGetValue("manifestVersion", TokenType.Double,
+                    out var manifestVersionToken) ||
                 !manifest.DataDictionary.TryGetValue("requiredFeatures", TokenType.DataList,
                     out var requiredFeaturesToken) ||
                 !requiredFeaturesToken.TryToStringArray(out requiredFeatures) ||
                 !manifest.DataDictionary.TryGetValue("extensions", TokenType.DataList, out var extensionToken) ||
                 !extensionToken.TryToStringArray(out extension) ||
                 !IsValidFilesV1(filesToken.DataList)
-            ) 
+            )
             {
-                Debug.Log("Invalid manifest");
                 files = null;
                 manifestVersion = -1;
                 requiredFeatures = null;
@@ -68,35 +69,32 @@ namespace jp.ootr.ImageDeviceController
             }
 
             files = filesToken.DataList;
-            manifestVersion = (int) manifestVersionToken.Double;
-            
+            manifestVersion = (int)manifestVersionToken.Double;
+
             return true;
         }
-        
+
         private static bool IsValidFilesV1(DataList files)
         {
             var length = files.Count;
             for (var i = 0; i < length; i++)
-            {
                 if (
                     !files.TryGetValue(i, TokenType.DataDictionary, out var file) ||
                     !file.DataDictionary.TryGetValue("path", TokenType.String, out var path) ||
                     !file.DataDictionary.TryGetValue("format", TokenType.String, out var format) ||
-                    !file.DataDictionary.TryGetValue("rect",TokenType.DataDictionary, out var rect) ||
+                    !file.DataDictionary.TryGetValue("rect", TokenType.DataDictionary, out var rect) ||
                     !rect.DataDictionary.TryGetValue("width", TokenType.Double, out var width) ||
                     !rect.DataDictionary.TryGetValue("height", TokenType.Double, out var height) ||
-                    (file.DataDictionary.TryGetValue("extensions", TokenType.DataDictionary, out var ext) && !ext.IsStringDictionary())
+                    (file.DataDictionary.TryGetValue("extensions", TokenType.DataDictionary, out var ext) &&
+                     !ext.IsStringDictionary())
                 )
-                {
-                    Debug.Log($"Invalid file {i}");
                     return false;
-                }
-            }
 
             return true;
         }
-        
-        public static bool TryGetFileMetadata(this DataDictionary file, out string path, out TextureFormat format, out int width, out int height, out DataDictionary ext)
+
+        public static bool TryGetFileMetadata(this DataDictionary file, out string path, out TextureFormat format,
+            out int width, out int height, out DataDictionary ext)
         {
             if (
                 !file.TryGetValue("path", TokenType.String, out var pathToken) ||
@@ -113,11 +111,12 @@ namespace jp.ootr.ImageDeviceController
                 return false;
             }
 
-            ext = file.TryGetValue("extensions", TokenType.DataDictionary, out var extToken) ? extToken.DataDictionary : new DataDictionary();
+            ext = file.TryGetValue("extensions", TokenType.DataDictionary, out var extToken)
+                ? extToken.DataDictionary
+                : new DataDictionary();
 
             path = pathToken.String;
             if (file.TryGetValue("format", TokenType.String, out var formatToken))
-            {
                 switch (formatToken.String)
                 {
                     case "RGB24":
@@ -130,13 +129,11 @@ namespace jp.ootr.ImageDeviceController
                         format = TextureFormat.RGBA32;
                         break;
                 }
-            }
             else
-            {
                 format = TextureFormat.RGBA32;
-            }
-            width = (int) widthToken.Double;
-            height = (int) heightToken.Double;
+
+            width = (int)widthToken.Double;
+            height = (int)heightToken.Double;
             return true;
         }
 

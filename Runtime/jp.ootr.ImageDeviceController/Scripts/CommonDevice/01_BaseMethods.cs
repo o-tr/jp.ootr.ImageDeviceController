@@ -14,7 +14,7 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
         [SerializeField] public RawImage splashImage;
         [SerializeField] public AspectRatioFitter splashImageFitter;
 
-        public string deviceUuid = null;
+        public string deviceUuid;
 
         public virtual string GetName()
         {

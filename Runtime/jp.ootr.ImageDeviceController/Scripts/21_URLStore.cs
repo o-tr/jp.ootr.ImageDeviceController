@@ -8,18 +8,14 @@ namespace jp.ootr.ImageDeviceController
 {
     public class URLStore : CacheController
     {
+        [SerializeField] public VRCUrl[] usUrls = new VRCUrl[0];
+        [SerializeField] public string[] usUrlStrings = new string[0];
         [UdonSynced] protected URLStoreSyncAction UsSyncAction = URLStoreSyncAction.None;
         [UdonSynced] protected VRCUrl[] UsSyncUrl = new VRCUrl[0];
 
-        [SerializeField] public VRCUrl[] usUrls = new VRCUrl[0];
-        [SerializeField] public string[] usUrlStrings = new string[0];
-
         public VRCUrl UsGetUrl(string url)
         {
-            if (UrlUtil.GetUrlAndArgs(url, out var tmpUrl, out var voidArgs))
-            {
-                url = tmpUrl;
-            }
+            if (UrlUtil.GetUrlAndArgs(url, out var tmpUrl, out var voidArgs)) url = tmpUrl;
 
             if (!usUrlStrings.Has(url, out var urlIndex)) return null;
             return usUrls[urlIndex];
@@ -42,10 +38,7 @@ namespace jp.ootr.ImageDeviceController
 
         public bool UsHasUrl(string url)
         {
-            if (UrlUtil.GetUrlAndArgs(url, out var tmpUrl, out var voidArgs))
-            {
-                url = tmpUrl;
-            }
+            if (UrlUtil.GetUrlAndArgs(url, out var tmpUrl, out var voidArgs)) url = tmpUrl;
 
             return usUrlStrings.Has(url, out var tmp);
         }

@@ -15,7 +15,6 @@ namespace jp.ootr.ImageDeviceController
         [SerializeField] protected float vlLoadTimeout = 5;
 
         protected readonly float VlDelaySeconds = 0.05f;
-        protected RenderTexture VlTmpRenderTexture;
         protected float VlCurrentTime;
         protected float VlDuration;
 
@@ -28,15 +27,16 @@ namespace jp.ootr.ImageDeviceController
 
         protected byte[] VlPreviousTextureBuffer;
         protected int VlProcessIndex;
+        protected string[] VlQueuedOptions = new string[0];
 
         protected string[] VlQueuedUrls = new string[0];
-        protected string[] VlQueuedOptions = new string[0];
         protected int VlRetryCount;
-        protected string VlSourceUrl;
         protected string VlSourceRawUrl;
+        protected string VlSourceUrl;
         protected int VlTextureHeight;
 
         protected int VlTextureWidth;
+        protected RenderTexture VlTmpRenderTexture;
 
         protected virtual void VlLoadVideo(string url, string options = "")
         {
@@ -154,7 +154,6 @@ namespace jp.ootr.ImageDeviceController
             }
 
             if (VlRetryCount * VlDelaySeconds < vlLoadTimeout)
-            {
                 if (data.Similar(VlPreviousTextureBuffer, 5000))
                 {
                     VlRetryCount++;
@@ -162,7 +161,6 @@ namespace jp.ootr.ImageDeviceController
                     SendCustomEventDelayedSeconds(nameof(VlOnVideoReady), VlDelaySeconds);
                     return;
                 }
-            }
 
             var readableText = new Texture2D(VlTextureWidth, VlTextureHeight, TextureFormat.RGBA32, false);
             readableText.LoadRawTextureData(data);

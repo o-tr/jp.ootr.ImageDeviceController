@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using jp.ootr.common;
+﻿using jp.ootr.common;
 using UnityEditor;
 using UnityEngine;
 
@@ -8,10 +7,10 @@ namespace jp.ootr.ImageDeviceController.Editor
     [CustomEditor(typeof(ImageDeviceController))]
     public class ImageDeviceControllerEditor : UnityEditor.Editor
     {
+        private bool _debug;
         private SerializedProperty _devices;
         private SerializedProperty _zlDelayFrames;
         private SerializedProperty _zlPartLength;
-        private bool _debug;
 
         private void OnEnable()
         {
@@ -39,25 +38,20 @@ namespace jp.ootr.ImageDeviceController.Editor
 
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(_devices, new GUIContent("Device List"), true);
-            for (int i = _devices.arraySize - 1; i >= 0; i--)
-            {
+            for (var i = _devices.arraySize - 1; i >= 0; i--)
                 if (_devices.GetArrayElementAtIndex(i).objectReferenceValue == null)
-                {
                     _devices.DeleteArrayElementAtIndex(i);
-                }
-            }
             if (EditorGUI.EndChangeCheck()) UpdateDevices(script);
 
             EditorGUILayout.Space();
-            
+
             EditorGUILayout.PropertyField(_zlDelayFrames, new GUIContent("Zip Load Delay Frames"));
 
             EditorGUILayout.Space();
-            
+
             EditorGUILayout.PropertyField(_zlPartLength, new GUIContent("Base64 Decode Part Size"));
 
             serializedObject.ApplyModifiedProperties();
-            
         }
 
         private void UpdateDevices(ImageDeviceController script)
@@ -69,13 +63,12 @@ namespace jp.ootr.ImageDeviceController.Editor
                 var property = so.FindProperty("devices");
                 property.arraySize = script.devices.Length;
                 for (var i = 0; i < script.devices.Length; i++)
-                {
                     property.GetArrayElementAtIndex(i).objectReferenceValue = script.devices[i];
-                }
 
                 so.ApplyModifiedProperties();
                 EditorUtility.SetDirty(device);
             }
+
             EditorUtility.SetDirty(script);
         }
     }
