@@ -12,7 +12,14 @@ namespace jp.ootr.ImageDeviceController.Editor
     public class CommonDeviceEditor : UnityEditor.Editor
     {
         private bool _debug;
+
+        private SerializedProperty _deviceName;
         private bool _foldoutState;
+
+        public void Start()
+        {
+            _deviceName = serializedObject.FindProperty("deviceName");
+        }
 
         public override void OnInspectorGUI()
         {
@@ -36,7 +43,7 @@ namespace jp.ootr.ImageDeviceController.Editor
 
             EditorGUILayout.Space();
 
-            EditorGUILayout.PropertyField(so.FindProperty("deviceName"));
+            EditorGUILayout.PropertyField(_deviceName);
 
             so.ApplyModifiedProperties();
             EditorGUILayout.Space();
