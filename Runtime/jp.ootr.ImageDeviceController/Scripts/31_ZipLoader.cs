@@ -13,8 +13,8 @@ namespace jp.ootr.ImageDeviceController
     {
         [SerializeField] protected UdonZip.UdonZip zlUdonZip;
 
-        public int zlPartLength = 102400;
-        public int zlDelayFrames = 1;
+        [SerializeField][Range(1024,1024000)]public int zlPartLength = 102400;
+        [SerializeField][Range(1,100)]public int zlDelayFrames = 1;
         protected int ZlDecodedBytes;
         protected byte[] ZlDecodedData;
         protected string[] ZlFilenames;

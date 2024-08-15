@@ -1,5 +1,6 @@
 ﻿using jp.ootr.common;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace jp.ootr.ImageDeviceController.CommonDevice
 {
@@ -10,6 +11,8 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
         [SerializeField] protected Animator animator;
         [SerializeField] public CommonDevice[] devices;
         [SerializeField] public DeviceController controller;
+        [SerializeField] public RawImage splashImage;
+        [SerializeField] public AspectRatioFitter splashImageFitter;
 
         public string deviceUuid = null;
 

@@ -9,12 +9,12 @@ namespace jp.ootr.ImageDeviceController.Editor
     [CustomEditor(typeof(CommonDevice.CommonDevice))]
     public class CommonDeviceEditor : UnityEditor.Editor
     {
-        protected bool Debug;
-
+        private bool _debug;
+        private bool _foldoutState = false;
         public override void OnInspectorGUI()
         {
-            Debug = EditorGUILayout.ToggleLeft("Debug", Debug);
-            if (Debug)
+            _debug = EditorGUILayout.ToggleLeft("Debug", _debug);
+            if (_debug)
             {
                 base.OnInspectorGUI();
                 return;
@@ -22,16 +22,49 @@ namespace jp.ootr.ImageDeviceController.Editor
 
             ShowScriptName();
             var script = (CommonDevice.CommonDevice)target;
+            SerializedObject so = new SerializedObject(script);
 
             SetController(script);
             if (script.deviceUuid.IsNullOrEmpty())
             {
-                CommonDeviceUtils.GenerateUuid(script);
+                CommonDeviceUtils.GenerateUuid(so);
             }
 
             EditorGUILayout.Space();
+            
             EditorGUILayout.LabelField("Device UUID", script.deviceUuid);
+            
+            EditorGUILayout.Space();
+
+            
+            EditorGUILayout.PropertyField(so.FindProperty("deviceName"));
+
+            so.ApplyModifiedProperties();
+            EditorGUILayout.Space();
+            ShowContent();
+            EditorGUILayout.Space();
+            
+            _foldoutState = EditorGUILayout.Foldout(_foldoutState, "My Foldout Section", true);
+
+            if (!_foldoutState) return;
+            EditorGUI.BeginChangeCheck();
+            if (script.splashImage != null)
+            {
+                script.splashImage.texture = (Texture)EditorGUILayout.ObjectField("Splash Image",
+                    script.splashImage.texture, typeof(Texture), false);
+            }
+
+            if (!EditorGUI.EndChangeCheck()) return;
+            if (script.splashImageFitter != null && script.splashImage.texture != null)
+            {
+                script.splashImageFitter.aspectRatio =
+                    script.splashImage.texture.width / (float)script.splashImage.texture.height;
+            }
+
+            EditorUtility.SetDirty(script);
         }
+        
+        protected virtual void ShowContent(){}
 
         private void SetController(CommonDevice.CommonDevice script)
         {
@@ -48,7 +81,7 @@ namespace jp.ootr.ImageDeviceController.Editor
             EditorGUILayout.HelpBox(content);
         }
 
-        public virtual void ShowScriptName()
+        protected virtual void ShowScriptName()
         {
             EditorGUILayout.LabelField("CommonDevice", EditorStyle.UiTitle);
         }
@@ -129,13 +162,10 @@ namespace jp.ootr.ImageDeviceController.Editor
             }
         }
 
-        public static void GenerateUuid(CommonDevice.CommonDevice script)
+        public static void GenerateUuid(SerializedObject so)
         {
             var uuid = System.Guid.NewGuid().ToString();
-            SerializedObject so = new SerializedObject(script);
             so.FindProperty("deviceUuid").stringValue = uuid;
-            so.ApplyModifiedProperties();
-            EditorUtility.SetDirty(script);
         }
 
         public static bool ValidateDuplicateReferencedDevices(ImageDeviceController[] controllers)

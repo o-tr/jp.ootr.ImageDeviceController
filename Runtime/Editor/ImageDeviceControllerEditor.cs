@@ -8,24 +8,27 @@ namespace jp.ootr.ImageDeviceController.Editor
     [CustomEditor(typeof(ImageDeviceController))]
     public class ImageDeviceControllerEditor : UnityEditor.Editor
     {
-        private SerializedProperty devices;
-        protected bool Debug;
+        private SerializedProperty _devices;
+        private SerializedProperty _zlDelayFrames;
+        private SerializedProperty _zlPartLength;
+        private bool _debug;
 
         private void OnEnable()
         {
-            devices = serializedObject.FindProperty("devices");
+            _devices = serializedObject.FindProperty("devices");
+            _zlDelayFrames = serializedObject.FindProperty("zlDelayFrames");
+            _zlPartLength = serializedObject.FindProperty("zlPartLength");
         }
 
         public override void OnInspectorGUI()
         {
-            Debug = EditorGUILayout.ToggleLeft("Debug", Debug);
-            if (Debug)
+            _debug = EditorGUILayout.ToggleLeft("Debug", _debug);
+            if (_debug)
             {
                 base.OnInspectorGUI();
                 return;
             }
 
-            EditorGUI.BeginChangeCheck();
             var script = (ImageDeviceController)target;
 
             EditorGUILayout.LabelField("ImageDeviceController", EditorStyle.UiTitle);
@@ -34,40 +37,46 @@ namespace jp.ootr.ImageDeviceController.Editor
 
             serializedObject.Update();
 
-            EditorGUILayout.PropertyField(devices, new GUIContent("Device List"), true);
-            script.devices = script.devices.Where((v) => v != null).ToArray();
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(_devices, new GUIContent("Device List"), true);
+            for (int i = _devices.arraySize - 1; i >= 0; i--)
+            {
+                if (_devices.GetArrayElementAtIndex(i).objectReferenceValue == null)
+                {
+                    _devices.DeleteArrayElementAtIndex(i);
+                }
+            }
+            if (EditorGUI.EndChangeCheck()) UpdateDevices(script);
+
+            EditorGUILayout.Space();
+            
+            EditorGUILayout.PropertyField(_zlDelayFrames, new GUIContent("Zip Load Delay Frames"));
+
+            EditorGUILayout.Space();
+            
+            EditorGUILayout.PropertyField(_zlPartLength, new GUIContent("Base64 Decode Part Size"));
 
             serializedObject.ApplyModifiedProperties();
+            
+        }
 
-            EditorGUILayout.Space();
-
-            EditorGUILayout.LabelField("Zip Load Delay Frames");
-            script.zlDelayFrames = EditorGUILayout.IntSlider(script.zlDelayFrames, 0, 100);
-
-            EditorGUILayout.Space();
-
-            EditorGUILayout.LabelField("Base64 Decode Part Size");
-            script.zlPartLength = EditorGUILayout.IntSlider(script.zlPartLength, 1024, 1024000);
-
-            if (EditorGUI.EndChangeCheck())
+        private void UpdateDevices(ImageDeviceController script)
+        {
+            foreach (var device in script.devices)
             {
-                foreach (var device in script.devices)
+                var so = new SerializedObject(device);
+                so.FindProperty("controller").objectReferenceValue = script;
+                var property = so.FindProperty("devices");
+                property.arraySize = script.devices.Length;
+                for (var i = 0; i < script.devices.Length; i++)
                 {
-                    var so = new SerializedObject(device);
-                    so.FindProperty("controller").objectReferenceValue = script;
-                    var property = so.FindProperty("devices");
-                    property.arraySize = script.devices.Length;
-                    for (var i = 0; i < script.devices.Length; i++)
-                    {
-                        property.GetArrayElementAtIndex(i).objectReferenceValue = script.devices[i];
-                    }
-
-                    so.ApplyModifiedProperties();
-                    EditorUtility.SetDirty(device);
+                    property.GetArrayElementAtIndex(i).objectReferenceValue = script.devices[i];
                 }
 
-                EditorUtility.SetDirty(script);
+                so.ApplyModifiedProperties();
+                EditorUtility.SetDirty(device);
             }
+            EditorUtility.SetDirty(script);
         }
     }
 }
