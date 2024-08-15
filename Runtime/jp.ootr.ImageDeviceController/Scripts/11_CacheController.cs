@@ -22,17 +22,12 @@ namespace jp.ootr.ImageDeviceController
          * }
          * }
          */
-        protected Cache CacheFiles; //Hack: 初期値を入れるとコンパイルエラーになるので、Startで初期化する
-
-        public virtual void Start()
-        {
-            CacheFiles = (Cache)new DataDictionary();
-        }
+        protected DataDictionary CacheFiles = new DataDictionary();
 
         public virtual Texture2D CcGetTexture(string source, string fileName)
         {
             if (!CcHasTexture(source, fileName)) return null;
-            var files = CacheFiles.GetSource(source);
+            var files = ((Cache)CacheFiles).GetSource(source);
             var file = files.GetFile(fileName);
             files.IncreaseUsedCount();
             file.IncreaseUsedCount();
@@ -57,8 +52,8 @@ namespace jp.ootr.ImageDeviceController
         public virtual bool CcHasTexture(string source, string fileName)
         {
             if (
-                !CacheFiles.HasSource(source) ||
-                !CacheFiles.GetSource(source).HasFile(fileName)
+                !((Cache)CacheFiles).HasSource(source) ||
+                !((Cache)CacheFiles).GetSource(source).HasFile(fileName)
             ) return false;
             return true;
         }
@@ -66,11 +61,11 @@ namespace jp.ootr.ImageDeviceController
         public virtual void CcReleaseTexture(string sourceName, string fileName)
         {
             if (!CcHasTexture(sourceName, fileName)) return;
-            var source = CacheFiles.GetSource(sourceName);
+            var source = ((Cache)CacheFiles).GetSource(sourceName);
             var file = source.GetFile(fileName);
             if (source.DecreaseUsedCount() < 1)
             {
-                var keys = CacheFiles.RemoveSource(sourceName);
+                var keys = ((Cache)CacheFiles).RemoveSource(sourceName);
                 foreach (var key in keys)
                 {
                     if (!CacheBinaryNames.Has(key, out var index)) continue;
@@ -87,7 +82,7 @@ namespace jp.ootr.ImageDeviceController
         public virtual Metadata CcGetMetadata(string source, string fileName)
         {
             if (!CcHasTexture(source, fileName)) return null;
-            return CacheFiles.GetSource(source).GetFile(fileName).GetMetadata();
+            return ((Cache)CacheFiles).GetSource(source).GetFile(fileName).GetMetadata();
         }
 
         protected virtual void CcSetTexture(string source, string fileName, Texture2D texture, byte[] bytes = null)
@@ -98,9 +93,9 @@ namespace jp.ootr.ImageDeviceController
         protected virtual void CcSetTexture(string source, string fileName, Texture2D texture, DataDictionary metadata,
             byte[] bytes = null)
         {
-            if (!CacheFiles.HasSource(source)) CacheFiles.AddSource(source);
+            if (!((Cache)CacheFiles).HasSource(source)) ((Cache)CacheFiles).AddSource(source);
 
-            var files = CacheFiles.GetSource(source);
+            var files = ((Cache)CacheFiles).GetSource(source);
             if (files.HasFile(fileName))
             {
                 ConsoleError($"CacheController: file already exists: {source}/{fileName}");
@@ -129,7 +124,7 @@ namespace jp.ootr.ImageDeviceController
             var cacheKeys = CacheFiles.GetKeys().ToStringArray();
             for (var i = 0; i < cacheKeys.Length; i++)
             {
-                var source = CacheFiles.GetSource(cacheKeys[i]);
+                var source = ((Cache)CacheFiles).GetSource(cacheKeys[i]);
                 var fileNames = source.GetFileNames();
                 result += $"{cacheKeys[i]}: {source["usedCount"].Int}\n";
                 for (var j = 0; j < fileNames.Length; j++)
