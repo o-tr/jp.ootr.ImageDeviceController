@@ -17,6 +17,7 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
             _fetchTargetOptions = _fetchTargetOptions.Append(options);
 
             if (_fetchTargetSources.Length > 1) return;
+            _retryCount = 0;
             FetchImageInternal();
         }
 
