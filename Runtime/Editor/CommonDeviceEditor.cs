@@ -16,7 +16,7 @@ namespace jp.ootr.ImageDeviceController.Editor
         private SerializedProperty _deviceName;
         private bool _foldoutState;
 
-        public void OnEnable()
+        public virtual void OnEnable()
         {
             _deviceName = serializedObject.FindProperty("deviceName");
         }
