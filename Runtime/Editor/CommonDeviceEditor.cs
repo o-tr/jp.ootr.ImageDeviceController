@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using Cinemachine.Editor;
 using jp.ootr.common;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 using VRC.SDKBase.Editor.BuildPipeline;
 using Console = jp.ootr.common.Console;
 
@@ -55,15 +57,24 @@ namespace jp.ootr.ImageDeviceController.Editor
             if (!_foldoutState) return;
             EditorGUI.BeginChangeCheck();
             if (script.splashImage != null)
-                script.splashImage.texture = (Texture)EditorGUILayout.ObjectField("Splash Image",
+            {
+                var texture = (Texture)EditorGUILayout.ObjectField("Splash Image",
                     script.splashImage.texture, typeof(Texture), false);
-
-            if (!EditorGUI.EndChangeCheck()) return;
-            if (script.splashImageFitter != null && script.splashImage.texture != null)
-                script.splashImageFitter.aspectRatio =
-                    script.splashImage.texture.width / (float)script.splashImage.texture.height;
-
-            EditorUtility.SetDirty(script);
+                if (texture != script.splashImage.texture)
+                {
+                    var splashImageProp = serializedObject.FindProperty("splashImage");
+                    var splashImage = (RawImage)splashImageProp.objectReferenceValue;
+                    var soImage = new SerializedObject(splashImage);
+                    soImage.FindProperty("m_Texture").objectReferenceValue = texture;
+                    soImage.ApplyModifiedProperties();
+                    var slashImageFitterProp = serializedObject.FindProperty("splashImageFitter");
+                    var splashImageFitter = (AspectRatioFitter)slashImageFitterProp.objectReferenceValue;
+                    var soImageFitter = new SerializedObject(splashImageFitter);
+                    soImageFitter.FindProperty("m_AspectRatio").floatValue =
+                        texture.width / (float)texture.height;
+                    soImageFitter.ApplyModifiedProperties();
+                }
+            }
         }
 
         protected virtual void ShowContent()
