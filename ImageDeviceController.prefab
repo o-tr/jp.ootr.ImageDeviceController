@@ -115,7 +115,7 @@ GameObject:
   - component: {fileID: 6850015312808278782}
   - component: {fileID: 8005686339308456890}
   m_Layer: 0
-  m_Name: _OotrDeviceController
+  m_Name: ImageDeviceController
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
