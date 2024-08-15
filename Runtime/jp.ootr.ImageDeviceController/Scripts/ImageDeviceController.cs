@@ -9,5 +9,10 @@ namespace jp.ootr.ImageDeviceController
         {
             return "jp.ootr.ImageDeviceController.ImageDeviceController";
         }
+        
+        public override string GetDisplayName()
+        {
+            return "Image Device Controller";
+        }
     }
 }
