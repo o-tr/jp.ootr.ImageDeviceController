@@ -1,22 +1,19 @@
-﻿using jp.ootr.common;
+﻿using VRC.SDK3.Data;
 
 namespace jp.ootr.ImageDeviceController.CommonDevice
 {
     public class LogicLoadImage : BaseMethods
     {
-        private string[] _fetchTargetOptions = new string[0];
-        private string[] _fetchTargetSources = new string[0];
-        private URLType[] _fetchTargetTypes = new URLType[0];
+        private DataList _queueList = new DataList();
 
         private int _retryCount;
 
         protected virtual void LLIFetchImage(string source, URLType type, string options = "")
         {
-            _fetchTargetSources = _fetchTargetSources.Append(source);
-            _fetchTargetTypes = _fetchTargetTypes.Append(type);
-            _fetchTargetOptions = _fetchTargetOptions.Append(options);
+            var queue = QueueUtils.CreateQueue(source, options, (int)type);
+            ((QueueList)_queueList).AddQueue(queue);
 
-            if (_fetchTargetSources.Length > 1) return;
+            if (_queueList.Count > 1) return;
             _retryCount = 0;
             FetchImageInternal();
         }
@@ -27,8 +24,8 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
          */
         public virtual void FetchImageInternal()
         {
-            if (controller.LoadFilesFromUrl((IControlledDevice)this, _fetchTargetSources[0], _fetchTargetTypes[0],
-                    _fetchTargetOptions[0])) return;
+            ((QueueList)_queueList).GetQueue(0).Get(out var source, out var options, out var type);
+            if (controller.LoadFilesFromUrl((IControlledDevice)this, source,type, options)) return;
             if (_retryCount >= SyncURLRetryCountLimit)
             {
                 OnFilesLoadFailed(LoadError.URLNotSynced);
@@ -41,10 +38,8 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
 
         private void FetchNextImage()
         {
-            _fetchTargetSources = _fetchTargetSources.__Shift();
-            _fetchTargetTypes = _fetchTargetTypes.__Shift();
-            _fetchTargetOptions = _fetchTargetOptions.__Shift();
-            if (_fetchTargetSources.Length == 0) return;
+            ((QueueList)_queueList).ShiftQueue();
+            if (_queueList.Count == 0) return;
             SendCustomEventDelayedFrames(nameof(FetchImageInternal), 1);
         }
 
