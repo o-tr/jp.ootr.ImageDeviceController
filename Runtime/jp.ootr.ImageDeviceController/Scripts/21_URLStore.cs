@@ -1,3 +1,4 @@
+using System;
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
@@ -10,8 +11,8 @@ namespace jp.ootr.ImageDeviceController
     {
         [SerializeField] public VRCUrl[] usUrls = new VRCUrl[0];
         [SerializeField] public string[] usUrlStrings = new string[0];
-        [UdonSynced] protected URLStoreSyncAction UsSyncAction = URLStoreSyncAction.None;
-        [UdonSynced] protected VRCUrl[] UsSyncUrl = new VRCUrl[0];
+        [UdonSynced] private URLStoreSyncAction _usSyncAction = URLStoreSyncAction.None;
+        [UdonSynced] private VRCUrl[] _usSyncUrl = new VRCUrl[0];
 
         public VRCUrl UsGetUrl(string url)
         {
@@ -24,8 +25,8 @@ namespace jp.ootr.ImageDeviceController
         public void UsAddUrl(VRCUrl url)
         {
             if (usUrlStrings.Has(url.ToString())) return;
-            UsSyncAction = URLStoreSyncAction.AddUrl;
-            UsSyncUrl = new[] { url };
+            _usSyncAction = URLStoreSyncAction.AddUrl;
+            _usSyncUrl = new[] { url };
             Sync();
         }
 
@@ -45,29 +46,32 @@ namespace jp.ootr.ImageDeviceController
 
         public override void _OnDeserialization()
         {
-            switch (UsSyncAction)
+            switch (_usSyncAction)
             {
                 case URLStoreSyncAction.AddUrl:
-                    if (usUrlStrings.Has(UsSyncUrl[0].ToString())) return;
-                    ConsoleDebug($"URLStore: url added to store: {UsSyncUrl[0]}");
-                    usUrls = usUrls.Append(UsSyncUrl[0]);
-                    usUrlStrings = usUrlStrings.Append(UsSyncUrl[0].ToString());
+                    if (usUrlStrings.Has(_usSyncUrl[0].ToString())) return;
+                    ConsoleDebug($"URLStore: url added to store: {_usSyncUrl[0]}");
+                    usUrls = usUrls.Append(_usSyncUrl[0]);
+                    usUrlStrings = usUrlStrings.Append(_usSyncUrl[0].ToString());
                     break;
                 case URLStoreSyncAction.SyncAll:
-                    ConsoleDebug($"URLStore: urls synced: {UsSyncUrl.Length}");
-                    usUrls = UsSyncUrl;
-                    usUrlStrings = UsSyncUrl.ToStrings();
+                    ConsoleDebug($"URLStore: urls synced: {_usSyncUrl.Length}");
+                    usUrls = _usSyncUrl;
+                    usUrlStrings = _usSyncUrl.ToStrings();
+                    break;
+                case URLStoreSyncAction.None:
+                default:
                     break;
             }
 
-            UsSyncAction = URLStoreSyncAction.None;
+            _usSyncAction = URLStoreSyncAction.None;
         }
 
         public override void OnPlayerJoined(VRCPlayerApi player)
         {
             if (!Networking.IsOwner(gameObject)) return;
-            UsSyncAction = URLStoreSyncAction.SyncAll;
-            UsSyncUrl = usUrls;
+            _usSyncAction = URLStoreSyncAction.SyncAll;
+            _usSyncUrl = usUrls;
             Sync();
         }
     }

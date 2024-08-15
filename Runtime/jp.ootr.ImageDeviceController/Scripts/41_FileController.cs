@@ -4,11 +4,11 @@ namespace jp.ootr.ImageDeviceController
 {
     public class FileController : ImageLoader
     {
-        protected string[][] CachedData = new string[0][];
+        private string[][] _cachedData = new string[0][];
 
-        protected string[] LoadedUrls = new string[0];
-        protected CommonDevice.CommonDevice[][] LoadingDevices = new CommonDevice.CommonDevice[0][];
-        protected string[] LoadingUrls = new string[0];
+        private string[] _loadedUrls = new string[0];
+        private CommonDevice.CommonDevice[][] _loadingDevices = new CommonDevice.CommonDevice[0][];
+        private string[] _loadingUrls = new string[0];
 
         public virtual bool LoadFilesFromUrl(IControlledDevice _self, string source, URLType type, string options = "")
         {
@@ -19,25 +19,25 @@ namespace jp.ootr.ImageDeviceController
             }
 
             var self = (CommonDevice.CommonDevice)_self;
-            if (((Cache)CacheFiles).HasSource(source))
+            if (CcHasCache(source))
             {
-                var files = ((Cache)CacheFiles).GetSource(source);
+                var files = CcGetCache(source);
                 var fileNames = files.GetFileNames();
                 ConsoleDebug($"FileController: already loaded. {source}");
                 self.OnFilesLoadSuccess(source, fileNames);
                 return true;
             }
 
-            if (LoadingUrls.Has(source, out var loadingIndex))
+            if (_loadingUrls.Has(source, out var loadingIndex))
             {
                 ConsoleDebug($"FileController: already loading. {source}");
-                LoadingDevices[loadingIndex] = LoadingDevices[loadingIndex].Append(self);
+                _loadingDevices[loadingIndex] = _loadingDevices[loadingIndex].Append(self);
                 return true;
             }
 
             ConsoleDebug($"FileController: loading {source}.");
-            LoadingUrls = LoadingUrls.Append(source);
-            LoadingDevices = LoadingDevices.Append(new[] { self });
+            _loadingUrls = _loadingUrls.Append(source);
+            _loadingDevices = _loadingDevices.Append(new[] { self });
             switch (type)
             {
                 case URLType.Image:
@@ -57,15 +57,15 @@ namespace jp.ootr.ImageDeviceController
         public virtual void UnloadFilesFromUrl(IControlledDevice _self, string source)
         {
             var self = (CommonDevice.CommonDevice)_self;
-            if (LoadingUrls.Has(source, out var loadingIndex))
+            if (_loadingUrls.Has(source, out var loadingIndex))
             {
-                if (!LoadingDevices[loadingIndex].Has(self, out var deviceIndex)) return;
+                if (!_loadingDevices[loadingIndex].Has(self, out var deviceIndex)) return;
                 {
-                    LoadingDevices[loadingIndex] = LoadingDevices[loadingIndex].Remove(deviceIndex);
-                    if (LoadingDevices[loadingIndex].Length == 0)
+                    _loadingDevices[loadingIndex] = _loadingDevices[loadingIndex].Remove(deviceIndex);
+                    if (_loadingDevices[loadingIndex].Length == 0)
                     {
-                        LoadingUrls = LoadingUrls.Remove(loadingIndex);
-                        LoadingDevices = LoadingDevices.Remove(loadingIndex);
+                        _loadingUrls = _loadingUrls.Remove(loadingIndex);
+                        _loadingDevices = _loadingDevices.Remove(loadingIndex);
                     }
                 }
             }
@@ -77,83 +77,83 @@ namespace jp.ootr.ImageDeviceController
 
         protected override void CcOnRelease(string source)
         {
-            if (!LoadedUrls.Has(source, out var loadedIndex)) return;
-            LoadedUrls = LoadedUrls.Remove(loadedIndex);
-            CachedData = CachedData.Remove(loadedIndex);
+            if (!_loadedUrls.Has(source, out var loadedIndex)) return;
+            _loadedUrls = _loadedUrls.Remove(loadedIndex);
+            _cachedData = _cachedData.Remove(loadedIndex);
         }
 
 
         protected override void ZlOnLoadProgress(string source, float progress)
         {
-            if (!LoadingUrls.Has(source, out var loadingIndex)) return;
-            foreach (var device in LoadingDevices[loadingIndex]) device.OnFileLoadProgress(source, progress);
+            if (!_loadingUrls.Has(source, out var loadingIndex)) return;
+            foreach (var device in _loadingDevices[loadingIndex]) device.OnFileLoadProgress(source, progress);
         }
 
         protected override void ZlOnLoadSuccess(string source, string[] fileNames)
         {
-            if (!LoadingUrls.Has(source, out var loadingIndex)) return;
+            if (!_loadingUrls.Has(source, out var loadingIndex)) return;
             ConsoleDebug(
-                $"FileController(TextZip): loaded successfully. {fileNames.Length} files. device count: {LoadingDevices[loadingIndex].Length}, {source} ");
-            foreach (var device in LoadingDevices[loadingIndex]) device.OnFilesLoadSuccess(source, fileNames);
-            LoadingUrls = LoadingUrls.Remove(loadingIndex);
-            LoadingDevices = LoadingDevices.Remove(loadingIndex);
-            LoadedUrls = LoadedUrls.Append(source);
-            CachedData = CachedData.Append(fileNames);
+                $"FileController(TextZip): loaded successfully. {fileNames.Length} files. device count: {_loadingDevices[loadingIndex].Length}, {source} ");
+            foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadSuccess(source, fileNames);
+            _loadingUrls = _loadingUrls.Remove(loadingIndex);
+            _loadingDevices = _loadingDevices.Remove(loadingIndex);
+            _loadedUrls = _loadedUrls.Append(source);
+            _cachedData = _cachedData.Append(fileNames);
         }
 
         protected override void ZlOnLoadError(string source, LoadError error)
         {
             ConsoleDebug($"FileController(TextZip): load failed: {error}, {source} ");
-            if (!LoadingUrls.Has(source, out var loadingIndex)) return;
-            foreach (var device in LoadingDevices[loadingIndex]) device.OnFilesLoadFailed(error);
-            LoadingUrls = LoadingUrls.Remove(loadingIndex);
-            LoadingDevices = LoadingDevices.Remove(loadingIndex);
+            if (!_loadingUrls.Has(source, out var loadingIndex)) return;
+            foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadFailed(error);
+            _loadingUrls = _loadingUrls.Remove(loadingIndex);
+            _loadingDevices = _loadingDevices.Remove(loadingIndex);
         }
 
         protected override void IlOnLoadSuccess(string source, string[] fileNames)
         {
-            if (!LoadingUrls.Has(source, out var loadingIndex)) return;
+            if (!_loadingUrls.Has(source, out var loadingIndex)) return;
             ConsoleDebug($"FileController(Image): loaded successfully. {source} ");
-            foreach (var device in LoadingDevices[loadingIndex]) device.OnFilesLoadSuccess(source, fileNames);
-            LoadingUrls = LoadingUrls.Remove(loadingIndex);
-            LoadingDevices = LoadingDevices.Remove(loadingIndex);
-            LoadedUrls = LoadedUrls.Append(source);
-            CachedData = CachedData.Append(fileNames);
+            foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadSuccess(source, fileNames);
+            _loadingUrls = _loadingUrls.Remove(loadingIndex);
+            _loadingDevices = _loadingDevices.Remove(loadingIndex);
+            _loadedUrls = _loadedUrls.Append(source);
+            _cachedData = _cachedData.Append(fileNames);
         }
 
         protected override void IlOnLoadError(string source, LoadError error)
         {
-            if (!LoadingUrls.Has(source, out var loadingIndex)) return;
+            if (!_loadingUrls.Has(source, out var loadingIndex)) return;
             ConsoleDebug($"FileController(Image): load failed: {error}, {source}");
-            foreach (var device in LoadingDevices[loadingIndex]) device.OnFilesLoadFailed(error);
-            LoadingUrls = LoadingUrls.Remove(loadingIndex);
-            LoadingDevices = LoadingDevices.Remove(loadingIndex);
+            foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadFailed(error);
+            _loadingUrls = _loadingUrls.Remove(loadingIndex);
+            _loadingDevices = _loadingDevices.Remove(loadingIndex);
         }
 
         protected override void VlOnLoadError(string source, LoadError error)
         {
-            if (!LoadingUrls.Has(source, out var loadingIndex)) return;
+            if (!_loadingUrls.Has(source, out var loadingIndex)) return;
             ConsoleDebug($"FileController(Video): load failed: {error}, {source} ");
-            foreach (var device in LoadingDevices[loadingIndex]) device.OnFilesLoadFailed(error);
-            LoadingUrls = LoadingUrls.Remove(loadingIndex);
-            LoadingDevices = LoadingDevices.Remove(loadingIndex);
+            foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadFailed(error);
+            _loadingUrls = _loadingUrls.Remove(loadingIndex);
+            _loadingDevices = _loadingDevices.Remove(loadingIndex);
         }
 
         protected override void VlOnLoadSuccess(string source, string[] fileNames)
         {
-            if (!LoadingUrls.Has(source, out var loadingIndex)) return;
+            if (!_loadingUrls.Has(source, out var loadingIndex)) return;
             ConsoleDebug($"FileController(Video): loaded successfully. {source}");
-            foreach (var device in LoadingDevices[loadingIndex]) device.OnFilesLoadSuccess(source, fileNames);
-            LoadingUrls = LoadingUrls.Remove(loadingIndex);
-            LoadingDevices = LoadingDevices.Remove(loadingIndex);
-            LoadedUrls = LoadedUrls.Append(source);
-            CachedData = CachedData.Append(fileNames);
+            foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadSuccess(source, fileNames);
+            _loadingUrls = _loadingUrls.Remove(loadingIndex);
+            _loadingDevices = _loadingDevices.Remove(loadingIndex);
+            _loadedUrls = _loadedUrls.Append(source);
+            _cachedData = _cachedData.Append(fileNames);
         }
 
         protected override void VlOnLoadProgress(string source, float progress)
         {
-            if (!LoadingUrls.Has(source, out var loadingIndex)) return;
-            foreach (var device in LoadingDevices[loadingIndex]) device.OnFileLoadProgress(source, progress);
+            if (!_loadingUrls.Has(source, out var loadingIndex)) return;
+            foreach (var device in _loadingDevices[loadingIndex]) device.OnFileLoadProgress(source, progress);
         }
 
         #endregion

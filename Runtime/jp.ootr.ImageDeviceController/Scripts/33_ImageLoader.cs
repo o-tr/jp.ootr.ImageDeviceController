@@ -7,79 +7,83 @@ namespace jp.ootr.ImageDeviceController
 {
     public class ImageLoader : VideoLoader
     {
-        protected const int IlDelayFrames = 10;
-        protected bool IlInited;
+        private const int IlDelayFrames = 10;
+        private bool _ilInited;
 
-        protected bool IlIsLoading;
+        private bool _ilIsLoading;
 
-        protected string[] IlQueuedUrlStrings = new string[0];
-        protected string IlSourceUrl;
-        protected VRCImageDownloader ImageDownloader;
-        protected TextureInfo TextureInfo;
+        private string[] _ilQueuedUrlStrings = new string[0];
+        private string _ilSourceUrl;
+        private VRCImageDownloader _imageDownloader;
+        private TextureInfo _textureInfo;
 
         private void IlInit()
         {
-            ImageDownloader = new VRCImageDownloader();
-            TextureInfo = new TextureInfo();
-            TextureInfo.GenerateMipMaps = true;
-            TextureInfo.WrapModeU = TextureWrapMode.Clamp;
-            TextureInfo.WrapModeV = TextureWrapMode.Clamp;
-            TextureInfo.AnisoLevel = 16;
+            _imageDownloader = new VRCImageDownloader();
+            _textureInfo = new TextureInfo();
+            _textureInfo.GenerateMipMaps = true;
+            _textureInfo.WrapModeU = TextureWrapMode.Clamp;
+            _textureInfo.WrapModeV = TextureWrapMode.Clamp;
+            _textureInfo.AnisoLevel = 16;
         }
 
-        public virtual void IlLoadImage(string url)
+        protected virtual void IlLoadImage(string url)
         {
-            if (!IlInited)
+            if (!_ilInited)
             {
-                IlInited = true;
+                _ilInited = true;
                 IlInit();
             }
 
-            if (IlQueuedUrlStrings.Has(url))
+            if (_ilQueuedUrlStrings.Has(url))
             {
                 ConsoleWarn($"[ILLoadImage] already in queue: {url}");
                 return;
             }
 
-            IlQueuedUrlStrings = IlQueuedUrlStrings.Append(url);
-            if (IlIsLoading)
+            _ilQueuedUrlStrings = _ilQueuedUrlStrings.Append(url);
+            if (_ilIsLoading)
             {
                 ConsoleDebug($"[ILLoadImage] added to queue: {url}");
                 return;
             }
 
-            IlIsLoading = true;
+            _ilIsLoading = true;
             IlLoadNext();
         }
 
+        /**
+         * @private
+         * コールバック用にpublicにしているが、外部から直接呼び出さないこと
+         */
         public virtual void IlLoadNext()
         {
-            if (IlQueuedUrlStrings.Length == 0)
+            if (_ilQueuedUrlStrings.Length == 0)
             {
-                IlIsLoading = false;
+                _ilIsLoading = false;
                 return;
             }
 
-            IlSourceUrl = IlQueuedUrlStrings[0];
-            ConsoleDebug($"[ILLoadNext] Loading next image: {IlSourceUrl}");
-            ImageDownloader.DownloadImage(UsGetUrl(IlSourceUrl), null, (IUdonEventReceiver)this, TextureInfo);
+            _ilSourceUrl = _ilQueuedUrlStrings[0];
+            ConsoleDebug($"[ILLoadNext] Loading next image: {_ilSourceUrl}");
+            _imageDownloader.DownloadImage(UsGetUrl(_ilSourceUrl), null, (IUdonEventReceiver)this, _textureInfo);
         }
 
         public override void OnImageLoadSuccess(IVRCImageDownload result)
         {
             var texture = result.Result;
-            CcSetTexture(IlSourceUrl, IlSourceUrl, texture);
-            IlOnLoadSuccess(IlSourceUrl, new[] { IlSourceUrl });
-            IlQueuedUrlStrings = IlQueuedUrlStrings.Remove(0);
+            CcSetTexture(_ilSourceUrl, _ilSourceUrl, texture);
+            IlOnLoadSuccess(_ilSourceUrl, new[] { _ilSourceUrl });
+            _ilQueuedUrlStrings = _ilQueuedUrlStrings.Remove(0);
             SendCustomEventDelayedFrames(nameof(IlLoadNext), IlDelayFrames);
         }
 
         public override void OnImageLoadError(IVRCImageDownload result)
         {
             ConsoleError(
-                $"[ImageLoader] Error loading image: url: {IlSourceUrl}, error code: {result.Error}, message: {result.ErrorMessage}");
-            IlOnLoadError(IlSourceUrl, ParseImageDownloadError((LoadError)result.Error, result.ErrorMessage));
-            IlQueuedUrlStrings = IlQueuedUrlStrings.Remove(0);
+                $"[ImageLoader] Error loading image: url: {_ilSourceUrl}, error code: {result.Error}, message: {result.ErrorMessage}");
+            IlOnLoadError(_ilSourceUrl, ParseImageDownloadError((LoadError)result.Error, result.ErrorMessage));
+            _ilQueuedUrlStrings = _ilQueuedUrlStrings.Remove(0);
             SendCustomEventDelayedFrames(nameof(IlLoadNext), IlDelayFrames);
         }
 

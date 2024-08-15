@@ -6,8 +6,8 @@ namespace jp.ootr.ImageDeviceController
 {
     public class CacheController : CommonClass
     {
-        protected byte[][] CacheBinary = new byte[0][]; //DataDictionaryにbyte[]が入らないので別で取り扱う
-        protected string[] CacheBinaryNames = new string[0];
+        private byte[][] _cacheBinary = new byte[0][]; //DataDictionaryにbyte[]が入らないので別で取り扱う
+        private string[] _cacheBinaryNames = new string[0];
 
         /**
          * type CacheFiles = {
@@ -22,12 +22,12 @@ namespace jp.ootr.ImageDeviceController
          * }
          * }
          */
-        protected readonly DataDictionary CacheFiles = new DataDictionary();
+        private readonly DataDictionary _cacheFiles = new DataDictionary();
 
         public virtual Texture2D CcGetTexture(string source, string fileName)
         {
             if (!CcHasTexture(source, fileName)) return null;
-            var files = ((Cache)CacheFiles).GetSource(source);
+            var files = ((Cache)_cacheFiles).GetSource(source);
             var file = files.GetFile(fileName);
             files.IncreaseUsedCount();
             file.IncreaseUsedCount();
@@ -39,8 +39,9 @@ namespace jp.ootr.ImageDeviceController
         private Texture2D TryRegenerateTexture(File file)
         {
             var key = file.GetCacheKey();
-            if (!CacheBinaryNames.Has(key, out var index)) return null;
-            var bytes = CacheBinary[index];
+            if (!_cacheBinaryNames.Has(key, out var index)) return null;
+            ConsoleDebug($"CacheController: regenerate texture: {key}");
+            var bytes = _cacheBinary[index];
             var texture = new Texture2D(file["width"].Int, file["height"].Int);
             texture.LoadRawTextureData(bytes);
             texture.Apply();
@@ -48,41 +49,51 @@ namespace jp.ootr.ImageDeviceController
             return texture;
         }
 
-
-        public virtual bool CcHasTexture(string source, string fileName)
+        protected bool CcHasCache(string source)
         {
-            if (
-                !((Cache)CacheFiles).HasSource(source) ||
-                !((Cache)CacheFiles).GetSource(source).HasFile(fileName)
-            ) return false;
-            return true;
+            return ((Cache)_cacheFiles).HasSource(source);
+        }
+        
+        protected Source CcGetCache(string source)
+        {
+            return ((Cache)_cacheFiles).GetSource(source);
+        }
+
+        protected virtual bool CcHasTexture(string source, string fileName)
+        {
+            return ((Cache)_cacheFiles).HasSource(source) &&
+                   ((Cache)_cacheFiles).GetSource(source).HasFile(fileName);
         }
 
         public virtual void CcReleaseTexture(string sourceName, string fileName)
         {
             if (!CcHasTexture(sourceName, fileName)) return;
-            var source = ((Cache)CacheFiles).GetSource(sourceName);
+            var source = ((Cache)_cacheFiles).GetSource(sourceName);
             var file = source.GetFile(fileName);
             if (source.DecreaseUsedCount() < 1)
             {
-                var keys = ((Cache)CacheFiles).RemoveSource(sourceName);
+                var keys = ((Cache)_cacheFiles).RemoveSource(sourceName);
                 foreach (var key in keys)
                 {
-                    if (!CacheBinaryNames.Has(key, out var index)) continue;
-                    CacheBinary = CacheBinary.Remove(index);
-                    CacheBinaryNames = CacheBinaryNames.Remove(index);
+                    if (!_cacheBinaryNames.Has(key, out var index)) continue;
+                    _cacheBinary = _cacheBinary.Remove(index);
+                    _cacheBinaryNames = _cacheBinaryNames.Remove(index);
                 }
 
                 return;
             }
 
-            if (file.DecreaseUsedCount() < 1) file.DestroyTexture();
+            if (file.DecreaseUsedCount() < 1)
+            {
+                ConsoleDebug($"CacheController: release texture: {sourceName}/{fileName}");
+                file.DestroyTexture();
+            }
         }
 
         public virtual Metadata CcGetMetadata(string source, string fileName)
         {
             if (!CcHasTexture(source, fileName)) return null;
-            return ((Cache)CacheFiles).GetSource(source).GetFile(fileName).GetMetadata();
+            return ((Cache)_cacheFiles).GetSource(source).GetFile(fileName).GetMetadata();
         }
 
         protected virtual void CcSetTexture(string source, string fileName, Texture2D texture, byte[] bytes = null)
@@ -93,9 +104,9 @@ namespace jp.ootr.ImageDeviceController
         protected virtual void CcSetTexture(string source, string fileName, Texture2D texture, DataDictionary metadata,
             byte[] bytes = null)
         {
-            if (!((Cache)CacheFiles).HasSource(source)) ((Cache)CacheFiles).AddSource(source);
+            if (!((Cache)_cacheFiles).HasSource(source)) ((Cache)_cacheFiles).AddSource(source);
 
-            var files = ((Cache)CacheFiles).GetSource(source);
+            var files = ((Cache)_cacheFiles).GetSource(source);
             if (files.HasFile(fileName))
             {
                 ConsoleError($"CacheController: file already exists: {source}/{fileName}");
@@ -107,8 +118,8 @@ namespace jp.ootr.ImageDeviceController
             if (bytes != null)
             {
                 cacheKey = $"cache://{source}/{fileName}";
-                CacheBinary = CacheBinary.Append(bytes);
-                CacheBinaryNames = CacheBinaryNames.Append(cacheKey);
+                _cacheBinary = _cacheBinary.Append(bytes);
+                _cacheBinaryNames = _cacheBinaryNames.Append(cacheKey);
             }
 
             files.AddFile(fileName, texture, metadata, cacheKey);
@@ -121,10 +132,10 @@ namespace jp.ootr.ImageDeviceController
         public virtual string DumpCache()
         {
             var result = "";
-            var cacheKeys = CacheFiles.GetKeys().ToStringArray();
+            var cacheKeys = _cacheFiles.GetKeys().ToStringArray();
             for (var i = 0; i < cacheKeys.Length; i++)
             {
-                var source = ((Cache)CacheFiles).GetSource(cacheKeys[i]);
+                var source = ((Cache)_cacheFiles).GetSource(cacheKeys[i]);
                 var fileNames = source.GetFileNames();
                 result += $"{cacheKeys[i]}: {source["usedCount"].Int}\n";
                 for (var j = 0; j < fileNames.Length; j++)

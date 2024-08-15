@@ -14,29 +14,29 @@ namespace jp.ootr.ImageDeviceController
         [SerializeField] protected MeshRenderer vlVideoRenderer;
         [SerializeField] protected float vlLoadTimeout = 5;
 
-        protected readonly float VlDelaySeconds = 0.05f;
-        protected float VlCurrentTime;
-        protected float VlDuration;
+        private const float VlDelaySeconds = 0.05f;
+        private float _vlCurrentTime;
+        private float _vlDuration;
 
-        protected string[] VlFilenames;
-        protected float VlInterval;
-        protected bool VlIsLoading;
-        protected Texture2D VlMainTexture;
-        protected float VlOffset;
-        protected int VlPageCount;
+        private string[] _vlFilenames;
+        private float _vlInterval;
+        private bool _vlIsLoading;
+        private Texture2D _vlMainTexture;
+        private float _vlOffset;
+        private int _vlPageCount;
 
-        protected byte[] VlPreviousTextureBuffer;
-        protected int VlProcessIndex;
-        protected string[] VlQueuedOptions = new string[0];
+        private byte[] _vlPreviousTextureBuffer;
+        private int _vlProcessIndex;
+        private string[] _vlQueuedOptions = new string[0];
 
-        protected string[] VlQueuedUrls = new string[0];
-        protected int VlRetryCount;
-        protected string VlSourceRawUrl;
-        protected string VlSourceUrl;
-        protected int VlTextureHeight;
+        private string[] _vlQueuedUrls = new string[0];
+        private int _vlRetryCount;
+        private string _vlSourceRawUrl;
+        private string _vlSourceUrl;
+        private int _vlTextureHeight;
 
-        protected int VlTextureWidth;
-        protected RenderTexture VlTmpRenderTexture;
+        private int _vlTextureWidth;
+        private RenderTexture _vlTmpRenderTexture;
 
         protected virtual void VlLoadVideo(string url, string options = "")
         {
@@ -47,142 +47,154 @@ namespace jp.ootr.ImageDeviceController
                 return;
             }
 
-            VlQueuedUrls = VlQueuedUrls.Append(url);
-            VlQueuedOptions = VlQueuedOptions.Append(options);
-            if (VlIsLoading) return;
+            _vlQueuedUrls = _vlQueuedUrls.Append(url);
+            _vlQueuedOptions = _vlQueuedOptions.Append(options);
+            if (_vlIsLoading) return;
             VlLoadNext();
         }
 
+        /**
+         * @private
+         * コールバック用にpublicにしているが、外部から直接呼び出さないこと
+         */
         public virtual void VlLoadNext()
         {
-            if (VlQueuedUrls.Length < 1)
+            if (_vlQueuedUrls.Length < 1)
             {
                 ConsoleDebug("[VLLoadVideoInternal] No video to load.");
-                VlIsLoading = false;
+                _vlIsLoading = false;
                 return;
             }
 
-            VlQueuedUrls = VlQueuedUrls.__Shift(out var url);
-            VlQueuedOptions = VlQueuedOptions.__Shift(out var options);
+            _vlQueuedUrls = _vlQueuedUrls.__Shift(out var url);
+            _vlQueuedOptions = _vlQueuedOptions.__Shift(out var options);
 
             options.ParseSourceOptions(out var type, out var offset, out var duration);
 
             ConsoleDebug($"[VLLoadVideoInternal] Loading video: {url}");
-            VlIsLoading = true;
-            VlInterval = duration;
-            VlCurrentTime = offset;
-            VlOffset = offset;
-            VlSourceUrl = url;
-            VlSourceRawUrl = url;
+            _vlIsLoading = true;
+            _vlInterval = duration;
+            _vlCurrentTime = offset;
+            _vlOffset = offset;
+            _vlSourceUrl = url;
+            _vlSourceRawUrl = url;
             vlVideoPlayer.Stop();
             vlVideoPlayer.LoadURL(UsGetUrl(url));
         }
 
         public override void OnVideoReady()
         {
-            ConsoleDebug($"[VlOnVideoReady] Video is ready. {VlSourceUrl}");
+            ConsoleDebug($"[VlOnVideoReady] Video is ready. {_vlSourceUrl}");
             base.OnVideoReady();
-            VlDuration = vlVideoPlayer.GetDuration();
-            VlPageCount = Mathf.CeilToInt((VlDuration - VlOffset) / VlInterval);
-            VlFilenames = new string[VlPageCount];
-            VlProcessIndex = 0;
-            VlRetryCount = 0;
+            _vlDuration = vlVideoPlayer.GetDuration();
+            _vlPageCount = Mathf.CeilToInt((_vlDuration - _vlOffset) / _vlInterval);
+            _vlFilenames = new string[_vlPageCount];
+            _vlProcessIndex = 0;
+            _vlRetryCount = 0;
             VlWaitForVideLoad();
         }
 
         public override void OnVideoError(VideoError videoError)
         {
-            VlOnLoadError(VlSourceUrl, ToLoadError(videoError));
+            VlOnLoadError(_vlSourceUrl, ToLoadError(videoError));
             SendCustomEventDelayedSeconds(nameof(VlLoadNext), VlDelaySeconds);
         }
 
+        /**
+         * @private
+         * コールバック用にpublicにしているが、外部から直接呼び出さないこと
+         */
         public virtual void VlWaitForVideLoad()
         {
-            if (!VlIsLoading) return;
-            VlMainTexture = (Texture2D)vlVideoRenderer.material.mainTexture;
-            if (VlMainTexture == null)
+            if (!_vlIsLoading) return;
+            _vlMainTexture = (Texture2D)vlVideoRenderer.material.mainTexture;
+            if (_vlMainTexture == null)
             {
                 SendCustomEventDelayedSeconds(nameof(VlWaitForVideLoad), 1);
                 return;
             }
 
-            vlVideoPlayer.SetTime(VlCurrentTime);
+            vlVideoPlayer.SetTime(_vlCurrentTime);
             SendCustomEventDelayedSeconds(nameof(VlOnVideoReady), 1);
         }
 
+        /**
+         * @private
+         * コールバック用にpublicにしているが、外部から直接呼び出さないこと
+         */
         public void VlOnVideoReady()
         {
-            if (!VlIsLoading)
+            if (!_vlIsLoading)
             {
                 ConsoleWarn("[VlOnVideoReady] Video is not loading.");
                 return;
             }
 
-            if (VlDuration < VlCurrentTime)
+            if (_vlDuration < _vlCurrentTime)
             {
-                ConsoleDebug($"end of video: {VlCurrentTime}");
+                ConsoleDebug($"end of video: {_vlCurrentTime}");
                 return;
             }
 
-            ConsoleDebug($"[VlOnVideoReady] {VlCurrentTime} / {VlDuration}");
-            VlTextureHeight = VlMainTexture.height;
-            VlTextureWidth = VlMainTexture.width;
-            CopyToRenderTexture(VlMainTexture, false, true);
+            ConsoleDebug($"[VlOnVideoReady] {_vlCurrentTime} / {_vlDuration}");
+            _vlTextureHeight = _vlMainTexture.height;
+            _vlTextureWidth = _vlMainTexture.width;
+            CopyToRenderTexture(_vlMainTexture, false, true);
         }
 
         protected virtual void CopyToRenderTexture(Texture2D texture, bool flipHorizontal = false,
             bool flipVertical = false)
         {
-            VlTmpRenderTexture = new RenderTexture(texture.width, texture.height, 0, RenderTextureFormat.ARGB32,
+            _vlTmpRenderTexture = new RenderTexture(texture.width, texture.height, 0, RenderTextureFormat.ARGB32,
                 RenderTextureReadWrite.Linear);
-            VlTmpRenderTexture.Create();
-            VRCGraphics.Blit(texture, VlTmpRenderTexture, new Vector2(flipHorizontal ? -1 : 1, flipVertical ? -1 : 1),
+            _vlTmpRenderTexture.Create();
+            VRCGraphics.Blit(texture, _vlTmpRenderTexture, new Vector2(flipHorizontal ? -1 : 1, flipVertical ? -1 : 1),
                 new Vector2(flipHorizontal ? 1 : 0, flipVertical ? 1 : 0));
-            VRCAsyncGPUReadback.Request(VlTmpRenderTexture, 0, (IUdonEventReceiver)this);
+            VRCAsyncGPUReadback.Request(_vlTmpRenderTexture, 0, (IUdonEventReceiver)this);
         }
 
         public override void OnAsyncGpuReadbackComplete(VRCAsyncGPUReadbackRequest request)
         {
-            var data = new byte[VlTextureWidth * VlTextureHeight * 4];
+            var data = new byte[_vlTextureWidth * _vlTextureHeight * 4];
             request.TryGetData(data);
             if (data.MayBlank(100))
             {
-                VlRetryCount++;
+                _vlRetryCount++;
                 ConsoleDebug($"[VlOnVideoReady] Texture may blank. wait for {VlDelaySeconds}s");
                 SendCustomEventDelayedFrames(nameof(VlOnVideoReady), 1);
                 return;
             }
 
-            if (VlRetryCount * VlDelaySeconds < vlLoadTimeout)
-                if (data.Similar(VlPreviousTextureBuffer, 5000))
+            if (_vlRetryCount * VlDelaySeconds < vlLoadTimeout)
+                if (data.Similar(_vlPreviousTextureBuffer, 5000))
                 {
-                    VlRetryCount++;
+                    _vlRetryCount++;
                     ConsoleDebug($"[VlOnVideoReady] Texture is same as previous. wait for {VlDelaySeconds}s");
                     SendCustomEventDelayedSeconds(nameof(VlOnVideoReady), VlDelaySeconds);
                     return;
                 }
 
-            var readableText = new Texture2D(VlTextureWidth, VlTextureHeight, TextureFormat.RGBA32, false);
+            var readableText = new Texture2D(_vlTextureWidth, _vlTextureHeight, TextureFormat.RGBA32, false);
             readableText.LoadRawTextureData(data);
             readableText.Apply();
-            VlTmpRenderTexture.Release();
-            VlPreviousTextureBuffer = data;
-            var fileName = $"video://{VlSourceUrl.Substring(8)}/{VlCurrentTime:0.00}";
-            VlFilenames[VlProcessIndex] = fileName;
-            CcSetTexture(VlSourceRawUrl, fileName, readableText);
-            VlProcessIndex++;
-            VlOnLoadProgress(VlSourceRawUrl, (float)VlProcessIndex / VlPageCount);
-            if (VlProcessIndex < VlPageCount)
+            _vlTmpRenderTexture.Release();
+            _vlPreviousTextureBuffer = data;
+            var fileName = $"video://{_vlSourceUrl.Substring(8)}/{_vlCurrentTime:0.00}";
+            _vlFilenames[_vlProcessIndex] = fileName;
+            CcSetTexture(_vlSourceRawUrl, fileName, readableText);
+            _vlProcessIndex++;
+            VlOnLoadProgress(_vlSourceRawUrl, (float)_vlProcessIndex / _vlPageCount);
+            if (_vlProcessIndex < _vlPageCount)
             {
-                VlCurrentTime += VlInterval;
-                VlRetryCount = 0;
-                vlVideoPlayer.SetTime(VlCurrentTime);
+                _vlCurrentTime += _vlInterval;
+                _vlRetryCount = 0;
+                vlVideoPlayer.SetTime(_vlCurrentTime);
                 SendCustomEventDelayedSeconds(nameof(VlOnVideoReady), VlDelaySeconds);
                 return;
             }
 
-            ConsoleDebug($"[VlOnVideoReady] Video load complete: {VlSourceUrl}");
-            VlOnLoadSuccess(VlSourceRawUrl, VlFilenames);
+            ConsoleDebug($"[VlOnVideoReady] Video load complete: {_vlSourceUrl}");
+            VlOnLoadSuccess(_vlSourceRawUrl, _vlFilenames);
             SendCustomEventDelayedSeconds(nameof(VlLoadNext), VlDelaySeconds);
         }
 
