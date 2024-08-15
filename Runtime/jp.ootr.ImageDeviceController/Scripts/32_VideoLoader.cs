@@ -12,7 +12,7 @@ namespace jp.ootr.ImageDeviceController
     {
         [SerializeField] protected VRCAVProVideoPlayer vlVideoPlayer;
         [SerializeField] protected MeshRenderer vlVideoRenderer;
-        [SerializeField] protected float vlLoadTimeout = 5;
+        [SerializeField] public float vlLoadTimeout = 5;
 
         private const float VlDelaySeconds = 0.05f;
         private float _vlCurrentTime;

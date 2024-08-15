@@ -11,12 +11,14 @@ namespace jp.ootr.ImageDeviceController.Editor
         private SerializedProperty _devices;
         private SerializedProperty _zlDelayFrames;
         private SerializedProperty _zlPartLength;
+        private SerializedProperty _vlLoadTimeout;
 
         private void OnEnable()
         {
             _devices = serializedObject.FindProperty("devices");
             _zlDelayFrames = serializedObject.FindProperty("zlDelayFrames");
             _zlPartLength = serializedObject.FindProperty("zlPartLength");
+            _vlLoadTimeout = serializedObject.FindProperty("vlLoadTimeout");
         }
 
         public override void OnInspectorGUI()
@@ -50,6 +52,10 @@ namespace jp.ootr.ImageDeviceController.Editor
             EditorGUILayout.Space();
 
             EditorGUILayout.PropertyField(_zlPartLength, new GUIContent("Base64 Decode Part Size"));
+            
+            EditorGUILayout.Space();
+            
+            EditorGUILayout.PropertyField(_vlLoadTimeout, new GUIContent("Video Frame Load Timeout"));
 
             serializedObject.ApplyModifiedProperties();
         }
