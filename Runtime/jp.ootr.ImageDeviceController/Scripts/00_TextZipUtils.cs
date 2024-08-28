@@ -125,6 +125,9 @@ namespace jp.ootr.ImageDeviceController
                     case "RGBA32":
                         format = TextureFormat.RGBA32;
                         break;
+                    case "DXT1":
+                        format = TextureFormat.DXT1;
+                        break;
                     default:
                         format = TextureFormat.RGBA32;
                         break;
