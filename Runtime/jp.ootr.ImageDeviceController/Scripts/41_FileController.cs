@@ -12,7 +12,7 @@ namespace jp.ootr.ImageDeviceController
 
         private readonly string[] _fileControllerPrefixes = new[] { "FileController" };
         
-        public virtual bool LoadFilesFromUrl(IControlledDevice _self, string source, URLType type, string options = "")
+        public virtual bool LoadFilesFromUrl(CommonDevice.CommonDevice self, string source, URLType type, string options = "")
         {
             if (!UsHasUrl(source))
             {
@@ -20,7 +20,6 @@ namespace jp.ootr.ImageDeviceController
                 return false;
             }
 
-            var self = (CommonDevice.CommonDevice)_self;
             if (CcHasCache(source))
             {
                 var files = CcGetCache(source);
@@ -56,9 +55,8 @@ namespace jp.ootr.ImageDeviceController
             return true;
         }
 
-        public virtual void UnloadFilesFromUrl(IControlledDevice _self, string source)
+        public virtual void UnloadFilesFromUrl(CommonDevice.CommonDevice self, string source)
         {
-            var self = (CommonDevice.CommonDevice)_self;
             if (_loadingUrls.Has(source, out var loadingIndex))
             {
                 if (!_loadingDevices[loadingIndex].Has(self, out var deviceIndex)) return;
