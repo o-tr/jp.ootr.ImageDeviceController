@@ -7,6 +7,11 @@
             return "jp.ootr.ImageManager.CommonDevice.CommonDevice";
         }
 
+        public override string GetDisplayName()
+        {
+            return "Common Device";
+        }
+
         public override void OnPickup()
         {
         }

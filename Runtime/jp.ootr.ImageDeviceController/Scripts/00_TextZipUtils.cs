@@ -6,9 +6,17 @@ using VRC.SDK3.StringLoading;
 
 namespace jp.ootr.ImageDeviceController
 {
+    public enum ParseResult
+    {
+        Success,
+        UnknownVersion,
+        InvalidValueType,
+        InvalidTextureFormat
+    }
+    
     public static class TextZipUtils
     {
-        public static bool ValidateManifest(DataToken manifest, out DataList files, out int manifestVersion,
+        public static ParseResult ValidateManifest(DataToken manifest, out DataList files, out int manifestVersion,
             out string[] requiredFeatures, out string[] extension)
         {
             switch (manifest.TokenType)
@@ -27,10 +35,10 @@ namespace jp.ootr.ImageDeviceController
             manifestVersion = -1;
             requiredFeatures = null;
             extension = null;
-            return false;
+            return ParseResult.UnknownVersion;
         }
 
-        private static bool ValidateManifestV0(DataList manifest, out DataList files)
+        private static ParseResult ValidateManifestV0(DataList manifest, out DataList files)
         {
             files = manifest;
             var length = files.Count;
@@ -42,12 +50,12 @@ namespace jp.ootr.ImageDeviceController
                     !rect.DataDictionary.TryGetValue("width", TokenType.Double, out var width) ||
                     !rect.DataDictionary.TryGetValue("height", TokenType.Double, out var height)
                 )
-                    return false;
+                    return ParseResult.InvalidValueType;
 
-            return true;
+            return ParseResult.Success;
         }
 
-        private static bool ValidateManifestV1(DataToken manifest, out DataList files, out int manifestVersion,
+        private static ParseResult ValidateManifestV1(DataToken manifest, out DataList files, out int manifestVersion,
             out string[] requiredFeatures, out string[] extension)
         {
             if (
@@ -66,13 +74,13 @@ namespace jp.ootr.ImageDeviceController
                 manifestVersion = -1;
                 requiredFeatures = null;
                 extension = null;
-                return false;
+                return ParseResult.InvalidValueType;
             }
 
             files = filesToken.DataList;
             manifestVersion = (int)manifestVersionToken.Double;
 
-            return true;
+            return ParseResult.Success;
         }
 
         private static bool IsValidFilesV1(DataList files)
@@ -94,7 +102,7 @@ namespace jp.ootr.ImageDeviceController
             return true;
         }
 
-        public static bool TryGetFileMetadata(this DataDictionary file, out string path, out TextureFormat format,
+        public static ParseResult TryGetFileMetadata(this DataDictionary file, out string path, out TextureFormat format,
             out int width, out int height, out DataDictionary ext)
         {
             if (
@@ -109,7 +117,7 @@ namespace jp.ootr.ImageDeviceController
                 width = -1;
                 height = -1;
                 ext = null;
-                return false;
+                return ParseResult.InvalidValueType;
             }
 
             ext = file.TryGetValue("extensions", TokenType.DataDictionary, out var extToken)
@@ -117,14 +125,23 @@ namespace jp.ootr.ImageDeviceController
                 : new DataDictionary();
 
             path = pathToken.String;
-            if (file.TryGetValue("format", TokenType.String, out var formatToken))
-                format = ParseTextureFormatString(formatToken.String);
-            else
+            if (!file.TryGetValue("format", TokenType.String, out var formatToken))
+            {
                 format = TextureFormat.RGBA32;
+            }
+            else if (!ParseTextureFormatString(formatToken.String, out format))
+            {
+                path = null;
+                format = TextureFormat.RGBA32;
+                width = -1;
+                height = -1;
+                ext = null;
+                return ParseResult.InvalidTextureFormat;
+            }
 
             width = (int)widthToken.Double;
             height = (int)heightToken.Double;
-            return true;
+            return ParseResult.Success;
         }
 
         public static bool IsValidTextZip(this IVRCStringDownload result)
@@ -132,7 +149,7 @@ namespace jp.ootr.ImageDeviceController
             return result.Result.Substring(0, 6) == "UEsDBA";
         }
 
-        public static TextureFormat ParseTextureFormatString(string input)
+        public static bool ParseTextureFormatString(string input, out TextureFormat result)
         {
             var textureFormats = new string[]
             {
@@ -154,8 +171,13 @@ namespace jp.ootr.ImageDeviceController
                 "ASTC_HDR_12x12", "RG32", "RGB48", "RGBA64"
             };
             var index = Array.IndexOf(textureFormats, input);
-            if (index == -1) return TextureFormat.RGBA32;
-            return (TextureFormat)index;
+            if (index == -1)
+            {
+                result = TextureFormat.RGBA32;
+                return false;
+            }
+            result = (TextureFormat)index;
+            return true;
         }
     }
 }

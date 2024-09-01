@@ -36,12 +36,14 @@ namespace jp.ootr.ImageDeviceController
 
         private int _vlTextureWidth;
         private RenderTexture _vlTmpRenderTexture;
+        
+        private readonly string[] _videoLoaderPrefixes = new[] { "VideoLoader" };
 
         protected virtual void VlLoadVideo(string url, string options = "")
         {
             if (vlVideoPlayer == null)
             {
-                ConsoleError("VideoLoader: VRCAVProVideoPlayer component is not set.");
+                ConsoleError("VRCAVProVideoPlayer component is not set.", _videoLoaderPrefixes);
                 VlOnLoadError(url, LoadError.MissingVRCAVProVideoPlayer);
                 return;
             }
@@ -60,7 +62,7 @@ namespace jp.ootr.ImageDeviceController
         {
             if (_vlQueuedUrls.Length < 1)
             {
-                ConsoleDebug("[VLLoadVideoInternal] No video to load.");
+                ConsoleDebug("no more urls to load.", _videoLoaderPrefixes);
                 _vlIsLoading = false;
                 return;
             }
@@ -70,7 +72,7 @@ namespace jp.ootr.ImageDeviceController
 
             options.ParseSourceOptions(out var type, out var offset, out var duration);
 
-            ConsoleDebug($"[VLLoadVideoInternal] Loading video: {url}");
+            ConsoleDebug($"Loading video: {url}", _videoLoaderPrefixes);
             _vlIsLoading = true;
             _vlInterval = duration;
             _vlCurrentTime = offset;
@@ -83,7 +85,7 @@ namespace jp.ootr.ImageDeviceController
 
         public override void OnVideoReady()
         {
-            ConsoleDebug($"[VlOnVideoReady] Video is ready. {_vlSourceUrl}");
+            ConsoleDebug($"Video is ready. source: {_vlSourceUrl}", _videoLoaderPrefixes);
             base.OnVideoReady();
             _vlDuration = vlVideoPlayer.GetDuration();
             _vlPageCount = Mathf.CeilToInt((_vlDuration - _vlOffset) / _vlInterval);
@@ -125,17 +127,17 @@ namespace jp.ootr.ImageDeviceController
         {
             if (!_vlIsLoading)
             {
-                ConsoleWarn("[VlOnVideoReady] Video is not loading.");
+                ConsoleWarn($"Video is not loading. source: {_vlSourceUrl}", _videoLoaderPrefixes);
                 return;
             }
 
             if (_vlDuration < _vlCurrentTime)
             {
-                ConsoleDebug($"end of video: {_vlCurrentTime}");
+                ConsoleDebug($"end of video: {_vlCurrentTime}", _videoLoaderPrefixes);
                 return;
             }
 
-            ConsoleDebug($"[VlOnVideoReady] {_vlCurrentTime} / {_vlDuration}");
+            ConsoleDebug($"Video is ready. source: {_vlSourceUrl}", _videoLoaderPrefixes);
             _vlTextureHeight = _vlMainTexture.height;
             _vlTextureWidth = _vlMainTexture.width;
             CopyToRenderTexture(_vlMainTexture, false, true);
@@ -159,7 +161,7 @@ namespace jp.ootr.ImageDeviceController
             if (data.MayBlank(100))
             {
                 _vlRetryCount++;
-                ConsoleDebug($"[VlOnVideoReady] Texture may blank. wait for {VlDelaySeconds}s");
+                ConsoleDebug($"Texture may blank. wait for {VlDelaySeconds}s", _videoLoaderPrefixes);
                 SendCustomEventDelayedFrames(nameof(VlOnVideoReady), 1);
                 return;
             }
@@ -168,7 +170,7 @@ namespace jp.ootr.ImageDeviceController
                 if (data.Similar(_vlPreviousTextureBuffer, 5000))
                 {
                     _vlRetryCount++;
-                    ConsoleDebug($"[VlOnVideoReady] Texture is same as previous. wait for {VlDelaySeconds}s");
+                    ConsoleDebug($"Texture may same as previous. wait for {VlDelaySeconds}s", _videoLoaderPrefixes);
                     SendCustomEventDelayedSeconds(nameof(VlOnVideoReady), VlDelaySeconds);
                     return;
                 }
@@ -192,24 +194,24 @@ namespace jp.ootr.ImageDeviceController
                 return;
             }
 
-            ConsoleDebug($"[VlOnVideoReady] Video load complete: {_vlSourceUrl}");
+            ConsoleDebug($"Video load complete: {_vlSourceUrl}", _videoLoaderPrefixes);
             VlOnLoadSuccess(_vlSourceRawUrl, _vlFilenames);
             SendCustomEventDelayedSeconds(nameof(VlLoadNext), VlDelaySeconds);
         }
 
         protected virtual void VlOnLoadProgress(string source, float progress)
         {
-            ConsoleError("VideoLoader: VideoOnLoadProgress should not be called from base class");
+            ConsoleError("VideoOnLoadProgress should not be called from base class", _videoLoaderPrefixes);
         }
 
         protected virtual void VlOnLoadSuccess(string source, string[] fileNames)
         {
-            ConsoleError("VideoLoader: VideoOnLoadSuccess should not be called from base class");
+            ConsoleError("VideoOnLoadSuccess should not be called from base class", _videoLoaderPrefixes);
         }
 
         protected virtual void VlOnLoadError(string source, LoadError error)
         {
-            ConsoleError("VideoLoader: VideoOnLoadError should not be called from base class");
+            ConsoleError("VideoOnLoadError should not be called from base class", _videoLoaderPrefixes);
         }
 
 

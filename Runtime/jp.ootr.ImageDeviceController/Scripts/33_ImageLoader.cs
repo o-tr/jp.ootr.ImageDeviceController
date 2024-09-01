@@ -16,6 +16,8 @@ namespace jp.ootr.ImageDeviceController
         private string _ilSourceUrl;
         private VRCImageDownloader _imageDownloader;
         private TextureInfo _textureInfo;
+        
+        private readonly string[] _imageLoaderPrefixes = new[] { "ImageLoader" };
 
         private void IlInit()
         {
@@ -37,14 +39,14 @@ namespace jp.ootr.ImageDeviceController
 
             if (_ilQueuedUrlStrings.Has(url))
             {
-                ConsoleWarn($"[ILLoadImage] already in queue: {url}");
+                ConsoleWarn($"already in queue: {url}", _imageLoaderPrefixes);
                 return;
             }
 
             _ilQueuedUrlStrings = _ilQueuedUrlStrings.Append(url);
             if (_ilIsLoading)
             {
-                ConsoleDebug($"[ILLoadImage] added to queue: {url}");
+                ConsoleDebug($"added to queue: {url}", _imageLoaderPrefixes);
                 return;
             }
 
@@ -65,7 +67,7 @@ namespace jp.ootr.ImageDeviceController
             }
 
             _ilSourceUrl = _ilQueuedUrlStrings[0];
-            ConsoleDebug($"[ILLoadNext] Loading next image: {_ilSourceUrl}");
+            ConsoleDebug($"Loading next image: {_ilSourceUrl}", _imageLoaderPrefixes);
             _imageDownloader.DownloadImage(UsGetUrl(_ilSourceUrl), null, (IUdonEventReceiver)this, _textureInfo);
         }
 
@@ -81,7 +83,7 @@ namespace jp.ootr.ImageDeviceController
         public override void OnImageLoadError(IVRCImageDownload result)
         {
             ConsoleError(
-                $"[ImageLoader] Error loading image: url: {_ilSourceUrl}, error code: {result.Error}, message: {result.ErrorMessage}");
+                $"Error loading image: url: {_ilSourceUrl}, error code: {result.Error}, message: {result.ErrorMessage}", _imageLoaderPrefixes);
             IlOnLoadError(_ilSourceUrl, ParseImageDownloadError((LoadError)result.Error, result.ErrorMessage));
             _ilQueuedUrlStrings = _ilQueuedUrlStrings.Remove(0);
             SendCustomEventDelayedFrames(nameof(IlLoadNext), IlDelayFrames);
@@ -89,12 +91,12 @@ namespace jp.ootr.ImageDeviceController
 
         protected virtual void IlOnLoadSuccess(string source, string[] fileNames)
         {
-            ConsoleError("ZipLoader: ZipOnLoadSuccess should not be called from base class");
+            ConsoleError("IlOnLoadSuccess should not be called from base class", _imageLoaderPrefixes);
         }
 
         protected virtual void IlOnLoadError(string source, LoadError error)
         {
-            ConsoleError("ZipLoader: ZipOnLoadError should not be called from base class");
+            ConsoleError("IlOnLoadError should not be called from base class", _imageLoaderPrefixes);
         }
     }
 }
