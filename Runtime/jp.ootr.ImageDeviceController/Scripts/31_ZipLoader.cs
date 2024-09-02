@@ -17,6 +17,8 @@ namespace jp.ootr.ImageDeviceController
         public int zlPartLength = 102400;
 
         [SerializeField] [Range(1, 100)] public int zlDelayFrames = 1;
+
+        private readonly string[] _zipLoaderPrefixes = { "ZipLoader" };
         private int _zlDecodedBytes;
         private byte[] _zlDecodedData;
         private string[] _zlFilenames;
@@ -27,8 +29,6 @@ namespace jp.ootr.ImageDeviceController
         private string[] _zlQueuedUrlStrings = new string[0];
         private string[] _zlSource;
         private string _zlSourceUrl;
-        
-        private readonly string[] _zipLoaderPrefixes = new[] { "ZipLoader" };
 
         protected virtual void ZlLoadZip(string url)
         {
@@ -96,7 +96,8 @@ namespace jp.ootr.ImageDeviceController
          */
         public override void OnStringLoadError(IVRCStringDownload result)
         {
-            ConsoleError($"failed to download string from ${result.Url}: {result.ErrorCode} - {result.Error}", _zipLoaderPrefixes);
+            ConsoleError($"failed to download string from ${result.Url}: {result.ErrorCode} - {result.Error}",
+                _zipLoaderPrefixes);
             ZlOnLoadError(_zlSourceUrl, ParseStringDownloadError(result.Result, result.ErrorCode));
             SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
         }
@@ -145,8 +146,8 @@ namespace jp.ootr.ImageDeviceController
             var file = zlUdonZip.GetFile(_zlObject, "metadata.json");
             var metadata = zlUdonZip.GetFileData(file);
             VRCJson.TryDeserializeFromJson(Encoding.UTF8.GetString(metadata), out var metadataToken);
-            if (TextZipUtils.ValidateManifest(manifest:metadataToken, files:out _zlMetadata, manifestVersion:out var manifestVersion,
-                    requiredFeatures:out var requiredFeatures, extension:out var extension) != ParseResult.Success)
+            if (TextZipUtils.ValidateManifest(metadataToken, out _zlMetadata, out var manifestVersion,
+                    out var requiredFeatures, out var extension) != ParseResult.Success)
             {
                 ZlOnLoadError(_zlSourceUrl, LoadError.InvalidManifest);
                 ConsoleError($"invalid manifest. {_zlSourceUrl}", _zipLoaderPrefixes);

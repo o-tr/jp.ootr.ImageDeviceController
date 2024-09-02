@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿#if UNITY_EDITOR
+using System.Linq;
 using jp.ootr.common;
 using UnityEditor;
 using UnityEngine;
@@ -92,15 +93,11 @@ namespace jp.ootr.ImageDeviceController.Editor
             if (state == PlayModeStateChange.EnteredEditMode)
             {
                 var scripts = ComponentUtils.GetAllComponents<ImageDeviceController>();
-                foreach (var script in scripts)
-                {
-                    ImageDeviceControllerUtils.ValidateDeviceList(script);
-                }
+                foreach (var script in scripts) ImageDeviceControllerUtils.ValidateDeviceList(script);
             }
         }
-        
     }
-    
+
     public class SetObjectReference__ImageDeviceController : UnityEditor.Editor, IVRCSDKBuildRequestedCallback
     {
         public int callbackOrder => 9;
@@ -108,14 +105,11 @@ namespace jp.ootr.ImageDeviceController.Editor
         public bool OnBuildRequested(VRCSDKRequestedBuildType requestedBuildType)
         {
             var scripts = ComponentUtils.GetAllComponents<ImageDeviceController>();
-            foreach (var script in scripts)
-            {
-                ImageDeviceControllerUtils.ValidateDeviceList(script);
-            }
+            foreach (var script in scripts) ImageDeviceControllerUtils.ValidateDeviceList(script);
             return true;
         }
     }
-    
+
     public static class ImageDeviceControllerUtils
     {
         public static void ValidateDeviceList(ImageDeviceController script)
@@ -138,3 +132,4 @@ namespace jp.ootr.ImageDeviceController.Editor
         }
     }
 }
+#endif

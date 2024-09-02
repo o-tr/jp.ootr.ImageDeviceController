@@ -8,6 +8,8 @@ namespace jp.ootr.ImageDeviceController
     public class ImageLoader : VideoLoader
     {
         private const int IlDelayFrames = 10;
+
+        private readonly string[] _imageLoaderPrefixes = { "ImageLoader" };
         private bool _ilInited;
 
         private bool _ilIsLoading;
@@ -16,8 +18,6 @@ namespace jp.ootr.ImageDeviceController
         private string _ilSourceUrl;
         private VRCImageDownloader _imageDownloader;
         private TextureInfo _textureInfo;
-        
-        private readonly string[] _imageLoaderPrefixes = new[] { "ImageLoader" };
 
         private void IlInit()
         {
@@ -83,7 +83,8 @@ namespace jp.ootr.ImageDeviceController
         public override void OnImageLoadError(IVRCImageDownload result)
         {
             ConsoleError(
-                $"Error loading image: url: {_ilSourceUrl}, error code: {result.Error}, message: {result.ErrorMessage}", _imageLoaderPrefixes);
+                $"Error loading image: url: {_ilSourceUrl}, error code: {result.Error}, message: {result.ErrorMessage}",
+                _imageLoaderPrefixes);
             IlOnLoadError(_ilSourceUrl, ParseImageDownloadError((LoadError)result.Error, result.ErrorMessage));
             _ilQueuedUrlStrings = _ilQueuedUrlStrings.Remove(0);
             SendCustomEventDelayedFrames(nameof(IlLoadNext), IlDelayFrames);

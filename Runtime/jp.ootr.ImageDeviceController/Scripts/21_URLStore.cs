@@ -10,10 +10,10 @@ namespace jp.ootr.ImageDeviceController
     {
         [SerializeField] public VRCUrl[] usUrls = new VRCUrl[0];
         [SerializeField] public string[] usUrlStrings = new string[0];
+
+        private readonly string[] _urlStorePrefixes = { "URLStore" };
         [UdonSynced] private URLStoreSyncAction _usSyncAction = URLStoreSyncAction.None;
         [UdonSynced] private VRCUrl[] _usSyncUrl = new VRCUrl[0];
-        
-        private readonly string[] _urlStorePrefixes = new[] { "URLStore" };
 
         public VRCUrl UsGetUrl(string url)
         {

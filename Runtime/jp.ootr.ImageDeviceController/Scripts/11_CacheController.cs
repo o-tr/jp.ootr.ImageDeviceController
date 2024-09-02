@@ -6,6 +6,8 @@ namespace jp.ootr.ImageDeviceController
 {
     public class CacheController : CommonClass
     {
+        private readonly string[] _cacheControllerPrefixes = { "CacheController" };
+
         /**
          * type CacheFiles = {
          * [source: string]: {
@@ -24,8 +26,6 @@ namespace jp.ootr.ImageDeviceController
         private byte[][] _cacheBinary = new byte[0][]; //DataDictionaryにbyte[]が入らないので別で取り扱う
         private string[] _cacheBinaryNames = new string[0];
 
-        private readonly string[] _cacheControllerPrefixes = new[] { "CacheController" };
-        
         public virtual Texture2D CcGetTexture(string source, string fileName)
         {
             if (!CcHasTexture(source, fileName)) return null;

@@ -4,15 +4,15 @@ namespace jp.ootr.ImageDeviceController
 {
     public class FileController : ImageLoader
     {
+        private readonly string[] _fileControllerPrefixes = { "FileController" };
         private string[][] _cachedData = new string[0][];
 
         private string[] _loadedUrls = new string[0];
         private CommonDevice.CommonDevice[][] _loadingDevices = new CommonDevice.CommonDevice[0][];
         private string[] _loadingUrls = new string[0];
 
-        private readonly string[] _fileControllerPrefixes = new[] { "FileController" };
-        
-        public virtual bool LoadFilesFromUrl(CommonDevice.CommonDevice self, string source, URLType type, string options = "")
+        public virtual bool LoadFilesFromUrl(CommonDevice.CommonDevice self, string source, URLType type,
+            string options = "")
         {
             if (!UsHasUrl(source))
             {
@@ -93,7 +93,8 @@ namespace jp.ootr.ImageDeviceController
         {
             if (!_loadingUrls.Has(source, out var loadingIndex)) return;
             ConsoleDebug(
-                $"TextZip loaded successfully. {fileNames.Length} files. device count: {_loadingDevices[loadingIndex].Length}, {source}", _fileControllerPrefixes);
+                $"TextZip loaded successfully. {fileNames.Length} files. device count: {_loadingDevices[loadingIndex].Length}, {source}",
+                _fileControllerPrefixes);
             foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadSuccess(source, fileNames);
             _loadingUrls = _loadingUrls.Remove(loadingIndex);
             _loadingDevices = _loadingDevices.Remove(loadingIndex);

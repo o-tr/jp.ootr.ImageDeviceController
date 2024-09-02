@@ -45,27 +45,27 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
 
         protected override void ConsoleDebug(string message, string[] prefix = null)
         {
-            base.ConsoleDebug(message, LogBuilder.CombinePrefix(new[]{deviceName}, prefix));
+            base.ConsoleDebug(message, LogBuilder.CombinePrefix(new[] { deviceName }, prefix));
         }
 
         protected override void ConsoleError(string message, string[] prefix = null)
         {
-            base.ConsoleError(message, LogBuilder.CombinePrefix(new[]{deviceName}, prefix));
+            base.ConsoleError(message, LogBuilder.CombinePrefix(new[] { deviceName }, prefix));
         }
 
         protected override void ConsoleWarn(string message, string[] prefix = null)
         {
-            base.ConsoleWarn(message, LogBuilder.CombinePrefix(new[]{deviceName}, prefix));
+            base.ConsoleWarn(message, LogBuilder.CombinePrefix(new[] { deviceName }, prefix));
         }
 
         protected override void ConsoleLog(string message, string[] prefix = null)
         {
-            base.ConsoleLog(message, LogBuilder.CombinePrefix(new[]{deviceName}, prefix));
+            base.ConsoleLog(message, LogBuilder.CombinePrefix(new[] { deviceName }, prefix));
         }
 
         protected override void ConsoleInfo(string message, string[] prefix = null)
         {
-            base.ConsoleInfo(message, LogBuilder.CombinePrefix(new[]{deviceName}, prefix));
+            base.ConsoleInfo(message, LogBuilder.CombinePrefix(new[] { deviceName }, prefix));
         }
     }
 }

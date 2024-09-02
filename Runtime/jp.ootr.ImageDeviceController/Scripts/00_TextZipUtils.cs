@@ -13,7 +13,7 @@ namespace jp.ootr.ImageDeviceController
         InvalidValueType,
         InvalidTextureFormat
     }
-    
+
     public static class TextZipUtils
     {
         public static ParseResult ValidateManifest(DataToken manifest, out DataList files, out int manifestVersion,
@@ -102,7 +102,8 @@ namespace jp.ootr.ImageDeviceController
             return true;
         }
 
-        public static ParseResult TryGetFileMetadata(this DataDictionary file, out string path, out TextureFormat format,
+        public static ParseResult TryGetFileMetadata(this DataDictionary file, out string path,
+            out TextureFormat format,
             out int width, out int height, out DataDictionary ext)
         {
             if (
@@ -151,23 +152,23 @@ namespace jp.ootr.ImageDeviceController
 
         public static bool ParseTextureFormatString(string input, out TextureFormat result)
         {
-            var textureFormats = new string[]
+            var textureFormats = new[]
             {
                 "-",
                 "Alpha8", "ARGB4444", "RGB24", "RGBA32", "ARGB32",
-                "-", "RGB565", "-", "R16", "DXT1",//10
+                "-", "RGB565", "-", "R16", "DXT1", //10
                 "-", "DXT5", "RGBA4444", "BGRA32", "RHalf",
-                "RGHalf", "RGBAHalf", "RFloat", "RGFloat", "RGBAFloat",//20
+                "RGHalf", "RGBAHalf", "RFloat", "RGFloat", "RGBAFloat", //20
                 "YUY2", "RGB9e5Float", "-", "BC6H", "BC7",
-                "BC4", "BC5", "DXT1Crunched", "DXT5Crunched", "PVRTC_RGB2",//30
+                "BC4", "BC5", "DXT1Crunched", "DXT5Crunched", "PVRTC_RGB2", //30
                 "PVRTC_RGBA2", "PVRTC_RGB4", "PVRTC_RGBA4", "ETC_RGB4", "-",
                 "-", "-", "-", "-", "-", //40
                 "EAC_R", "EAC_R_SIGNED", "EAC_RG", "EAC_RG_SIGNED", "ETC2_RGB",
-                "ETC2_RGBA1", "ETC2_RGBA8", "ASTC_4x4", "ASTC_5x5", "ASTC_6x6",//50
+                "ETC2_RGBA1", "ETC2_RGBA8", "ASTC_4x4", "ASTC_5x5", "ASTC_6x6", //50
                 "ASTC_8x8", "ASTC_10x10", "ASTC_12x12", "-", "-",
                 "-", "-", "-", "-", "-", //60
                 "-", "RG16", "R8", "ETC_RGB4Crunched", "ETC2_RGBA8Crunched",
-                "ASTC_HDR_4x4", "ASTC_HDR_5x5", "ASTC_HDR_6x6", "ASTC_HDR_8x8", "ASTC_HDR_10x10",//70
+                "ASTC_HDR_4x4", "ASTC_HDR_5x5", "ASTC_HDR_6x6", "ASTC_HDR_8x8", "ASTC_HDR_10x10", //70
                 "ASTC_HDR_12x12", "RG32", "RGB48", "RGBA64"
             };
             var index = Array.IndexOf(textureFormats, input);
@@ -176,6 +177,7 @@ namespace jp.ootr.ImageDeviceController
                 result = TextureFormat.RGBA32;
                 return false;
             }
+
             result = (TextureFormat)index;
             return true;
         }

@@ -14,6 +14,8 @@ namespace jp.ootr.ImageDeviceController
         [SerializeField] protected VRCAVProVideoPlayer vlVideoPlayer;
         [SerializeField] protected MeshRenderer vlVideoRenderer;
         [SerializeField] [Range(1, 60)] public float vlLoadTimeout = 5;
+
+        private readonly string[] _videoLoaderPrefixes = { "VideoLoader" };
         private float _vlCurrentTime;
         private float _vlDuration;
 
@@ -36,8 +38,6 @@ namespace jp.ootr.ImageDeviceController
 
         private int _vlTextureWidth;
         private RenderTexture _vlTmpRenderTexture;
-        
-        private readonly string[] _videoLoaderPrefixes = new[] { "VideoLoader" };
 
         protected virtual void VlLoadVideo(string url, string options = "")
         {
