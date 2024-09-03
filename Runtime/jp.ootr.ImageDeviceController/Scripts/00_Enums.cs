@@ -38,6 +38,7 @@ namespace jp.ootr.ImageDeviceController
 
         //VideoLoader
         MissingVRCAVProVideoPlayer,
+        LiveVideoNotSupported,
         PlayerError,
         RateLimited,
 
@@ -132,6 +133,8 @@ namespace jp.ootr.ImageDeviceController
                     return "ootr:InvalidZipFile";
                 case LoadError.MissingVRCAVProVideoPlayer:
                     return "ootr:MissingVRCAVProVideoPlayer";
+                case LoadError.LiveVideoNotSupported:
+                    return "ootr:LiveVideoNotSupported";
 
                 case LoadError.PlayerError:
                     return "VRC:PlayerError";

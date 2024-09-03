@@ -88,6 +88,14 @@ namespace jp.ootr.ImageDeviceController
             ConsoleDebug($"Video is ready. source: {_vlSourceUrl}", _videoLoaderPrefixes);
             base.OnVideoReady();
             _vlDuration = vlVideoPlayer.GetDuration();
+            if (float.IsInfinity(_vlDuration))
+            {
+                ConsoleWarn($"Video duration is infinity. source: {_vlSourceUrl}", _videoLoaderPrefixes);
+                
+                VlOnLoadError(_vlSourceUrl, LoadError.LiveVideoNotSupported);
+                SendCustomEventDelayedSeconds(nameof(VlLoadNext), VlDelaySeconds);
+                return;
+            }
             _vlPageCount = Mathf.CeilToInt((_vlDuration - _vlOffset) / _vlInterval);
             _vlFilenames = new string[_vlPageCount];
             _vlProcessIndex = 0;
