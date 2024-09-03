@@ -74,6 +74,10 @@ namespace jp.ootr.ImageDeviceController
             var file = source.GetFile(fileName);
             if (source.DecreaseUsedCount() < 1)
             {
+                foreach (var tmpFileName in source.GetFileNames())
+                {
+                    source.GetFile(tmpFileName).DestroyTexture();
+                }
                 var keys = ((Cache)_cacheFiles).RemoveSource(sourceName);
                 foreach (var key in keys)
                 {
@@ -87,8 +91,16 @@ namespace jp.ootr.ImageDeviceController
 
             if (file.DecreaseUsedCount() < 1)
             {
-                ConsoleInfo($"release texture: {sourceName}/{fileName}", _cacheControllerPrefixes);
-                file.DestroyTexture();
+                var key = file.GetCacheKey();
+                if (key.IsNullOrEmpty() && _cacheBinaryNames.Has(key, out var index))
+                {
+                    ConsoleInfo($"release texture: {sourceName}/{fileName}", _cacheControllerPrefixes);
+                    file.DestroyTexture();
+                }
+                else
+                {
+                    ConsoleInfo($"cannot release texture: {sourceName}/{fileName}", _cacheControllerPrefixes);
+                }
             }
         }
 
