@@ -10,6 +10,8 @@ namespace jp.ootr.ImageDeviceController
     {
         [SerializeField] public VRCUrl[] usUrls = new VRCUrl[0];
         [SerializeField] public string[] usUrlStrings = new string[0];
+
+        private readonly string[] _urlStorePrefixes = { "URLStore" };
         [UdonSynced] private URLStoreSyncAction _usSyncAction = URLStoreSyncAction.None;
         [UdonSynced] private VRCUrl[] _usSyncUrl = new VRCUrl[0];
 
@@ -49,12 +51,12 @@ namespace jp.ootr.ImageDeviceController
             {
                 case URLStoreSyncAction.AddUrl:
                     if (usUrlStrings.Has(_usSyncUrl[0].ToString())) return;
-                    ConsoleDebug($"URLStore: url added to store: {_usSyncUrl[0]}");
+                    ConsoleDebug($"url added to store: {_usSyncUrl[0]}", _urlStorePrefixes);
                     usUrls = usUrls.Append(_usSyncUrl[0]);
                     usUrlStrings = usUrlStrings.Append(_usSyncUrl[0].ToString());
                     break;
                 case URLStoreSyncAction.SyncAll:
-                    ConsoleDebug($"URLStore: urls synced: {_usSyncUrl.Length}");
+                    ConsoleDebug($"urls synced: {_usSyncUrl.Length}", _urlStorePrefixes);
                     usUrls = _usSyncUrl;
                     usUrlStrings = _usSyncUrl.ToStrings();
                     break;

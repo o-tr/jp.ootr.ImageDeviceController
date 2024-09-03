@@ -6,6 +6,8 @@ namespace jp.ootr.ImageDeviceController
 {
     public class CacheController : CommonClass
     {
+        private readonly string[] _cacheControllerPrefixes = { "CacheController" };
+
         /**
          * type CacheFiles = {
          * [source: string]: {
@@ -40,7 +42,7 @@ namespace jp.ootr.ImageDeviceController
         {
             var key = file.GetCacheKey();
             if (!_cacheBinaryNames.Has(key, out var index)) return null;
-            ConsoleDebug($"CacheController: regenerate texture: {key}");
+            ConsoleDebug($"regenerate texture: {key}", _cacheControllerPrefixes);
             var bytes = _cacheBinary[index];
             var texture = new Texture2D(file["width"].Int, file["height"].Int);
             texture.LoadRawTextureData(bytes);
@@ -85,7 +87,7 @@ namespace jp.ootr.ImageDeviceController
 
             if (file.DecreaseUsedCount() < 1)
             {
-                ConsoleDebug($"CacheController: release texture: {sourceName}/{fileName}");
+                ConsoleInfo($"release texture: {sourceName}/{fileName}", _cacheControllerPrefixes);
                 file.DestroyTexture();
             }
         }
@@ -109,7 +111,7 @@ namespace jp.ootr.ImageDeviceController
             var files = ((Cache)_cacheFiles).GetSource(source);
             if (files.HasFile(fileName))
             {
-                ConsoleError($"CacheController: file already exists: {source}/{fileName}");
+                ConsoleError($"file already exists: {source}/{fileName}", _cacheControllerPrefixes);
                 return;
             }
 

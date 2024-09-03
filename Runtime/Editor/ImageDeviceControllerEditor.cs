@@ -1,6 +1,9 @@
-﻿using jp.ootr.common;
+﻿#if UNITY_EDITOR
+using System.Linq;
+using jp.ootr.common;
 using UnityEditor;
 using UnityEngine;
+using VRC.SDKBase.Editor.BuildPipeline;
 
 namespace jp.ootr.ImageDeviceController.Editor
 {
@@ -40,9 +43,6 @@ namespace jp.ootr.ImageDeviceController.Editor
 
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(_devices, new GUIContent("Device List"), true);
-            for (var i = _devices.arraySize - 1; i >= 0; i--)
-                if (_devices.GetArrayElementAtIndex(i).objectReferenceValue == null)
-                    _devices.DeleteArrayElementAtIndex(i);
             if (EditorGUI.EndChangeCheck()) UpdateDevices(script);
 
             EditorGUILayout.Space();
@@ -64,6 +64,7 @@ namespace jp.ootr.ImageDeviceController.Editor
         {
             foreach (var device in script.devices)
             {
+                if (device == null) continue;
                 var so = new SerializedObject(device);
                 so.FindProperty("controller").objectReferenceValue = script;
                 var property = so.FindProperty("devices");
@@ -78,4 +79,57 @@ namespace jp.ootr.ImageDeviceController.Editor
             EditorUtility.SetDirty(script);
         }
     }
+
+    [InitializeOnLoad]
+    public class PlayModeNotifier__ImageDeviceController
+    {
+        static PlayModeNotifier__ImageDeviceController()
+        {
+            EditorApplication.playModeStateChanged += PlayModeStateChanged;
+        }
+
+        private static void PlayModeStateChanged(PlayModeStateChange state)
+        {
+            if (state == PlayModeStateChange.EnteredEditMode)
+            {
+                var scripts = ComponentUtils.GetAllComponents<ImageDeviceController>();
+                foreach (var script in scripts) ImageDeviceControllerUtils.ValidateDeviceList(script);
+            }
+        }
+    }
+
+    public class SetObjectReference__ImageDeviceController : UnityEditor.Editor, IVRCSDKBuildRequestedCallback
+    {
+        public int callbackOrder => 9;
+
+        public bool OnBuildRequested(VRCSDKRequestedBuildType requestedBuildType)
+        {
+            var scripts = ComponentUtils.GetAllComponents<ImageDeviceController>();
+            foreach (var script in scripts) ImageDeviceControllerUtils.ValidateDeviceList(script);
+            return true;
+        }
+    }
+
+    public static class ImageDeviceControllerUtils
+    {
+        public static void ValidateDeviceList(ImageDeviceController script)
+        {
+            if (script.devices == null || script.devices.Length == 0)
+            {
+                script.devices = new CommonDevice.CommonDevice[0];
+                return;
+            }
+
+            //filter script devices
+            var devices = script.devices.Where(d => d != null).ToArray();
+            var so = new SerializedObject(script);
+            var property = so.FindProperty("devices");
+            property.arraySize = devices.Length;
+            for (var i = 0; i < devices.Length; i++)
+                property.GetArrayElementAtIndex(i).objectReferenceValue = devices[i];
+            so.ApplyModifiedProperties();
+            EditorUtility.SetDirty(script);
+        }
+    }
 }
+#endif

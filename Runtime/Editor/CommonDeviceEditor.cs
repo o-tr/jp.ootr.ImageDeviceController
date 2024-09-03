@@ -1,6 +1,6 @@
-﻿using System;
+﻿#if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
-using Cinemachine.Editor;
 using jp.ootr.common;
 using UnityEditor;
 using UnityEngine;
@@ -236,3 +236,4 @@ namespace jp.ootr.ImageDeviceController.Editor
         }
     }
 }
+#endif

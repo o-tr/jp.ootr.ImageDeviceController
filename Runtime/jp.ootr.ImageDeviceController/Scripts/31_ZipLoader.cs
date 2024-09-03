@@ -17,6 +17,8 @@ namespace jp.ootr.ImageDeviceController
         public int zlPartLength = 102400;
 
         [SerializeField] [Range(1, 100)] public int zlDelayFrames = 1;
+
+        private readonly string[] _zipLoaderPrefixes = { "ZipLoader" };
         private int _zlDecodedBytes;
         private byte[] _zlDecodedData;
         private string[] _zlFilenames;
@@ -32,14 +34,14 @@ namespace jp.ootr.ImageDeviceController
         {
             if (zlUdonZip == null)
             {
-                ConsoleError("ZipLoader: UdonZip component is not set.");
+                ConsoleError("UdonZip component is not set.", _zipLoaderPrefixes);
                 ZlOnLoadError(url, LoadError.MissingUdonZip);
                 return;
             }
 
             if (_zlIsLoading)
             {
-                ConsoleDebug($"ZipLoader: {url} queued.");
+                ConsoleDebug($"{url} queued.", _zipLoaderPrefixes);
                 _zlQueuedUrlStrings = _zlQueuedUrlStrings.Append(url);
                 return;
             }
@@ -58,7 +60,7 @@ namespace jp.ootr.ImageDeviceController
             if (_zlQueuedUrlStrings.Length < 1)
             {
                 _zlIsLoading = false;
-                ConsoleDebug("ZipLoader: no more urls to load.");
+                ConsoleDebug("no more urls to load.", _zipLoaderPrefixes);
                 return;
             }
 
@@ -72,11 +74,11 @@ namespace jp.ootr.ImageDeviceController
          */
         public override void OnStringLoadSuccess(IVRCStringDownload result)
         {
-            ConsoleDebug($"ZipLoader: text-zip loaded successfully from {result.Url}.");
+            ConsoleLog($"download success from {result.Url}", _zipLoaderPrefixes);
             if (!result.IsValidTextZip())
             {
                 ZlOnLoadError(result.Url.ToString(), LoadError.InvalidZipFile);
-                ConsoleError("ZipLoader: invalid text-zip file.");
+                ConsoleError("invalid text-zip file.", _zipLoaderPrefixes);
                 SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
                 return;
             }
@@ -94,7 +96,8 @@ namespace jp.ootr.ImageDeviceController
          */
         public override void OnStringLoadError(IVRCStringDownload result)
         {
-            ConsoleError($"ZipLoader: text-zip load error: {result.ErrorCode} - {result.Error}");
+            ConsoleError($"failed to download string from ${result.Url}: {result.ErrorCode} - {result.Error}",
+                _zipLoaderPrefixes);
             ZlOnLoadError(_zlSourceUrl, ParseStringDownloadError(result.Result, result.ErrorCode));
             SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
         }
@@ -127,7 +130,7 @@ namespace jp.ootr.ImageDeviceController
             else
             {
                 _zlDecodedData = _zlDecodedData.Resize(_zlDecodedBytes);
-                ConsoleDebug($"ZipLoader: {_zlDecodedBytes} bytes decoded.");
+                ConsoleDebug($"{_zlDecodedBytes} bytes decoded.", _zipLoaderPrefixes);
                 SendCustomEventDelayedFrames(nameof(ZlExtractData), zlDelayFrames);
             }
         }
@@ -138,16 +141,16 @@ namespace jp.ootr.ImageDeviceController
          */
         public virtual void ZlExtractData()
         {
-            ConsoleDebug("ZipLoader: extracting data.");
+            ConsoleDebug("extracting data.", _zipLoaderPrefixes);
             _zlObject = zlUdonZip.Extract(_zlDecodedData);
             var file = zlUdonZip.GetFile(_zlObject, "metadata.json");
             var metadata = zlUdonZip.GetFileData(file);
             VRCJson.TryDeserializeFromJson(Encoding.UTF8.GetString(metadata), out var metadataToken);
-            if (!TextZipUtils.ValidateManifest(metadataToken, out _zlMetadata, out var manifestVersion,
-                    out var requiredFeatures, out var extension))
+            if (TextZipUtils.ValidateManifest(metadataToken, out _zlMetadata, out var manifestVersion,
+                    out var requiredFeatures, out var extension) != ParseResult.Success)
             {
                 ZlOnLoadError(_zlSourceUrl, LoadError.InvalidManifest);
-                ConsoleError($"ZipLoader: invalid manifest. {_zlSourceUrl}");
+                ConsoleError($"invalid manifest. {_zlSourceUrl}", _zipLoaderPrefixes);
                 SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
                 return;
             }
@@ -155,7 +158,7 @@ namespace jp.ootr.ImageDeviceController
             if (manifestVersion > SupportedManifestVersion)
             {
                 ZlOnLoadError(_zlSourceUrl, LoadError.UnsupportedManifestVersion);
-                ConsoleError($"ZipLoader: unsupported manifest version. {_zlSourceUrl}");
+                ConsoleError($"unsupported manifest version. {_zlSourceUrl}", _zipLoaderPrefixes);
                 SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
                 return;
             }
@@ -164,7 +167,7 @@ namespace jp.ootr.ImageDeviceController
             {
                 if (SupportedFeatures.Has(feature)) continue;
                 ZlOnLoadError(_zlSourceUrl, LoadError.UnsupportedFeature);
-                ConsoleError($"ZipLoader: unsupported feature: {feature}. {_zlSourceUrl}");
+                ConsoleError($"unsupported feature: {feature}. {_zlSourceUrl}", _zipLoaderPrefixes);
                 SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
                 return;
             }
@@ -182,12 +185,12 @@ namespace jp.ootr.ImageDeviceController
         {
             if (
                 !_zlMetadata.TryGetValue(_zlProcessIndex, TokenType.DataDictionary, out var metadataItem) ||
-                !metadataItem.DataDictionary.TryGetFileMetadata(out var path, out var format, out var width,
-                    out var height, out var ext)
+                metadataItem.DataDictionary.TryGetFileMetadata(out var path, out var format, out var width,
+                    out var height, out var ext) != ParseResult.Success
             )
             {
                 ZlOnLoadError(_zlSourceUrl, LoadError.InvalidMetadata);
-                ConsoleError($"ZipLoader: invalid metadata. {_zlSourceUrl} - {_zlProcessIndex}");
+                ConsoleError($"invalid metadata. {_zlSourceUrl} - {_zlProcessIndex}", _zipLoaderPrefixes);
                 SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
                 return;
             }
@@ -214,17 +217,17 @@ namespace jp.ootr.ImageDeviceController
 
         protected virtual void ZlOnLoadProgress(string source, float progress)
         {
-            ConsoleError("ZipLoader: ZipOnLoadProgress should not be called from base class");
+            ConsoleError("ZipOnLoadProgress should not be called from base class", _zipLoaderPrefixes);
         }
 
         protected virtual void ZlOnLoadSuccess(string source, string[] fileNames)
         {
-            ConsoleError("ZipLoader: ZipOnLoadSuccess should not be called from base class");
+            ConsoleError("ZipOnLoadSuccess should not be called from base class", _zipLoaderPrefixes);
         }
 
         protected virtual void ZlOnLoadError(string source, LoadError error)
         {
-            ConsoleError("ZipLoader: ZipOnLoadError should not be called from base class");
+            ConsoleError("ZipOnLoadError should not be called from base class", _zipLoaderPrefixes);
         }
     }
 }

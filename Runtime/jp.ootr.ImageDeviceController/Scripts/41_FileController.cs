@@ -4,38 +4,39 @@ namespace jp.ootr.ImageDeviceController
 {
     public class FileController : ImageLoader
     {
+        private readonly string[] _fileControllerPrefixes = { "FileController" };
         private string[][] _cachedData = new string[0][];
 
         private string[] _loadedUrls = new string[0];
         private CommonDevice.CommonDevice[][] _loadingDevices = new CommonDevice.CommonDevice[0][];
         private string[] _loadingUrls = new string[0];
 
-        public virtual bool LoadFilesFromUrl(IControlledDevice _self, string source, URLType type, string options = "")
+        public virtual bool LoadFilesFromUrl(CommonDevice.CommonDevice self, string source, URLType type,
+            string options = "")
         {
             if (!UsHasUrl(source))
             {
-                ConsoleError($"FileController: url not found in store: {source}");
+                ConsoleError($"url not found in store: {source}", _fileControllerPrefixes);
                 return false;
             }
 
-            var self = (CommonDevice.CommonDevice)_self;
             if (CcHasCache(source))
             {
                 var files = CcGetCache(source);
                 var fileNames = files.GetFileNames();
-                ConsoleDebug($"FileController: already loaded. {source}");
+                ConsoleDebug($"already loaded. {source}", _fileControllerPrefixes);
                 self.OnFilesLoadSuccess(source, fileNames);
                 return true;
             }
 
             if (_loadingUrls.Has(source, out var loadingIndex))
             {
-                ConsoleDebug($"FileController: already loading. {source}");
+                ConsoleDebug($"already loading. {source}", _fileControllerPrefixes);
                 _loadingDevices[loadingIndex] = _loadingDevices[loadingIndex].Append(self);
                 return true;
             }
 
-            ConsoleDebug($"FileController: loading {source}.");
+            ConsoleDebug($"loading {source}.", _fileControllerPrefixes);
             _loadingUrls = _loadingUrls.Append(source);
             _loadingDevices = _loadingDevices.Append(new[] { self });
             switch (type)
@@ -54,9 +55,8 @@ namespace jp.ootr.ImageDeviceController
             return true;
         }
 
-        public virtual void UnloadFilesFromUrl(IControlledDevice _self, string source)
+        public virtual void UnloadFilesFromUrl(CommonDevice.CommonDevice self, string source)
         {
-            var self = (CommonDevice.CommonDevice)_self;
             if (_loadingUrls.Has(source, out var loadingIndex))
             {
                 if (!_loadingDevices[loadingIndex].Has(self, out var deviceIndex)) return;
@@ -93,7 +93,8 @@ namespace jp.ootr.ImageDeviceController
         {
             if (!_loadingUrls.Has(source, out var loadingIndex)) return;
             ConsoleDebug(
-                $"FileController(TextZip): loaded successfully. {fileNames.Length} files. device count: {_loadingDevices[loadingIndex].Length}, {source} ");
+                $"TextZip loaded successfully. {fileNames.Length} files. device count: {_loadingDevices[loadingIndex].Length}, {source}",
+                _fileControllerPrefixes);
             foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadSuccess(source, fileNames);
             _loadingUrls = _loadingUrls.Remove(loadingIndex);
             _loadingDevices = _loadingDevices.Remove(loadingIndex);
@@ -103,7 +104,7 @@ namespace jp.ootr.ImageDeviceController
 
         protected override void ZlOnLoadError(string source, LoadError error)
         {
-            ConsoleDebug($"FileController(TextZip): load failed: {error}, {source} ");
+            ConsoleDebug($"TextZip load failed: {error}, {source} ", _fileControllerPrefixes);
             if (!_loadingUrls.Has(source, out var loadingIndex)) return;
             foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadFailed(error);
             _loadingUrls = _loadingUrls.Remove(loadingIndex);
@@ -113,7 +114,7 @@ namespace jp.ootr.ImageDeviceController
         protected override void IlOnLoadSuccess(string source, string[] fileNames)
         {
             if (!_loadingUrls.Has(source, out var loadingIndex)) return;
-            ConsoleDebug($"FileController(Image): loaded successfully. {source} ");
+            ConsoleDebug($"Image loaded successfully. {source} ", _fileControllerPrefixes);
             foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadSuccess(source, fileNames);
             _loadingUrls = _loadingUrls.Remove(loadingIndex);
             _loadingDevices = _loadingDevices.Remove(loadingIndex);
@@ -124,7 +125,7 @@ namespace jp.ootr.ImageDeviceController
         protected override void IlOnLoadError(string source, LoadError error)
         {
             if (!_loadingUrls.Has(source, out var loadingIndex)) return;
-            ConsoleDebug($"FileController(Image): load failed: {error}, {source}");
+            ConsoleDebug($"Image load failed: {error}, {source}", _fileControllerPrefixes);
             foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadFailed(error);
             _loadingUrls = _loadingUrls.Remove(loadingIndex);
             _loadingDevices = _loadingDevices.Remove(loadingIndex);
@@ -133,7 +134,7 @@ namespace jp.ootr.ImageDeviceController
         protected override void VlOnLoadError(string source, LoadError error)
         {
             if (!_loadingUrls.Has(source, out var loadingIndex)) return;
-            ConsoleDebug($"FileController(Video): load failed: {error}, {source} ");
+            ConsoleDebug($"Video load failed: {error}, {source} ", _fileControllerPrefixes);
             foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadFailed(error);
             _loadingUrls = _loadingUrls.Remove(loadingIndex);
             _loadingDevices = _loadingDevices.Remove(loadingIndex);
@@ -142,7 +143,7 @@ namespace jp.ootr.ImageDeviceController
         protected override void VlOnLoadSuccess(string source, string[] fileNames)
         {
             if (!_loadingUrls.Has(source, out var loadingIndex)) return;
-            ConsoleDebug($"FileController(Video): loaded successfully. {source}");
+            ConsoleDebug($"Video loaded successfully. {source}", _fileControllerPrefixes);
             foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadSuccess(source, fileNames);
             _loadingUrls = _loadingUrls.Remove(loadingIndex);
             _loadingDevices = _loadingDevices.Remove(loadingIndex);
