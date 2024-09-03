@@ -187,6 +187,7 @@ namespace jp.ootr.ImageDeviceController
             readableText.LoadRawTextureData(data);
             readableText.Apply();
             _vlTmpRenderTexture.Release();
+            Destroy(_vlTmpRenderTexture);
             _vlPreviousTextureBuffer = data;
             var fileName = $"video://{_vlSourceUrl.Substring(8)}/{_vlCurrentTime:0.00}";
             _vlFilenames[_vlProcessIndex] = fileName;
