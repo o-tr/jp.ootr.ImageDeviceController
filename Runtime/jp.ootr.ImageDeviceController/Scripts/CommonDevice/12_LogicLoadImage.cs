@@ -24,6 +24,11 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
          */
         public virtual void FetchImageInternal()
         {
+            if (_queueList.Count == 0)
+            {
+                ConsoleError($"Index out of range: {nameof(FetchImageInternal)}");
+                return;
+            }
             ((QueueList)_queueList).GetQueue(0).Get(out var source, out var options, out var type);
             if (controller.LoadFilesFromUrl((CommonDevice)this, source, type, options)) return;
             if (_retryCount >= SyncURLRetryCountLimit)
@@ -38,6 +43,7 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
 
         private void FetchNextImage()
         {
+            if (_queueList.Count == 0) return;
             ((QueueList)_queueList).ShiftQueue();
             if (_queueList.Count == 0) return;
             SendCustomEventDelayedFrames(nameof(FetchImageInternal), 1);

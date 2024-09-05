@@ -3099,13 +3099,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: LocalTextures
+      Data: localTextures
     - Name: $v
       Entry: 7
       Data: 155|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: LocalTextures
+      Data: localTextures
     - Name: <UserType>k__BackingField
       Entry: 7
       Data: 156|System.RuntimeType, mscorlib
@@ -3160,13 +3160,13 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: LocalTextureUrls
+      Data: localTextureUrls
     - Name: $v
       Entry: 7
       Data: 159|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: LocalTextureUrls
+      Data: localTextureUrls
     - Name: <UserType>k__BackingField
       Entry: 9
       Data: 13
