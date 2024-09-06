@@ -47,6 +47,12 @@ namespace jp.ootr.ImageDeviceController
 
         public override void _OnDeserialization()
         {
+            if (_usSyncUrl.Length < 1)
+            {
+                _usSyncAction = URLStoreSyncAction.None;
+                return;
+            }
+
             switch (_usSyncAction)
             {
                 case URLStoreSyncAction.AddUrl:

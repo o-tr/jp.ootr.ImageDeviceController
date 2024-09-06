@@ -2,7 +2,7 @@ using static jp.ootr.common.ArrayUtils;
 
 namespace jp.ootr.ImageDeviceController
 {
-    public class FileController : ImageLoader
+    public class FileController : LocalLoader
     {
         private readonly string[] _fileControllerPrefixes = { "FileController" };
         private string[][] _cachedData = new string[0][];
@@ -49,6 +49,9 @@ namespace jp.ootr.ImageDeviceController
                     break;
                 case URLType.Video:
                     VlLoadVideo(source, options);
+                    break;
+                case URLType.Local:
+                    LlLoadImage(source);
                     break;
             }
 
@@ -155,6 +158,26 @@ namespace jp.ootr.ImageDeviceController
         {
             if (!_loadingUrls.Has(source, out var loadingIndex)) return;
             foreach (var device in _loadingDevices[loadingIndex]) device.OnFileLoadProgress(source, progress);
+        }
+
+        protected override void LlOnLoadError(string source, LoadError error)
+        {
+            if (!_loadingUrls.Has(source, out var loadingIndex)) return;
+            ConsoleDebug($"Local file load failed: {error}, {source} ", _fileControllerPrefixes);
+            foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadFailed(error);
+            _loadingUrls = _loadingUrls.Remove(loadingIndex);
+            _loadingDevices = _loadingDevices.Remove(loadingIndex);
+        }
+
+        protected override void LlOnLoadSuccess(string source, string[] fileNames)
+        {
+            if (!_loadingUrls.Has(source, out var loadingIndex)) return;
+            ConsoleDebug($"Local file loaded successfully. {source}", _fileControllerPrefixes);
+            foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadSuccess(source, fileNames);
+            _loadingUrls = _loadingUrls.Remove(loadingIndex);
+            _loadingDevices = _loadingDevices.Remove(loadingIndex);
+            _loadedUrls = _loadedUrls.Append(source);
+            _cachedData = _cachedData.Append(fileNames);
         }
 
         #endregion

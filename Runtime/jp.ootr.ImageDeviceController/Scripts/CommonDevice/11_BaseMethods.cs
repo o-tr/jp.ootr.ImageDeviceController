@@ -13,8 +13,17 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
         [SerializeField] public DeviceController controller;
         [SerializeField] public RawImage splashImage;
         [SerializeField] public AspectRatioFitter splashImageFitter;
+        [SerializeField] public Texture2D splashImageTexture;
 
         public string deviceUuid;
+
+        private void Start()
+        {
+            if (splashImage == null) return;
+            splashImage.texture = splashImageTexture;
+            if (splashImageTexture == null || splashImageFitter == null) return;
+            splashImageFitter.aspectRatio = (float)splashImageTexture.width / splashImageTexture.height;
+        }
 
         public virtual string GetName()
         {

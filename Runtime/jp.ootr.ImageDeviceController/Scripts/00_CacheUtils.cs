@@ -52,7 +52,7 @@ namespace jp.ootr.ImageDeviceController
         }
 
         public static File AddFile(this Source files, string fileName, Texture2D texture, DataDictionary metadata,
-            string cacheKey = null)
+            string cacheKey = null, TextureFormat format = TextureFormat.RGBA32)
         {
             var fileData = new DataDictionary();
             fileData["texture"] = texture;
@@ -61,6 +61,7 @@ namespace jp.ootr.ImageDeviceController
             fileData["width"] = texture.width;
             fileData["height"] = texture.height;
             fileData["metadata"] = metadata;
+            fileData["format"] = (int)format;
             files["files"].DataDictionary[fileName] = fileData;
             return (File)fileData;
         }
@@ -139,6 +140,11 @@ namespace jp.ootr.ImageDeviceController
         public static string GetCacheKey(this File file)
         {
             return file["cacheKey"].String;
+        }
+
+        public static TextureFormat GetTextureFormat(this File file)
+        {
+            return (TextureFormat)(int)file["format"].Double;
         }
 
         public static Metadata GetMetadata(this File file)

@@ -202,7 +202,7 @@ namespace jp.ootr.ImageDeviceController
             texture.Apply();
             var fileName = $"zip://{_zlSourceUrl.Substring(8)}/{path}";
             _zlFilenames[_zlProcessIndex] = fileName;
-            CcSetTexture(_zlSourceUrl, fileName, texture, metadataItem.DataDictionary, imageBytes);
+            CcSetTexture(_zlSourceUrl, fileName, texture, metadataItem.DataDictionary, imageBytes, format);
             _zlProcessIndex++;
             ZlOnLoadProgress(_zlSourceUrl, 0.5f + (float)_zlProcessIndex / _zlMetadata.Count / 2);
             if (_zlProcessIndex < _zlMetadata.Count)

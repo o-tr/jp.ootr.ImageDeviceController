@@ -66,6 +66,7 @@ namespace jp.ootr.ImageDeviceController.Editor
             {
                 if (device == null) continue;
                 var so = new SerializedObject(device);
+                so.Update();
                 so.FindProperty("controller").objectReferenceValue = script;
                 var property = so.FindProperty("devices");
                 property.arraySize = script.devices.Length;
@@ -123,6 +124,7 @@ namespace jp.ootr.ImageDeviceController.Editor
             //filter script devices
             var devices = script.devices.Where(d => d != null).ToArray();
             var so = new SerializedObject(script);
+            so.Update();
             var property = so.FindProperty("devices");
             property.arraySize = devices.Length;
             for (var i = 0; i < devices.Length; i++)

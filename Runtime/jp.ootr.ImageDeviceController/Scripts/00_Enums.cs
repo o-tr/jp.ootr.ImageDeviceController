@@ -92,6 +92,7 @@ namespace jp.ootr.ImageDeviceController
         Image,
         TextZip,
         Video,
+        Local,
         Unknown
     }
 

@@ -43,8 +43,9 @@ namespace jp.ootr.ImageDeviceController
             var key = file.GetCacheKey();
             if (!_cacheBinaryNames.Has(key, out var index)) return null;
             ConsoleDebug($"regenerate texture: {key}", _cacheControllerPrefixes);
+            var format = file.GetTextureFormat();
             var bytes = _cacheBinary[index];
-            var texture = new Texture2D(file["width"].Int, file["height"].Int);
+            var texture = new Texture2D(file["width"].Int, file["height"].Int, format, false);
             texture.LoadRawTextureData(bytes);
             texture.Apply();
             file.SetTexture(texture);
@@ -74,10 +75,7 @@ namespace jp.ootr.ImageDeviceController
             var file = source.GetFile(fileName);
             if (source.DecreaseUsedCount() < 1)
             {
-                foreach (var tmpFileName in source.GetFileNames())
-                {
-                    source.GetFile(tmpFileName).DestroyTexture();
-                }
+                foreach (var tmpFileName in source.GetFileNames()) source.GetFile(tmpFileName).DestroyTexture();
                 var keys = ((Cache)_cacheFiles).RemoveSource(sourceName);
                 foreach (var key in keys)
                 {
@@ -110,13 +108,14 @@ namespace jp.ootr.ImageDeviceController
             return ((Cache)_cacheFiles).GetSource(source).GetFile(fileName).GetMetadata();
         }
 
-        protected virtual void CcSetTexture(string source, string fileName, Texture2D texture, byte[] bytes = null)
+        protected virtual void CcSetTexture(string source, string fileName, Texture2D texture, byte[] bytes = null,
+            TextureFormat format = TextureFormat.RGBA32)
         {
-            CcSetTexture(source, fileName, texture, new DataDictionary(), bytes);
+            CcSetTexture(source, fileName, texture, new DataDictionary(), bytes, format);
         }
 
         protected virtual void CcSetTexture(string source, string fileName, Texture2D texture, DataDictionary metadata,
-            byte[] bytes = null)
+            byte[] bytes = null, TextureFormat format = TextureFormat.RGBA32)
         {
             if (!((Cache)_cacheFiles).HasSource(source)) ((Cache)_cacheFiles).AddSource(source);
 
@@ -136,7 +135,7 @@ namespace jp.ootr.ImageDeviceController
                 _cacheBinaryNames = _cacheBinaryNames.Append(cacheKey);
             }
 
-            files.AddFile(fileName, texture, metadata, cacheKey);
+            files.AddFile(fileName, texture, metadata, cacheKey, format);
         }
 
         protected virtual void CcOnRelease(string source)
