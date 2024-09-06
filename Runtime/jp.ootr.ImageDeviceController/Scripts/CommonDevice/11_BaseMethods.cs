@@ -1,4 +1,5 @@
-﻿using jp.ootr.common;
+﻿using System;
+using jp.ootr.common;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,8 +14,15 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
         [SerializeField] public DeviceController controller;
         [SerializeField] public RawImage splashImage;
         [SerializeField] public AspectRatioFitter splashImageFitter;
+        [SerializeField] public Texture2D splashImageTexture;
 
         public string deviceUuid;
+
+        private void Start()
+        {
+            splashImage.texture = splashImageTexture;
+            splashImageFitter.aspectRatio = (float)splashImageTexture.width / splashImageTexture.height;
+        }
 
         public virtual string GetName()
         {

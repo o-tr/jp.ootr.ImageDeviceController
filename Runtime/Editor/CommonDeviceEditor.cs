@@ -16,11 +16,13 @@ namespace jp.ootr.ImageDeviceController.Editor
         private bool _debug;
 
         private SerializedProperty _deviceName;
+        private SerializedProperty _splashImageTexture;
         private bool _foldoutState;
 
         public virtual void OnEnable()
         {
             _deviceName = serializedObject.FindProperty("deviceName");
+            _splashImageTexture = serializedObject.FindProperty("splashImageTexture");
         }
 
         public override void OnInspectorGUI()
@@ -34,10 +36,10 @@ namespace jp.ootr.ImageDeviceController.Editor
 
             ShowScriptName();
             var script = (CommonDevice.CommonDevice)target;
-            var so = new SerializedObject(script);
+            serializedObject.Update();
 
             SetController(script);
-            if (script.deviceUuid.IsNullOrEmpty()) CommonDeviceUtils.GenerateUuid(so);
+            if (script.deviceUuid.IsNullOrEmpty()) CommonDeviceUtils.GenerateUuid(serializedObject);
 
             EditorGUILayout.Space();
 
@@ -47,7 +49,7 @@ namespace jp.ootr.ImageDeviceController.Editor
 
             EditorGUILayout.PropertyField(_deviceName);
 
-            so.ApplyModifiedProperties();
+            serializedObject.ApplyModifiedProperties();
             EditorGUILayout.Space();
             ShowContent();
             EditorGUILayout.Space();
@@ -58,18 +60,22 @@ namespace jp.ootr.ImageDeviceController.Editor
             EditorGUI.BeginChangeCheck();
             if (script.splashImage != null)
             {
-                var texture = (Texture)EditorGUILayout.ObjectField("Splash Image",
-                    script.splashImage.texture, typeof(Texture), false);
+                serializedObject.Update();
+                EditorGUILayout.PropertyField(_splashImageTexture, new GUIContent("Splash Image"));
+                serializedObject.ApplyModifiedProperties();
+                var texture =(Texture2D) _splashImageTexture.objectReferenceValue;
                 if (texture != script.splashImage.texture)
                 {
                     var splashImageProp = serializedObject.FindProperty("splashImage");
                     var splashImage = (RawImage)splashImageProp.objectReferenceValue;
                     var soImage = new SerializedObject(splashImage);
+                    soImage.Update();
                     soImage.FindProperty("m_Texture").objectReferenceValue = texture;
                     soImage.ApplyModifiedProperties();
                     var slashImageFitterProp = serializedObject.FindProperty("splashImageFitter");
                     var splashImageFitter = (AspectRatioFitter)slashImageFitterProp.objectReferenceValue;
                     var soImageFitter = new SerializedObject(splashImageFitter);
+                    soImageFitter.Update();
                     soImageFitter.FindProperty("m_AspectRatio").floatValue =
                         texture.width / (float)texture.height;
                     soImageFitter.ApplyModifiedProperties();
@@ -109,6 +115,7 @@ namespace jp.ootr.ImageDeviceController.Editor
 
             var scripts = ComponentUtils.GetAllComponents<CommonDevice.CommonDevice>();
             CommonDeviceUtils.ValidateUuids(scripts.ToArray());
+            CommonDeviceUtils.UpdateSplashImages(scripts.ToArray());
         }
 
         private static void OnPlayModeStateChanged(PlayModeStateChange state)
@@ -117,6 +124,7 @@ namespace jp.ootr.ImageDeviceController.Editor
             {
                 var scripts = ComponentUtils.GetAllComponents<CommonDevice.CommonDevice>();
                 CommonDeviceUtils.ValidateUuids(scripts.ToArray());
+                CommonDeviceUtils.UpdateSplashImages(scripts.ToArray());
             }
         }
     }
@@ -141,7 +149,29 @@ namespace jp.ootr.ImageDeviceController.Editor
                 return false;
 
             ValidateUuids(scripts.ToArray());
+            UpdateSplashImages(scripts.ToArray());
             return true;
+        }
+
+        public static void UpdateSplashImages(CommonDevice.CommonDevice[] scripts)
+        {
+            foreach (var script in scripts)
+            {
+                if (script.splashImage == null) continue;
+                var texture = script.splashImageTexture;
+                var splashImageProp = new SerializedObject(script).FindProperty("splashImage");
+                var splashImage = (RawImage)splashImageProp.objectReferenceValue;
+                var soImage = new SerializedObject(splashImage);
+                soImage.Update();
+                soImage.FindProperty("m_Texture").objectReferenceValue = texture;
+                soImage.ApplyModifiedProperties();
+                var slashImageFitterProp = new SerializedObject(script).FindProperty("splashImageFitter");
+                var splashImageFitter = (AspectRatioFitter)slashImageFitterProp.objectReferenceValue;
+                var soImageFitter = new SerializedObject(splashImageFitter);
+                soImageFitter.Update();
+                soImageFitter.FindProperty("m_AspectRatio").floatValue = texture.width / (float)texture.height;
+                soImageFitter.ApplyModifiedProperties();
+            }
         }
 
         public static void ValidateUuids(CommonDevice.CommonDevice[] scripts)
@@ -163,6 +193,7 @@ namespace jp.ootr.ImageDeviceController.Editor
                 usedUuids.Add(uuid);
                 if (script.deviceUuid == uuid) continue;
                 var so = new SerializedObject(script);
+                so.Update();
                 so.FindProperty("deviceUuid").stringValue = uuid;
                 so.ApplyModifiedProperties();
                 EditorUtility.SetDirty(script);
