@@ -10,12 +10,12 @@ namespace jp.ootr.ImageDeviceController.Editor
     public class PickupDetectorEditor : UnityEditor.Editor
     {
         private SerializedProperty _commonDevice;
-        
+
         private void OnEnable()
         {
             _commonDevice = serializedObject.FindProperty("commonDevice");
         }
-        
+
         public override void OnInspectorGUI()
         {
             EditorGUILayout.LabelField("PickupDetector", EditorStyle.UiTitle);

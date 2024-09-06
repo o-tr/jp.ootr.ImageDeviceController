@@ -146,7 +146,6 @@ namespace jp.ootr.ImageDeviceController
                 return;
             }
 
-            ConsoleDebug($"Video is ready. source: {_vlSourceUrl}", _videoLoaderPrefixes);
             _vlTextureHeight = _vlMainTexture.height;
             _vlTextureWidth = _vlMainTexture.width;
             CopyToRenderTexture(_vlMainTexture, false, true);
@@ -165,6 +164,8 @@ namespace jp.ootr.ImageDeviceController
 
         public override void OnAsyncGpuReadbackComplete(VRCAsyncGPUReadbackRequest request)
         {
+            Destroy(_vlTmpRenderTexture);
+            _vlTmpRenderTexture.Release();
             var data = new byte[_vlTextureWidth * _vlTextureHeight * 4];
             request.TryGetData(data);
             if (data.MayBlank(100))
@@ -184,15 +185,14 @@ namespace jp.ootr.ImageDeviceController
                     return;
                 }
 
+            ConsoleDebug($"Success to read texture {_vlProcessIndex + 1}/{_vlPageCount}", _videoLoaderPrefixes);
             var readableText = new Texture2D(_vlTextureWidth, _vlTextureHeight, TextureFormat.RGBA32, false);
             readableText.LoadRawTextureData(data);
             readableText.Apply();
-            _vlTmpRenderTexture.Release();
-            Destroy(_vlTmpRenderTexture);
             _vlPreviousTextureBuffer = data;
             var fileName = $"video://{_vlSourceUrl.Substring(8)}/{_vlCurrentTime:0.00}";
             _vlFilenames[_vlProcessIndex] = fileName;
-            CcSetTexture(_vlSourceRawUrl, fileName, readableText);
+            CcSetTexture(_vlSourceRawUrl, fileName, readableText, data);
             _vlProcessIndex++;
             VlOnLoadProgress(_vlSourceRawUrl, (float)_vlProcessIndex / _vlPageCount);
             if (_vlProcessIndex < _vlPageCount)

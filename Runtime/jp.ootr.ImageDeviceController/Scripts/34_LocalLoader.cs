@@ -9,19 +9,13 @@ namespace jp.ootr.ImageDeviceController
         [SerializeField] protected string[] localTextureUrls;
 
         private readonly string[] _localLoaderPrefixes = { "LocalLoader" };
-        
+
         protected void LlLoadImage(string url)
         {
-            if (!localTextureUrls.Has(url, out var index))
-            {
-                LlOnLoadError(url, LoadError.HttpNotFound);
-            }
+            if (!localTextureUrls.Has(url, out var index)) LlOnLoadError(url, LoadError.HttpNotFound);
 
-            if (!CcHasCache(url))
-            {
-                CcSetTexture(url, url, localTextures[index], null);
-            }
-            
+            if (!CcHasCache(url)) CcSetTexture(url, url, localTextures[index]);
+
             LlOnLoadSuccess(url, new[] { url });
         }
 

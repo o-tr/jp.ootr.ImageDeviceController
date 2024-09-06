@@ -16,8 +16,8 @@ namespace jp.ootr.ImageDeviceController.Editor
         private bool _debug;
 
         private SerializedProperty _deviceName;
-        private SerializedProperty _splashImageTexture;
         private bool _foldoutState;
+        private SerializedProperty _splashImageTexture;
 
         public virtual void OnEnable()
         {
@@ -63,7 +63,7 @@ namespace jp.ootr.ImageDeviceController.Editor
                 serializedObject.Update();
                 EditorGUILayout.PropertyField(_splashImageTexture, new GUIContent("Splash Image"));
                 serializedObject.ApplyModifiedProperties();
-                var texture =(Texture2D) _splashImageTexture.objectReferenceValue;
+                var texture = (Texture2D)_splashImageTexture.objectReferenceValue;
                 if (texture != script.splashImage.texture)
                 {
                     var splashImageProp = serializedObject.FindProperty("splashImage");

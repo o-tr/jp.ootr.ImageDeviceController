@@ -1,5 +1,4 @@
-﻿using System;
-using jp.ootr.common;
+﻿using jp.ootr.common;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -20,7 +19,7 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
 
         private void Start()
         {
-            if(splashImage == null) return;
+            if (splashImage == null) return;
             splashImage.texture = splashImageTexture;
             if (splashImageTexture == null || splashImageFitter == null) return;
             splashImageFitter.aspectRatio = (float)splashImageTexture.width / splashImageTexture.height;

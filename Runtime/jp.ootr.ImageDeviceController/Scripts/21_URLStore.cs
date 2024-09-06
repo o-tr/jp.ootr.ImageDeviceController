@@ -52,6 +52,7 @@ namespace jp.ootr.ImageDeviceController
                 _usSyncAction = URLStoreSyncAction.None;
                 return;
             }
+
             switch (_usSyncAction)
             {
                 case URLStoreSyncAction.AddUrl:
