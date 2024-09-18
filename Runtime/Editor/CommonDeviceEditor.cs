@@ -3,8 +3,10 @@ using System;
 using System.Collections.Generic;
 using jp.ootr.common;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 using VRC.SDKBase.Editor.BuildPipeline;
 using Console = jp.ootr.common.Console;
 
@@ -15,72 +17,55 @@ namespace jp.ootr.ImageDeviceController.Editor
     {
         private bool _debug;
 
-        private SerializedProperty _deviceName;
-        private bool _foldoutState;
-        private SerializedProperty _splashImageTexture;
-
+        protected VisualElement Root;
+        protected VisualElement InfoBlock;
+        
+        [SerializeField] private StyleSheet _styleSheet;
+        
         public virtual void OnEnable()
         {
-            _deviceName = serializedObject.FindProperty("deviceName");
-            _splashImageTexture = serializedObject.FindProperty("splashImageTexture");
+            Root = new VisualElement();
+            Root.styleSheets.Add(_styleSheet);
+            Root.AddToClassList("root");
+            InfoBlock = new VisualElement();
+            InfoBlock.AddToClassList("infoBlock");
         }
 
-        public override void OnInspectorGUI()
+        public override VisualElement CreateInspectorGUI()
         {
-            _debug = EditorGUILayout.ToggleLeft("Debug", _debug);
-            if (_debug)
-            {
-                base.OnInspectorGUI();
-                return;
-            }
-
             ShowScriptName();
             var script = (CommonDevice.CommonDevice)target;
-            serializedObject.Update();
+            
+            Root.Add(InfoBlock);
 
+            ShowDeviceUuid(script);
+            
+            ShowDeviceName();
+            
             SetController(script);
-            if (script.deviceUuid.IsNullOrEmpty()) CommonDeviceUtils.GenerateUuid(serializedObject);
+            
+            ShowContentTk();
+            var imguiContainer = new IMGUIContainer(OnInspectorGUIInternal);
+            Root.Add(imguiContainer);
+            
+            ShowOther(script);
+            
+            ShowDebug();
+            
+            return Root;
+        }
 
-            EditorGUILayout.Space();
-
-            EditorGUILayout.LabelField("Device UUID", script.deviceUuid);
-
-            EditorGUILayout.Space();
-
-            EditorGUILayout.PropertyField(_deviceName);
-
-            serializedObject.ApplyModifiedProperties();
+        protected virtual void OnInspectorGUIInternal()
+        {
+            var script = (CommonDevice.CommonDevice)target;
             EditorGUILayout.Space();
             ShowContent();
             EditorGUILayout.Space();
+        }
 
-            _foldoutState = EditorGUILayout.Foldout(_foldoutState, "Other", true);
-
-            if (!_foldoutState) return;
-            EditorGUI.BeginChangeCheck();
-            if (script.splashImage != null)
-            {
-                serializedObject.Update();
-                EditorGUILayout.PropertyField(_splashImageTexture, new GUIContent("Splash Image"));
-                serializedObject.ApplyModifiedProperties();
-                var texture = (Texture2D)_splashImageTexture.objectReferenceValue;
-                if (texture != script.splashImage.texture)
-                {
-                    var splashImageProp = serializedObject.FindProperty("splashImage");
-                    var splashImage = (RawImage)splashImageProp.objectReferenceValue;
-                    var soImage = new SerializedObject(splashImage);
-                    soImage.Update();
-                    soImage.FindProperty("m_Texture").objectReferenceValue = texture;
-                    soImage.ApplyModifiedProperties();
-                    var slashImageFitterProp = serializedObject.FindProperty("splashImageFitter");
-                    var splashImageFitter = (AspectRatioFitter)slashImageFitterProp.objectReferenceValue;
-                    var soImageFitter = new SerializedObject(splashImageFitter);
-                    soImageFitter.Update();
-                    soImageFitter.FindProperty("m_AspectRatio").floatValue =
-                        texture.width / (float)texture.height;
-                    soImageFitter.ApplyModifiedProperties();
-                }
-            }
+        protected virtual void ShowContentTk()
+        {
+            
         }
 
         protected virtual void ShowContent()
@@ -89,19 +74,99 @@ namespace jp.ootr.ImageDeviceController.Editor
 
         private void SetController(CommonDevice.CommonDevice script)
         {
-            if (CommonDeviceUtils.UpdateDeviceControl(script, FindObjectsOfType<ImageDeviceController>())) return;
+            serializedObject.Update();
+            if (CommonDeviceUtils.UpdateDeviceControl(script, FindObjectsOfType<ImageDeviceController>()))
+            {
+                serializedObject.ApplyModifiedProperties();
+                return;
+            }
 
-            EditorGUILayout.Space();
-            var content =
-                new GUIContent(
-                    "Please assign this device to ImageDeviceController\n\nこのデバイスをImageDeviceControllerの管理対象に追加してください");
-            content.image = EditorGUIUtility.IconContent("console.erroricon").image;
-            EditorGUILayout.HelpBox(content);
+            var helpBox = new HelpBox("Please assign this device to ImageDeviceController\nこのデバイスをImageDeviceControllerの管理対象に追加してください", HelpBoxMessageType.Error);
+            InfoBlock.Add(helpBox);
+            serializedObject.ApplyModifiedProperties();
         }
 
-        protected virtual void ShowScriptName()
+        protected void ShowScriptName()
         {
-            EditorGUILayout.LabelField("CommonDevice", EditorStyle.UiTitle);
+            var title = new Label(GetScriptName());
+            title.AddToClassList("scriptName");
+            Root.Add(title);
+        }
+        
+        protected virtual string GetScriptName()
+        {
+            return "CommonDevice";
+        }
+        
+        private void ShowDeviceUuid(CommonDevice.CommonDevice script)
+        {
+            if (script.deviceUuid.IsNullOrEmpty()) CommonDeviceUtils.GenerateUuid(serializedObject);
+            var row = new VisualElement();
+            row.AddToClassList("row");
+            var label = new Label("Device UUID");
+            row.Add(label);
+            var uuid = new Label(script.deviceUuid);
+            row.Add(uuid);
+            Root.Add(row);
+        }
+        
+        private void ShowDeviceName()
+        {
+            var input = new TextField("Device Name")
+            {
+                bindingPath = "deviceName",
+            };
+            Root.Add(input);
+        }
+
+        private void ShowOther(CommonDevice.CommonDevice script)
+        {
+            var foldout = new Foldout()
+            {
+                text = "Other",
+                value = false
+            };
+
+            if (script.splashImage != null)
+            {
+                var texture = new ObjectField("Splash Image")
+                {
+                    bindingPath = "splashImageTexture",
+                    objectType = typeof(Texture2D),
+                };
+                foldout.Add(texture);
+                
+                texture.RegisterValueChangedCallback(evt =>
+                {
+                    var newTexture = (Texture2D)evt.newValue;
+                    var splashImageProp = serializedObject.FindProperty("splashImage");
+                    var splashImage = (RawImage)splashImageProp.objectReferenceValue;
+                    var soImage = new SerializedObject(splashImage);
+                    soImage.Update();
+                    soImage.FindProperty("m_Texture").objectReferenceValue = newTexture;
+                    soImage.ApplyModifiedProperties();
+                    var slashImageFitterProp = serializedObject.FindProperty("splashImageFitter");
+                    var splashImageFitter = (AspectRatioFitter)slashImageFitterProp.objectReferenceValue;
+                    var soImageFitter = new SerializedObject(splashImageFitter);
+                    soImageFitter.Update();
+                    soImageFitter.FindProperty("m_AspectRatio").floatValue =
+                        newTexture.width / (float)newTexture.height;
+                    soImageFitter.ApplyModifiedProperties();
+                });
+            }
+            Root.Add(foldout);
+        }
+
+        private void ShowDebug()
+        {
+            var foldout = new Foldout()
+            {
+                text = "Debug",
+                value = false
+            };
+            
+            foldout.Add(new IMGUIContainer(base.OnInspectorGUI));
+            Root.Add(foldout);
         }
     }
 
