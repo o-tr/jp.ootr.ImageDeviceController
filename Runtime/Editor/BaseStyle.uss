@@ -1,0 +1,17 @@
+.root{
+    margin: 0 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.scriptName{
+    font-size: 24px;
+    -unity-font-style: bold;
+    padding: 16px 0;
+    -unity-text-align: middle-center;
+}
+
+.container>*{
+    padding-bottom: 8px;
+}
+

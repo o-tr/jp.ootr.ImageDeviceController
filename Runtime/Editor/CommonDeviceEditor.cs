@@ -13,59 +13,44 @@ using Console = jp.ootr.common.Console;
 namespace jp.ootr.ImageDeviceController.Editor
 {
     [CustomEditor(typeof(CommonDevice.CommonDevice))]
-    public class CommonDeviceEditor : UnityEditor.Editor
+    public class CommonDeviceEditor : BaseEditor
     {
-        private bool _debug;
+        [SerializeField] private StyleSheet commonStyle;
 
-        protected VisualElement Root;
-        protected VisualElement InfoBlock;
-        
-        [SerializeField] private StyleSheet _styleSheet;
-        
-        public virtual void OnEnable()
+        public override void OnEnable()
         {
-            Root = new VisualElement();
-            Root.styleSheets.Add(_styleSheet);
-            Root.AddToClassList("root");
-            InfoBlock = new VisualElement();
-            InfoBlock.AddToClassList("infoBlock");
+            base.OnEnable();
+            Root.styleSheets.Add(commonStyle);
         }
 
-        public override VisualElement CreateInspectorGUI()
+        protected override VisualElement GetLayout()
         {
-            ShowScriptName();
+            var container = new VisualElement();
+            container.AddToClassList("container");
             var script = (CommonDevice.CommonDevice)target;
-            
-            Root.Add(InfoBlock);
-
-            ShowDeviceUuid(script);
-            
-            ShowDeviceName();
-            
             SetController(script);
             
-            ShowContentTk();
+            container.Add(GetDeviceUuid(script));
+            container.Add(ShowDeviceName());
+            container.Add(GetContentTk());
+            
             var imguiContainer = new IMGUIContainer(OnInspectorGUIInternal);
             Root.Add(imguiContainer);
             
-            ShowOther(script);
-            
-            ShowDebug();
-            
-            return Root;
+            container.Add(GetOther(script));
+            return container;
         }
-
+        
+        protected virtual VisualElement GetContentTk()
+        {
+            throw new NotImplementedException();
+        }
+        
         protected virtual void OnInspectorGUIInternal()
         {
-            var script = (CommonDevice.CommonDevice)target;
             EditorGUILayout.Space();
             ShowContent();
             EditorGUILayout.Space();
-        }
-
-        protected virtual void ShowContentTk()
-        {
-            
         }
 
         protected virtual void ShowContent()
@@ -85,20 +70,13 @@ namespace jp.ootr.ImageDeviceController.Editor
             InfoBlock.Add(helpBox);
             serializedObject.ApplyModifiedProperties();
         }
-
-        protected void ShowScriptName()
-        {
-            var title = new Label(GetScriptName());
-            title.AddToClassList("scriptName");
-            Root.Add(title);
-        }
         
-        protected virtual string GetScriptName()
+        protected override string GetScriptName()
         {
             return "CommonDevice";
         }
         
-        private void ShowDeviceUuid(CommonDevice.CommonDevice script)
+        private VisualElement GetDeviceUuid(CommonDevice.CommonDevice script)
         {
             if (script.deviceUuid.IsNullOrEmpty()) CommonDeviceUtils.GenerateUuid(serializedObject);
             var row = new VisualElement();
@@ -107,19 +85,18 @@ namespace jp.ootr.ImageDeviceController.Editor
             row.Add(label);
             var uuid = new Label(script.deviceUuid);
             row.Add(uuid);
-            Root.Add(row);
+            return row;
         }
         
-        private void ShowDeviceName()
+        private VisualElement ShowDeviceName()
         {
-            var input = new TextField("Device Name")
+            return new TextField("Device Name")
             {
                 bindingPath = "deviceName",
             };
-            Root.Add(input);
         }
 
-        private void ShowOther(CommonDevice.CommonDevice script)
+        private VisualElement GetOther(CommonDevice.CommonDevice script)
         {
             var foldout = new Foldout()
             {
@@ -154,19 +131,8 @@ namespace jp.ootr.ImageDeviceController.Editor
                     soImageFitter.ApplyModifiedProperties();
                 });
             }
-            Root.Add(foldout);
-        }
 
-        private void ShowDebug()
-        {
-            var foldout = new Foldout()
-            {
-                text = "Debug",
-                value = false
-            };
-            
-            foldout.Add(new IMGUIContainer(base.OnInspectorGUI));
-            Root.Add(foldout);
+            return foldout;
         }
     }
 

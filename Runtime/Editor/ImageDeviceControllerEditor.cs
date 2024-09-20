@@ -2,63 +2,114 @@
 using System.Linq;
 using jp.ootr.common;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.UIElements;
 using VRC.SDKBase.Editor.BuildPipeline;
 
 namespace jp.ootr.ImageDeviceController.Editor
 {
     [CustomEditor(typeof(ImageDeviceController))]
-    public class ImageDeviceControllerEditor : UnityEditor.Editor
+    public class ImageDeviceControllerEditor : BaseEditor
     {
-        private bool _debug;
         private SerializedProperty _devices;
         private SerializedProperty _vlLoadTimeout;
         private SerializedProperty _zlDelayFrames;
         private SerializedProperty _zlPartLength;
 
-        private void OnEnable()
+        public override void OnEnable()
         {
+            base.OnEnable();
             _devices = serializedObject.FindProperty("devices");
             _zlDelayFrames = serializedObject.FindProperty("zlDelayFrames");
             _zlPartLength = serializedObject.FindProperty("zlPartLength");
             _vlLoadTimeout = serializedObject.FindProperty("vlLoadTimeout");
         }
-
-        public override void OnInspectorGUI()
+        
+        protected override string GetScriptName()
         {
-            _debug = EditorGUILayout.ToggleLeft("Debug", _debug);
-            if (_debug)
-            {
-                base.OnInspectorGUI();
-                return;
-            }
-
-            var script = (ImageDeviceController)target;
-
-            EditorGUILayout.LabelField("ImageDeviceController", EditorStyle.UiTitle);
-
-            EditorGUILayout.Space();
-
-            serializedObject.Update();
-
-            EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(_devices, new GUIContent("Device List"), true);
-            if (EditorGUI.EndChangeCheck()) UpdateDevices(script);
-
-            EditorGUILayout.Space();
-
-            EditorGUILayout.PropertyField(_zlDelayFrames, new GUIContent("Zip Load Delay Frames"));
-
-            EditorGUILayout.Space();
-
-            EditorGUILayout.PropertyField(_zlPartLength, new GUIContent("Base64 Decode Part Size"));
-
-            EditorGUILayout.Space();
-
-            EditorGUILayout.PropertyField(_vlLoadTimeout, new GUIContent("Video Frame Load Timeout"));
-
-            serializedObject.ApplyModifiedProperties();
+            return "Image Device Controller";
         }
+
+        protected override VisualElement GetLayout()
+        {
+            var root = new VisualElement();
+            root.AddToClassList("container");
+            
+            root.Add(GetDeviceList());
+            
+            root.Add(GetZipLoadDelayFrames());
+            
+            root.Add(GetBase64DecodePartSize());
+            
+            root.Add(GetVideoFrameLoadTimeout());
+            
+            return root;
+        }
+
+        private VisualElement GetDeviceList()
+        {
+            var devices = new PropertyField(_devices);
+            devices.RegisterCallback<ChangeEvent<Object>>(evt =>
+            {
+                UpdateDevices((ImageDeviceController)target);
+            });
+            return devices;
+        }
+        
+        private VisualElement GetZipLoadDelayFrames()
+        {
+            var zlDelayFrames = new PropertyField(_zlDelayFrames);
+            return zlDelayFrames;
+        }
+        
+        private VisualElement GetBase64DecodePartSize()
+        {
+            var zlPartLength = new PropertyField(_zlPartLength);
+            return zlPartLength;
+        }
+        
+        private VisualElement GetVideoFrameLoadTimeout()
+        {
+            var vlLoadTimeout = new PropertyField(_vlLoadTimeout);
+            return vlLoadTimeout;
+        }
+
+        // public override void OnInspectorGUI()
+        // {
+        //     _debug = EditorGUILayout.ToggleLeft("Debug", _debug);
+        //     if (_debug)
+        //     {
+        //         base.OnInspectorGUI();
+        //         return;
+        //     }
+        //
+        //     var script = (ImageDeviceController)target;
+        //
+        //     EditorGUILayout.LabelField("ImageDeviceController", EditorStyle.UiTitle);
+        //
+        //     EditorGUILayout.Space();
+        //
+        //     serializedObject.Update();
+        //
+        //     EditorGUI.BeginChangeCheck();
+        //     EditorGUILayout.PropertyField(_devices, new GUIContent("Device List"), true);
+        //     if (EditorGUI.EndChangeCheck()) UpdateDevices(script);
+        //
+        //     EditorGUILayout.Space();
+        //
+        //     EditorGUILayout.PropertyField(_zlDelayFrames, new GUIContent("Zip Load Delay Frames"));
+        //
+        //     EditorGUILayout.Space();
+        //
+        //     EditorGUILayout.PropertyField(_zlPartLength, new GUIContent("Base64 Decode Part Size"));
+        //
+        //     EditorGUILayout.Space();
+        //
+        //     EditorGUILayout.PropertyField(_vlLoadTimeout, new GUIContent("Video Frame Load Timeout"));
+        //
+        //     serializedObject.ApplyModifiedProperties();
+        // }
 
         private void UpdateDevices(ImageDeviceController script)
         {

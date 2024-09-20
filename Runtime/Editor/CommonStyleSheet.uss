@@ -20,3 +20,14 @@ VisualElement {}
     padding: 16px 0;
     -unity-text-align: middle-center;
 }
+
+.list{
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0;
+    overflow: visible;
+}
+
+.list>*{
+    overflow: scroll;
+}
