@@ -14,12 +14,12 @@ namespace jp.ootr.ImageDeviceController.Editor
         {
             var root = new VisualElement();
             root.AddToClassList("container");
-            
+
             root.Add(GetCommonDevice());
-            
+
             return root;
         }
-        
+
         private VisualElement GetCommonDevice()
         {
             var commonDevice = new ObjectField
@@ -28,7 +28,7 @@ namespace jp.ootr.ImageDeviceController.Editor
                 bindingPath = "commonDevice",
                 label = "Target Device"
             };
-            
+
             return commonDevice;
         }
 

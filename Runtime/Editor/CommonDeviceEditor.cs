@@ -30,23 +30,23 @@ namespace jp.ootr.ImageDeviceController.Editor
             container.AddToClassList("container");
             var script = (CommonDevice.CommonDevice)target;
             SetController(script);
-            
+
             container.Add(GetDeviceUuid(script));
             container.Add(ShowDeviceName());
             container.Add(GetContentTk());
-            
+
             var imguiContainer = new IMGUIContainer(OnInspectorGUIInternal);
             Root.Add(imguiContainer);
-            
+
             container.Add(GetOther(script));
             return container;
         }
-        
+
         protected virtual VisualElement GetContentTk()
         {
             throw new NotImplementedException();
         }
-        
+
         protected virtual void OnInspectorGUIInternal()
         {
             EditorGUILayout.Space();
@@ -67,16 +67,19 @@ namespace jp.ootr.ImageDeviceController.Editor
                 return;
             }
 
-            var helpBox = new HelpBox("Please assign this device to ImageDeviceController\nこのデバイスをImageDeviceControllerの管理対象に追加してください", HelpBoxMessageType.Error);
+            var helpBox =
+                new HelpBox(
+                    "Please assign this device to ImageDeviceController\nこのデバイスをImageDeviceControllerの管理対象に追加してください",
+                    HelpBoxMessageType.Error);
             InfoBlock.Add(helpBox);
             serializedObject.ApplyModifiedProperties();
         }
-        
+
         protected override string GetScriptName()
         {
             return "CommonDevice";
         }
-        
+
         private VisualElement GetDeviceUuid(CommonDevice.CommonDevice script)
         {
             if (script.deviceUuid.IsNullOrEmpty()) CommonDeviceUtils.GenerateUuid(serializedObject);
@@ -88,18 +91,18 @@ namespace jp.ootr.ImageDeviceController.Editor
             row.Add(uuid);
             return row;
         }
-        
+
         private VisualElement ShowDeviceName()
         {
             return new TextField("Device Name")
             {
-                bindingPath = "deviceName",
+                bindingPath = "deviceName"
             };
         }
 
         private VisualElement GetOther(CommonDevice.CommonDevice script)
         {
-            var foldout = new Foldout()
+            var foldout = new Foldout
             {
                 text = "Other",
                 value = false
@@ -110,10 +113,10 @@ namespace jp.ootr.ImageDeviceController.Editor
                 var texture = new ObjectField("Splash Image")
                 {
                     bindingPath = "splashImageTexture",
-                    objectType = typeof(Texture2D),
+                    objectType = typeof(Texture2D)
                 };
                 foldout.Add(texture);
-                
+
                 texture.RegisterValueChangedCallback(evt =>
                 {
                     var newTexture = (Texture2D)evt.newValue;

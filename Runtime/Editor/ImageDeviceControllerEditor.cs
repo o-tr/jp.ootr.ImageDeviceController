@@ -26,7 +26,7 @@ namespace jp.ootr.ImageDeviceController.Editor
             _zlPartLength = serializedObject.FindProperty("zlPartLength");
             _vlLoadTimeout = serializedObject.FindProperty("vlLoadTimeout");
         }
-        
+
         protected override string GetScriptName()
         {
             return "Image Device Controller";
@@ -36,40 +36,37 @@ namespace jp.ootr.ImageDeviceController.Editor
         {
             var root = new VisualElement();
             root.AddToClassList("container");
-            
+
             root.Add(GetDeviceList());
-            
+
             root.Add(GetZipLoadDelayFrames());
-            
+
             root.Add(GetBase64DecodePartSize());
-            
+
             root.Add(GetVideoFrameLoadTimeout());
-            
+
             return root;
         }
 
         private VisualElement GetDeviceList()
         {
             var devices = new PropertyField(_devices);
-            devices.RegisterCallback<ChangeEvent<Object>>(evt =>
-            {
-                UpdateDevices((ImageDeviceController)target);
-            });
+            devices.RegisterCallback<ChangeEvent<Object>>(evt => { UpdateDevices((ImageDeviceController)target); });
             return devices;
         }
-        
+
         private VisualElement GetZipLoadDelayFrames()
         {
             var zlDelayFrames = new PropertyField(_zlDelayFrames);
             return zlDelayFrames;
         }
-        
+
         private VisualElement GetBase64DecodePartSize()
         {
             var zlPartLength = new PropertyField(_zlPartLength);
             return zlPartLength;
         }
-        
+
         private VisualElement GetVideoFrameLoadTimeout()
         {
             var vlLoadTimeout = new PropertyField(_vlLoadTimeout);
