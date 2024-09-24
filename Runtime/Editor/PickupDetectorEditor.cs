@@ -1,31 +1,40 @@
 ﻿#if UNITY_EDITOR
-using jp.ootr.common;
+using jp.ootr.common.Editor;
 using jp.ootr.ImageDeviceController.CommonDevice.PickupDetector;
 using UnityEditor;
-using UnityEngine;
+using UnityEditor.UIElements;
+using UnityEngine.UIElements;
 
 namespace jp.ootr.ImageDeviceController.Editor
 {
     [CustomEditor(typeof(PickupDetector))]
-    public class PickupDetectorEditor : UnityEditor.Editor
+    public class PickupDetectorEditor : BaseEditor
     {
-        private SerializedProperty _commonDevice;
-
-        private void OnEnable()
+        protected override VisualElement GetLayout()
         {
-            _commonDevice = serializedObject.FindProperty("commonDevice");
+            var root = new VisualElement();
+            root.AddToClassList("container");
+            
+            root.Add(GetCommonDevice());
+            
+            return root;
+        }
+        
+        private VisualElement GetCommonDevice()
+        {
+            var commonDevice = new ObjectField
+            {
+                objectType = typeof(CommonDevice.CommonDevice),
+                bindingPath = "commonDevice",
+                label = "Target Device"
+            };
+            
+            return commonDevice;
         }
 
-        public override void OnInspectorGUI()
+        protected override string GetScriptName()
         {
-            EditorGUILayout.LabelField("PickupDetector", EditorStyle.UiTitle);
-
-            EditorGUILayout.Space();
-
-            EditorGUILayout.LabelField("Target Device");
-            serializedObject.Update();
-            EditorGUILayout.PropertyField(_commonDevice, new GUIContent("Common Device"), true);
-            serializedObject.ApplyModifiedProperties();
+            return "Pickup Detector";
         }
     }
 }

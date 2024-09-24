@@ -76,42 +76,6 @@ namespace jp.ootr.ImageDeviceController.Editor
             return vlLoadTimeout;
         }
 
-        // public override void OnInspectorGUI()
-        // {
-        //     _debug = EditorGUILayout.ToggleLeft("Debug", _debug);
-        //     if (_debug)
-        //     {
-        //         base.OnInspectorGUI();
-        //         return;
-        //     }
-        //
-        //     var script = (ImageDeviceController)target;
-        //
-        //     EditorGUILayout.LabelField("ImageDeviceController", EditorStyle.UiTitle);
-        //
-        //     EditorGUILayout.Space();
-        //
-        //     serializedObject.Update();
-        //
-        //     EditorGUI.BeginChangeCheck();
-        //     EditorGUILayout.PropertyField(_devices, new GUIContent("Device List"), true);
-        //     if (EditorGUI.EndChangeCheck()) UpdateDevices(script);
-        //
-        //     EditorGUILayout.Space();
-        //
-        //     EditorGUILayout.PropertyField(_zlDelayFrames, new GUIContent("Zip Load Delay Frames"));
-        //
-        //     EditorGUILayout.Space();
-        //
-        //     EditorGUILayout.PropertyField(_zlPartLength, new GUIContent("Base64 Decode Part Size"));
-        //
-        //     EditorGUILayout.Space();
-        //
-        //     EditorGUILayout.PropertyField(_vlLoadTimeout, new GUIContent("Video Frame Load Timeout"));
-        //
-        //     serializedObject.ApplyModifiedProperties();
-        // }
-
         private void UpdateDevices(ImageDeviceController script)
         {
             foreach (var device in script.devices)
