@@ -8,8 +8,8 @@ namespace jp.ootr.ImageDeviceController
 {
     public class URLStore : CacheController
     {
-        [SerializeField] public VRCUrl[] usUrls = new VRCUrl[0];
-        [SerializeField] public string[] usUrlStrings = new string[0];
+        [SerializeField] protected VRCUrl[] usUrls = new VRCUrl[0];
+        [SerializeField] protected string[] usUrlStrings = new string[0];
 
         private readonly string[] _urlStorePrefixes = { "URLStore" };
         [UdonSynced] private URLStoreSyncAction _usSyncAction = URLStoreSyncAction.None;

@@ -96,7 +96,7 @@ namespace jp.ootr.ImageDeviceController.Editor
         {
             return new TextField("Device Name")
             {
-                bindingPath = "deviceName"
+                bindingPath = nameof(CommonDevice.CommonDevice.deviceName)
             };
         }
 
@@ -112,7 +112,7 @@ namespace jp.ootr.ImageDeviceController.Editor
             {
                 var texture = new ObjectField("Splash Image")
                 {
-                    bindingPath = "splashImageTexture",
+                    bindingPath = nameof(CommonDevice.CommonDevice.splashImageTexture),
                     objectType = typeof(Texture2D)
                 };
                 foldout.Add(texture);
@@ -120,13 +120,13 @@ namespace jp.ootr.ImageDeviceController.Editor
                 texture.RegisterValueChangedCallback(evt =>
                 {
                     var newTexture = (Texture2D)evt.newValue;
-                    var splashImageProp = serializedObject.FindProperty("splashImage");
+                    var splashImageProp = serializedObject.FindProperty(nameof(CommonDevice.CommonDevice.splashImage));
                     var splashImage = (RawImage)splashImageProp.objectReferenceValue;
                     var soImage = new SerializedObject(splashImage);
                     soImage.Update();
                     soImage.FindProperty("m_Texture").objectReferenceValue = newTexture;
                     soImage.ApplyModifiedProperties();
-                    var slashImageFitterProp = serializedObject.FindProperty("splashImageFitter");
+                    var slashImageFitterProp = serializedObject.FindProperty(nameof(CommonDevice.CommonDevice.splashImageFitter));
                     var splashImageFitter = (AspectRatioFitter)slashImageFitterProp.objectReferenceValue;
                     var soImageFitter = new SerializedObject(splashImageFitter);
                     soImageFitter.Update();
@@ -194,13 +194,13 @@ namespace jp.ootr.ImageDeviceController.Editor
             {
                 if (script.splashImage == null) continue;
                 var texture = script.splashImageTexture;
-                var splashImageProp = new SerializedObject(script).FindProperty("splashImage");
+                var splashImageProp = new SerializedObject(script).FindProperty(nameof(CommonDevice.CommonDevice.splashImage));
                 var splashImage = (RawImage)splashImageProp.objectReferenceValue;
                 var soImage = new SerializedObject(splashImage);
                 soImage.Update();
                 soImage.FindProperty("m_Texture").objectReferenceValue = texture;
                 soImage.ApplyModifiedProperties();
-                var slashImageFitterProp = new SerializedObject(script).FindProperty("splashImageFitter");
+                var slashImageFitterProp = new SerializedObject(script).FindProperty(nameof(CommonDevice.CommonDevice.splashImageFitter));
                 var splashImageFitter = (AspectRatioFitter)slashImageFitterProp.objectReferenceValue;
                 var soImageFitter = new SerializedObject(splashImageFitter);
                 soImageFitter.Update();
@@ -229,7 +229,7 @@ namespace jp.ootr.ImageDeviceController.Editor
                 if (script.deviceUuid == uuid) continue;
                 var so = new SerializedObject(script);
                 so.Update();
-                so.FindProperty("deviceUuid").stringValue = uuid;
+                so.FindProperty(nameof(CommonDevice.CommonDevice.deviceUuid)).stringValue = uuid;
                 so.ApplyModifiedProperties();
                 EditorUtility.SetDirty(script);
             }
@@ -238,7 +238,7 @@ namespace jp.ootr.ImageDeviceController.Editor
         public static void GenerateUuid(SerializedObject so)
         {
             var uuid = Guid.NewGuid().ToString();
-            so.FindProperty("deviceUuid").stringValue = uuid;
+            so.FindProperty(nameof(CommonDevice.CommonDevice.deviceUuid)).stringValue = uuid;
         }
 
         public static bool ValidateDuplicateReferencedDevices(ImageDeviceController[] controllers)

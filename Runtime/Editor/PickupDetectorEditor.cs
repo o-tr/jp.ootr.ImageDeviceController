@@ -25,7 +25,7 @@ namespace jp.ootr.ImageDeviceController.Editor
             var commonDevice = new ObjectField
             {
                 objectType = typeof(CommonDevice.CommonDevice),
-                bindingPath = "commonDevice",
+                bindingPath = nameof(PickupDetector.commonDevice),
                 label = "Target Device"
             };
 

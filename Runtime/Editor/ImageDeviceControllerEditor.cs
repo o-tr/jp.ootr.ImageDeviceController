@@ -21,10 +21,10 @@ namespace jp.ootr.ImageDeviceController.Editor
         public override void OnEnable()
         {
             base.OnEnable();
-            _devices = serializedObject.FindProperty("devices");
-            _zlDelayFrames = serializedObject.FindProperty("zlDelayFrames");
-            _zlPartLength = serializedObject.FindProperty("zlPartLength");
-            _vlLoadTimeout = serializedObject.FindProperty("vlLoadTimeout");
+            _devices = serializedObject.FindProperty(nameof(ImageDeviceController.devices));
+            _zlDelayFrames = serializedObject.FindProperty(nameof(ImageDeviceController.zlDelayFrames));
+            _zlPartLength = serializedObject.FindProperty(nameof(ImageDeviceController.zlPartLength));
+            _vlLoadTimeout = serializedObject.FindProperty(nameof(ImageDeviceController.vlLoadTimeout));
         }
 
         protected override string GetScriptName()
@@ -80,8 +80,8 @@ namespace jp.ootr.ImageDeviceController.Editor
                 if (device == null) continue;
                 var so = new SerializedObject(device);
                 so.Update();
-                so.FindProperty("controller").objectReferenceValue = script;
-                var property = so.FindProperty("devices");
+                so.FindProperty(nameof(CommonDevice.CommonDevice.controller)).objectReferenceValue = script;
+                var property = so.FindProperty(nameof(CommonDevice.CommonDevice.devices));
                 property.arraySize = script.devices.Length;
                 for (var i = 0; i < script.devices.Length; i++)
                     property.GetArrayElementAtIndex(i).objectReferenceValue = script.devices[i];
@@ -138,7 +138,7 @@ namespace jp.ootr.ImageDeviceController.Editor
             var devices = script.devices.Where(d => d != null).ToArray();
             var so = new SerializedObject(script);
             so.Update();
-            var property = so.FindProperty("devices");
+            var property = so.FindProperty(nameof(ImageDeviceController.devices));
             property.arraySize = devices.Length;
             for (var i = 0; i < devices.Length; i++)
                 property.GetArrayElementAtIndex(i).objectReferenceValue = devices[i];
