@@ -10,11 +10,11 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
         [SerializeField] public Texture2D deviceIcon;
         [SerializeField] protected Animator animator;
         [SerializeField] public CommonDevice[] devices;
-        [SerializeField] public DeviceController controller;
-        [SerializeField] public RawImage splashImage;
-        [SerializeField] public AspectRatioFitter splashImageFitter;
-        [SerializeField] public Texture2D splashImageTexture;
-
+        [SerializeField] protected internal DeviceController controller;
+        [SerializeField] internal RawImage splashImage;
+        [SerializeField] internal AspectRatioFitter splashImageFitter;
+        [SerializeField] internal Texture2D splashImageTexture;
+        
         public string deviceUuid;
 
         private void Start()

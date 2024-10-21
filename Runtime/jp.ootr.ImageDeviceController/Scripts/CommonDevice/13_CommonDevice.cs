@@ -4,7 +4,7 @@
     {
         public override string GetClassName()
         {
-            return "jp.ootr.ImageManager.CommonDevice.CommonDevice";
+            return "jp.ootr.ImageDeviceController.CommonDevice.CommonDevice";
         }
 
         public override string GetDisplayName()

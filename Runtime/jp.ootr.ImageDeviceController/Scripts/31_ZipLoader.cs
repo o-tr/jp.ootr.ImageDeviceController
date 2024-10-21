@@ -14,9 +14,9 @@ namespace jp.ootr.ImageDeviceController
         [SerializeField] private UdonZip.UdonZip zlUdonZip;
 
         [SerializeField] [Range(1024, 1024000)]
-        public int zlPartLength = 102400;
+        protected internal int zlPartLength = 102400;
 
-        [SerializeField] [Range(1, 100)] public int zlDelayFrames = 1;
+        [SerializeField] [Range(1, 100)] protected internal int zlDelayFrames = 1;
 
         private readonly string[] _zipLoaderPrefixes = { "ZipLoader" };
         private int _zlDecodedBytes;
