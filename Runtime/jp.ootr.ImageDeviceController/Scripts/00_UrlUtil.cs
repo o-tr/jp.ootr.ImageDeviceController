@@ -55,6 +55,21 @@ namespace jp.ootr.ImageDeviceController
             options.ParseSourceOptions(out type, out var v1, out var v2);
         }
 
+        public static void ParseFileName(this string fileName, out URLType type)
+        {
+            if (fileName.StartsWith("zip://"))
+            {
+                type = URLType.TextZip;
+                return;
+            }
+            if (fileName.StartsWith("video://"))
+            {
+                type = URLType.Video;
+                return;
+            }
+            type = URLType.Image;
+        }
+
         public static string BuildSourceOptions(URLType type, float offset, float interval)
         {
             return $"{(int)type},{offset},{interval}";

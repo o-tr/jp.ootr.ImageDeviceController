@@ -1,7 +1,7 @@
 ﻿{
   "name": "jp.ootr.image-device-controller",
   "displayName": "ImageDeviceController",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "license": "MIT",
   "unity": "2022.3",
   "description": "Base Controller for image device gimmick",
