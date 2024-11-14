@@ -34,6 +34,7 @@ namespace jp.ootr.ImageDeviceController
         private int _vlRetryCount;
         private string _vlSourceRawUrl;
         private string _vlSourceUrl;
+        private string _vlSourceOptions;
         private int _vlTextureHeight;
 
         private int _vlTextureWidth;
@@ -79,6 +80,7 @@ namespace jp.ootr.ImageDeviceController
             _vlOffset = offset;
             _vlSourceUrl = url;
             _vlSourceRawUrl = url;
+            _vlSourceOptions = options;
             vlVideoPlayer.Stop();
             vlVideoPlayer.LoadURL(UsGetUrl(url));
         }
@@ -190,7 +192,7 @@ namespace jp.ootr.ImageDeviceController
             readableText.LoadRawTextureData(data);
             readableText.Apply();
             _vlPreviousTextureBuffer = data;
-            var fileName = $"video://{_vlSourceUrl.Substring(8)}/{_vlCurrentTime:0.00}";
+            var fileName = $"video://{_vlSourceOptions}@{_vlSourceUrl.Substring(8)}/{_vlCurrentTime:0.00}";
             _vlFilenames[_vlProcessIndex] = fileName;
             CcSetTexture(_vlSourceRawUrl, fileName, readableText, data);
             _vlProcessIndex++;
