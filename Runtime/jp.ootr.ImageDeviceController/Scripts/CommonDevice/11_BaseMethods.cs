@@ -1,6 +1,7 @@
 ﻿using jp.ootr.common;
 using UnityEngine;
 using UnityEngine.UI;
+using VRC.SDKBase;
 
 namespace jp.ootr.ImageDeviceController.CommonDevice
 {
@@ -19,9 +20,9 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
 
         private void Start()
         {
-            if (splashImage == null) return;
+            if (!Utilities.IsValid(splashImage)) return;
             splashImage.texture = splashImageTexture;
-            if (splashImageTexture == null || splashImageFitter == null) return;
+            if (!Utilities.IsValid(splashImageTexture) || !Utilities.IsValid(splashImageFitter)) return;
             splashImageFitter.aspectRatio = (float)splashImageTexture.width / splashImageTexture.height;
         }
 

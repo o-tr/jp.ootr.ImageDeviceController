@@ -3,6 +3,7 @@ using System.Text;
 using UnityEngine;
 using VRC.SDK3.Data;
 using VRC.SDK3.StringLoading;
+using VRC.SDKBase;
 using VRC.Udon.Common.Interfaces;
 using static jp.ootr.common.ArrayUtils;
 using static jp.ootr.common.String;
@@ -32,7 +33,7 @@ namespace jp.ootr.ImageDeviceController
 
         protected virtual void ZlLoadZip(string url)
         {
-            if (zlUdonZip == null)
+            if (!Utilities.IsValid(zlUdonZip))
             {
                 ConsoleError("UdonZip component is not set.", _zipLoaderPrefixes);
                 ZlOnLoadError(url, LoadError.MissingUdonZip);

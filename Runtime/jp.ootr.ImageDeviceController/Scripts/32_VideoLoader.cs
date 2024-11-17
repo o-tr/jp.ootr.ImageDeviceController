@@ -42,7 +42,7 @@ namespace jp.ootr.ImageDeviceController
 
         protected virtual void VlLoadVideo(string url, string options = "")
         {
-            if (vlVideoPlayer == null)
+            if (!Utilities.IsValid(vlVideoPlayer))
             {
                 ConsoleError("VRCAVProVideoPlayer component is not set.", _videoLoaderPrefixes);
                 VlOnLoadError(url, LoadError.MissingVRCAVProVideoPlayer);
@@ -120,7 +120,7 @@ namespace jp.ootr.ImageDeviceController
         {
             if (!_vlIsLoading) return;
             _vlMainTexture = (Texture2D)vlVideoRenderer.material.mainTexture;
-            if (_vlMainTexture == null)
+            if (!Utilities.IsValid(_vlMainTexture))
             {
                 SendCustomEventDelayedSeconds(nameof(VlWaitForVideLoad), 1);
                 return;

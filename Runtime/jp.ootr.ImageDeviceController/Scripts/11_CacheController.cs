@@ -1,6 +1,7 @@
 using jp.ootr.common;
 using UnityEngine;
 using VRC.SDK3.Data;
+using VRC.SDKBase;
 
 namespace jp.ootr.ImageDeviceController
 {
@@ -35,7 +36,7 @@ namespace jp.ootr.ImageDeviceController
             files.IncreaseUsedCount();
             file.IncreaseUsedCount();
             var texture = file.GetTexture();
-            if (texture == null) return TryRegenerateTexture(file);
+            if (!Utilities.IsValid(texture)) return TryRegenerateTexture(file);
             return texture;
         }
 
@@ -129,7 +130,7 @@ namespace jp.ootr.ImageDeviceController
 
             string cacheKey = null;
 
-            if (bytes != null)
+            if (Utilities.IsValid(bytes))
             {
                 cacheKey = $"cache://{source}/{fileName}";
                 _cacheBinary = _cacheBinary.Append(bytes);
