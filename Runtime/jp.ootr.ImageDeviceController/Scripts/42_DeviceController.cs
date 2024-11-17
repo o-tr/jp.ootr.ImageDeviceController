@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using VRC.SDKBase;
 
 namespace jp.ootr.ImageDeviceController
 {
@@ -15,7 +16,7 @@ namespace jp.ootr.ImageDeviceController
         {
             foreach (var device in devices)
             {
-                if (device == null) continue;
+                if (!Utilities.IsValid(device)) continue;
                 device.InitController();
             }
         }

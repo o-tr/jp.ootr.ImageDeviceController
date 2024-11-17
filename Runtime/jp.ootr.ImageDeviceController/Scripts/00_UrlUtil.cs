@@ -55,7 +55,7 @@ namespace jp.ootr.ImageDeviceController
             options.ParseSourceOptions(out type, out var v1, out var v2);
         }
 
-        public static void ParseFileName(this string fileName, out URLType type,  out string options)
+        public static void ParseFileName(this string fileName, out URLType type, out string options)
         {
             options = "";
             if (fileName.StartsWith("zip://"))
@@ -63,12 +63,14 @@ namespace jp.ootr.ImageDeviceController
                 type = URLType.TextZip;
                 return;
             }
+
             if (fileName.StartsWith("video://"))
             {
                 options = fileName.Substring(8).Split("@")[0];
                 type = URLType.Video;
                 return;
             }
+
             type = URLType.Image;
         }
 
