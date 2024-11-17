@@ -4,16 +4,17 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
 {
     public class LogicLoadImage : BaseMethods
     {
-        private readonly DataList _queueList = new DataList();
-
+        private readonly DataList _oQueueList = new DataList();
+        private QueueList QueueList => (QueueList)_oQueueList;
+        
         private int _retryCount;
 
         protected virtual void LLIFetchImage(string source, URLType type, string options = "")
         {
             var queue = QueueUtils.CreateQueue(source, options, (int)type);
-            ((QueueList)_queueList).AddQueue(queue);
+            QueueList.AddQueue(queue);
 
-            if (_queueList.Count > 1) return;
+            if (QueueList.Count > 1) return;
             _retryCount = 0;
             FetchImageInternal();
         }
@@ -24,13 +25,13 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
          */
         public virtual void FetchImageInternal()
         {
-            if (_queueList.Count == 0)
+            if (QueueList.Count == 0)
             {
                 ConsoleError($"Index out of range: {nameof(FetchImageInternal)}");
                 return;
             }
 
-            ((QueueList)_queueList).GetQueue(0).Get(out var source, out var options, out var type);
+            QueueList.GetQueue(0).Get(out var source, out var options, out var type);
             if (controller.LoadFilesFromUrl((CommonDevice)this, source, type, options)) return;
             if (_retryCount >= SyncURLRetryCountLimit)
             {
@@ -44,9 +45,9 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
 
         private void FetchNextImage()
         {
-            if (_queueList.Count == 0) return;
-            ((QueueList)_queueList).ShiftQueue();
-            if (_queueList.Count == 0) return;
+            if (QueueList.Count == 0) return;
+            QueueList.ShiftQueue();
+            if (QueueList.Count == 0) return;
             SendCustomEventDelayedFrames(nameof(FetchImageInternal), 1);
         }
 

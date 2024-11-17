@@ -23,10 +23,10 @@ namespace jp.ootr.ImageDeviceController
          * }
          */
         private readonly DataDictionary _oCacheFiles = new DataDictionary();
-        private Cache CacheFiles => (Cache)_oCacheFiles;
 
         private byte[][] _cacheBinary = new byte[0][]; //DataDictionaryにbyte[]が入らないので別で取り扱う
         private string[] _cacheBinaryNames = new string[0];
+        private Cache CacheFiles => (Cache)_oCacheFiles;
 
         public virtual Texture2D CcGetTexture(string source, string fileName)
         {
@@ -107,7 +107,7 @@ namespace jp.ootr.ImageDeviceController
         public virtual Metadata CcGetMetadata(string source, string fileName)
         {
             if (!CcHasTexture(source, fileName)) return null;
-            return ((Cache)CacheFiles).GetSource(source).GetFile(fileName).GetMetadata();
+            return CacheFiles.GetSource(source).GetFile(fileName).GetMetadata();
         }
 
         protected virtual void CcSetTexture(string source, string fileName, Texture2D texture, byte[] bytes = null,

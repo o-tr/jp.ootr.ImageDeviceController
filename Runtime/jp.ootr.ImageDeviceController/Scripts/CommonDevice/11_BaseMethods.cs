@@ -15,7 +15,7 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
         [SerializeField] internal RawImage splashImage;
         [SerializeField] internal AspectRatioFitter splashImageFitter;
         [SerializeField] internal Texture2D splashImageTexture;
-        
+
         public string deviceUuid;
 
         private void Start()

@@ -126,7 +126,8 @@ namespace jp.ootr.ImageDeviceController.Editor
                     soImage.Update();
                     soImage.FindProperty("m_Texture").objectReferenceValue = newTexture;
                     soImage.ApplyModifiedProperties();
-                    var slashImageFitterProp = serializedObject.FindProperty(nameof(CommonDevice.CommonDevice.splashImageFitter));
+                    var slashImageFitterProp =
+                        serializedObject.FindProperty(nameof(CommonDevice.CommonDevice.splashImageFitter));
                     var splashImageFitter = (AspectRatioFitter)slashImageFitterProp.objectReferenceValue;
                     var soImageFitter = new SerializedObject(splashImageFitter);
                     soImageFitter.Update();
@@ -194,13 +195,15 @@ namespace jp.ootr.ImageDeviceController.Editor
             {
                 if (script.splashImage == null) continue;
                 var texture = script.splashImageTexture;
-                var splashImageProp = new SerializedObject(script).FindProperty(nameof(CommonDevice.CommonDevice.splashImage));
+                var splashImageProp =
+                    new SerializedObject(script).FindProperty(nameof(CommonDevice.CommonDevice.splashImage));
                 var splashImage = (RawImage)splashImageProp.objectReferenceValue;
                 var soImage = new SerializedObject(splashImage);
                 soImage.Update();
                 soImage.FindProperty("m_Texture").objectReferenceValue = texture;
                 soImage.ApplyModifiedProperties();
-                var slashImageFitterProp = new SerializedObject(script).FindProperty(nameof(CommonDevice.CommonDevice.splashImageFitter));
+                var slashImageFitterProp =
+                    new SerializedObject(script).FindProperty(nameof(CommonDevice.CommonDevice.splashImageFitter));
                 var splashImageFitter = (AspectRatioFitter)slashImageFitterProp.objectReferenceValue;
                 var soImageFitter = new SerializedObject(splashImageFitter);
                 soImageFitter.Update();

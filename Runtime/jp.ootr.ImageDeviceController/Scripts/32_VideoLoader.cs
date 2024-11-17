@@ -32,9 +32,9 @@ namespace jp.ootr.ImageDeviceController
 
         private string[] _vlQueuedUrls = new string[0];
         private int _vlRetryCount;
+        private string _vlSourceOptions;
         private string _vlSourceRawUrl;
         private string _vlSourceUrl;
-        private string _vlSourceOptions;
         private int _vlTextureHeight;
 
         private int _vlTextureWidth;
