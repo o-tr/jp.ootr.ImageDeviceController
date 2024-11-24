@@ -12,11 +12,17 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
 
         protected virtual void LLIFetchImage([CanBeNull]string source, URLType type, [CanBeNull]string options = "")
         {
-            if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(options))
+            if (string.IsNullOrEmpty(source))
             {
                 ConsoleError("Source is empty");
                 return;
             }
+            
+            if (options == null)
+            {
+                options = UrlUtil.BuildSourceOptions(type, 0, 0);
+            }
+            
             var queue = QueueUtils.CreateQueue(source, options, (int)type);
             QueueList.AddQueue(queue);
 
