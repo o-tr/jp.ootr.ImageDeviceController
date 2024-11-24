@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using jp.ootr.common;
 using UnityEngine;
 using VRC.SDK3.Data;
@@ -28,49 +29,50 @@ namespace jp.ootr.ImageDeviceController
         private string[] _cacheBinaryNames = new string[0];
         private Cache CacheFiles => (Cache)_oCacheFiles;
 
-        public virtual Texture2D CcGetTexture(string source, string fileName)
+        public virtual Texture2D CcGetTexture([CanBeNull]string sourceName, [CanBeNull]string fileName)
         {
-            if (!CcHasTexture(source, fileName)) return null;
-            var files = CacheFiles.GetSource(source);
-            var file = files.GetFile(fileName);
-            files.IncreaseUsedCount();
+            if (!CcHasTexture(sourceName, fileName)) return null;
+            var source = CacheFiles.GetSource(sourceName);
+            var file = source.GetFile(fileName);
+            source.IncreaseUsedCount();
             file.IncreaseUsedCount();
             var texture = file.GetTexture();
-            if (!Utilities.IsValid(texture)) return TryRegenerateTexture(file);
+            if (texture == null) return TryRegenerateTexture(file);
             return texture;
         }
 
-        private Texture2D TryRegenerateTexture(File file)
+        private Texture2D TryRegenerateTexture([CanBeNull]File file)
         {
+            if (file == null) return null;
             var key = file.GetCacheKey();
             if (!_cacheBinaryNames.Has(key, out var index)) return null;
             ConsoleDebug($"regenerate texture: {key}", _cacheControllerPrefixes);
             var format = file.GetTextureFormat();
             var bytes = _cacheBinary[index];
-            var texture = new Texture2D(file["width"].Int, file["height"].Int, format, false);
+            var texture = new Texture2D(file.GetWidth(), file.GetHeight(), format, false);
             texture.LoadRawTextureData(bytes);
             texture.Apply();
             file.SetTexture(texture);
             return texture;
         }
 
-        protected bool CcHasCache(string source)
+        protected bool CcHasCache([CanBeNull]string source)
         {
             return CacheFiles.HasSource(source);
         }
 
-        protected Source CcGetCache(string source)
+        protected Source CcGetCache([CanBeNull]string source)
         {
             return CacheFiles.GetSource(source);
         }
 
-        protected virtual bool CcHasTexture(string source, string fileName)
+        protected virtual bool CcHasTexture([CanBeNull]string source, [CanBeNull]string fileName)
         {
             return CacheFiles.HasSource(source) &&
                    CacheFiles.GetSource(source).HasFile(fileName);
         }
 
-        public virtual void CcReleaseTexture(string sourceName, string fileName)
+        public virtual void CcReleaseTexture([CanBeNull]string sourceName, [CanBeNull]string fileName)
         {
             if (!CcHasTexture(sourceName, fileName)) return;
             var source = CacheFiles.GetSource(sourceName);
@@ -104,20 +106,20 @@ namespace jp.ootr.ImageDeviceController
             }
         }
 
-        public virtual Metadata CcGetMetadata(string source, string fileName)
+        public virtual Metadata CcGetMetadata([CanBeNull]string source, [CanBeNull]string fileName)
         {
             if (!CcHasTexture(source, fileName)) return null;
             return CacheFiles.GetSource(source).GetFile(fileName).GetMetadata();
         }
 
-        protected virtual void CcSetTexture(string source, string fileName, Texture2D texture, byte[] bytes = null,
+        protected virtual void CcSetTexture([CanBeNull]string source, [CanBeNull]string fileName, [CanBeNull]Texture2D texture, [CanBeNull]byte[] bytes = null,
             TextureFormat format = TextureFormat.RGBA32)
         {
             CcSetTexture(source, fileName, texture, new DataDictionary(), bytes, format);
         }
 
-        protected virtual void CcSetTexture(string source, string fileName, Texture2D texture, DataDictionary metadata,
-            byte[] bytes = null, TextureFormat format = TextureFormat.RGBA32)
+        protected virtual void CcSetTexture([CanBeNull]string source, [CanBeNull]string fileName, [CanBeNull]Texture2D texture, [CanBeNull]DataDictionary metadata,
+            [CanBeNull]byte[] bytes = null, TextureFormat format = TextureFormat.RGBA32)
         {
             if (!CacheFiles.HasSource(source)) CacheFiles.AddSource(source);
 
@@ -130,7 +132,7 @@ namespace jp.ootr.ImageDeviceController
 
             string cacheKey = null;
 
-            if (Utilities.IsValid(bytes))
+            if (bytes!=null)
             {
                 cacheKey = $"cache://{source}/{fileName}";
                 _cacheBinary = _cacheBinary.Append(bytes);
@@ -140,7 +142,7 @@ namespace jp.ootr.ImageDeviceController
             files.AddFile(fileName, texture, metadata, cacheKey, format);
         }
 
-        protected virtual void CcOnRelease(string source)
+        protected virtual void CcOnRelease([CanBeNull]string source)
         {
         }
 
@@ -152,11 +154,11 @@ namespace jp.ootr.ImageDeviceController
             {
                 var source = CacheFiles.GetSource(cacheKeys[i]);
                 var fileNames = source.GetFileNames();
-                result += $"{cacheKeys[i]}: {source["usedCount"].Int}\n";
+                result += $"{cacheKeys[i]}: {source.GetUsedCount()}\n";
                 for (var j = 0; j < fileNames.Length; j++)
                 {
                     var file = source.GetFile(fileNames[j]);
-                    result += $"{cacheKeys[i]}/{fileNames[j]}: {file["usedCount"].Int}\n";
+                    result += $"{cacheKeys[i]}/{fileNames[j]}: {file.GetUsedCount()}\n";
                 }
 
                 result += "\n";

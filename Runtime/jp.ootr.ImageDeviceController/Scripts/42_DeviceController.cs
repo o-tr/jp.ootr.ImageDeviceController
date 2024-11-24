@@ -1,11 +1,11 @@
-﻿using UnityEngine;
-using VRC.SDKBase;
+﻿using JetBrains.Annotations;
+using UnityEngine;
 
 namespace jp.ootr.ImageDeviceController
 {
     public class DeviceController : FileController
     {
-        [SerializeField] protected internal CommonDevice.CommonDevice[] devices = new CommonDevice.CommonDevice[0];
+        [ItemCanBeNull][SerializeField] protected internal CommonDevice.CommonDevice[] devices = new CommonDevice.CommonDevice[0];
 
         public virtual void Start()
         {
@@ -16,7 +16,7 @@ namespace jp.ootr.ImageDeviceController
         {
             foreach (var device in devices)
             {
-                if (!Utilities.IsValid(device)) continue;
+                if (device == null) continue;
                 device.InitController();
             }
         }
@@ -24,8 +24,11 @@ namespace jp.ootr.ImageDeviceController
         public bool IsUuidUsed(string uuid)
         {
             foreach (var device in devices)
+            {
+                if (device == null) continue;
                 if (device.GetDeviceUuid() == uuid)
                     return true;
+            }
 
             return false;
         }

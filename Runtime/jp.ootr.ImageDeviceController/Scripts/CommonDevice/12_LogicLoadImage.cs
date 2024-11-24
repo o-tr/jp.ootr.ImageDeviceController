@@ -1,16 +1,22 @@
-﻿using VRC.SDK3.Data;
+﻿using JetBrains.Annotations;
+using VRC.SDK3.Data;
 
 namespace jp.ootr.ImageDeviceController.CommonDevice
 {
     public class LogicLoadImage : BaseMethods
     {
-        private readonly DataList _oQueueList = new DataList();
-        private QueueList QueueList => (QueueList)_oQueueList;
+        [NotNull] private readonly DataList _oQueueList = new DataList();
+        [NotNull] private QueueList QueueList => (QueueList)_oQueueList;
         
         private int _retryCount;
 
-        protected virtual void LLIFetchImage(string source, URLType type, string options = "")
+        protected virtual void LLIFetchImage([CanBeNull]string source, URLType type, [CanBeNull]string options = "")
         {
+            if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(options))
+            {
+                ConsoleError("Source is empty");
+                return;
+            }
             var queue = QueueUtils.CreateQueue(source, options, (int)type);
             QueueList.AddQueue(queue);
 
@@ -51,11 +57,11 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
             SendCustomEventDelayedFrames(nameof(FetchImageInternal), 1);
         }
 
-        public virtual void OnFileLoadProgress(string source, float progress)
+        public virtual void OnFileLoadProgress([NotNull]string source, float progress)
         {
         }
 
-        public virtual void OnFilesLoadSuccess(string source, string[] fileNames)
+        public virtual void OnFilesLoadSuccess([NotNull]string source,[NotNull] string[] fileNames)
         {
             FetchNextImage();
         }

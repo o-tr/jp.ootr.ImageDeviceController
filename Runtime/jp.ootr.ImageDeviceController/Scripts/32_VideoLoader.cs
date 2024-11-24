@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using jp.ootr.common;
 using UnityEngine;
 using VRC.SDK3.Components.Video;
@@ -47,13 +48,33 @@ namespace jp.ootr.ImageDeviceController
 
         protected virtual void VlLoadVideo(string url, string options = "")
         {
-            if (!Utilities.IsValid(vlVideoPlayer))
+            if (vlVideoPlayer == null)
             {
                 ConsoleError("VRCAVProVideoPlayer component is not set.", _videoLoaderPrefixes);
                 VlOnLoadError(url, LoadError.MissingVRCAVProVideoPlayer);
                 return;
             }
-
+            
+            if (!url.IsValidUrl(out var error))
+            {
+                ConsoleError($"Invalid URL: {url}", _videoLoaderPrefixes);
+                VlOnLoadError(url, error);
+                return;
+            }
+            
+            if (string.IsNullOrEmpty(options) || !options.ParseSourceOptions(out var _void1, out var _void2, out var _void3))
+            {
+                ConsoleWarn("Options is empty or invalid.", _videoLoaderPrefixes);
+                VlOnLoadError(url, LoadError.InvalidOptions);
+                return;
+            }
+            
+            if (_vlQueuedUrls.Has(url, out var index) && _vlQueuedOptions[index] == options)
+            {
+                ConsoleDebug("Already queued.", _videoLoaderPrefixes);
+                return;
+            }
+            
             _vlQueuedUrls = _vlQueuedUrls.Append(url);
             _vlQueuedOptions = _vlQueuedOptions.Append(options);
             if (_vlIsLoading) return;
@@ -82,8 +103,8 @@ namespace jp.ootr.ImageDeviceController
             
             _vlLastLoadTime = DateTime.Now;
 
-            _vlQueuedUrls = _vlQueuedUrls.__Shift(out var url);
-            _vlQueuedOptions = _vlQueuedOptions.__Shift(out var options);
+            _vlQueuedUrls = _vlQueuedUrls.Shift(out var url);
+            _vlQueuedOptions = _vlQueuedOptions.Shift(out var options);
 
             options.ParseSourceOptions(out var type, out var offset, out var duration);
 
@@ -235,17 +256,17 @@ namespace jp.ootr.ImageDeviceController
             SendCustomEventDelayedSeconds(nameof(VlLoadNext), VlDelaySeconds);
         }
 
-        protected virtual void VlOnLoadProgress(string source, float progress)
+        protected virtual void VlOnLoadProgress([CanBeNull]string source, float progress)
         {
             ConsoleError("VideoOnLoadProgress should not be called from base class", _videoLoaderPrefixes);
         }
 
-        protected virtual void VlOnLoadSuccess(string source, string[] fileNames)
+        protected virtual void VlOnLoadSuccess([CanBeNull]string source, [CanBeNull]string[] fileNames)
         {
             ConsoleError("VideoOnLoadSuccess should not be called from base class", _videoLoaderPrefixes);
         }
 
-        protected virtual void VlOnLoadError(string source, LoadError error)
+        protected virtual void VlOnLoadError([CanBeNull]string source, LoadError error)
         {
             ConsoleError("VideoOnLoadError should not be called from base class", _videoLoaderPrefixes);
         }
