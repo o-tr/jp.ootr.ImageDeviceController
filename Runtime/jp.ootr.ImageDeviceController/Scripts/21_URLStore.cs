@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
@@ -15,7 +16,7 @@ namespace jp.ootr.ImageDeviceController
         [UdonSynced] private URLStoreSyncAction _usSyncAction = URLStoreSyncAction.None;
         [UdonSynced] private VRCUrl[] _usSyncUrl = new VRCUrl[0];
 
-        public VRCUrl UsGetUrl(string url)
+        public VRCUrl UsGetUrl([CanBeNull]string url)
         {
             if (UrlUtil.GetUrlAndArgs(url, out var tmpUrl, out var voidArgs)) url = tmpUrl;
 
@@ -23,22 +24,22 @@ namespace jp.ootr.ImageDeviceController
             return usUrls[urlIndex];
         }
 
-        public void UsAddUrl(VRCUrl url)
+        public void UsAddUrl([CanBeNull]VRCUrl url)
         {
-            if (usUrlStrings.Has(url.ToString())) return;
+            if (url == null || usUrlStrings.Has(url.ToString())) return;
             _usSyncAction = URLStoreSyncAction.AddUrl;
             _usSyncUrl = new[] { url };
             Sync();
         }
 
-        public void UsAddUrlLocal(VRCUrl url)
+        public void UsAddUrlLocal([CanBeNull]VRCUrl url)
         {
-            if (usUrlStrings.Has(url.ToString())) return;
+            if (url == null || usUrlStrings.Has(url.ToString())) return;
             usUrls = usUrls.Append(url);
             usUrlStrings = usUrlStrings.Append(url.ToString());
         }
 
-        public bool UsHasUrl(string url)
+        public bool UsHasUrl([CanBeNull]string url)
         {
             if (UrlUtil.GetUrlAndArgs(url, out var tmpUrl, out var voidArgs)) url = tmpUrl;
 

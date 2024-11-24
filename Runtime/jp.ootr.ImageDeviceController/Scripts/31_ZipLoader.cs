@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using JetBrains.Annotations;
 using UnityEngine;
 using VRC.SDK3.Data;
 using VRC.SDK3.StringLoading;
@@ -31,12 +32,18 @@ namespace jp.ootr.ImageDeviceController
         private string[] _zlSource;
         private string _zlSourceUrl;
 
-        protected virtual void ZlLoadZip(string url)
+        protected virtual void ZlLoadZip([CanBeNull]string url)
         {
-            if (!Utilities.IsValid(zlUdonZip))
+            if (zlUdonZip == null)
             {
                 ConsoleError("UdonZip component is not set.", _zipLoaderPrefixes);
                 ZlOnLoadError(url, LoadError.MissingUdonZip);
+                return;
+            }
+            
+            if (string.IsNullOrEmpty(url))
+            {
+                ConsoleError("url is empty.", _zipLoaderPrefixes);
                 return;
             }
 
@@ -65,7 +72,13 @@ namespace jp.ootr.ImageDeviceController
                 return;
             }
 
-            _zlQueuedUrlStrings = _zlQueuedUrlStrings.__Shift(out _zlSourceUrl);
+            _zlQueuedUrlStrings = _zlQueuedUrlStrings.Shift(out _zlSourceUrl, out var success);
+            if (!success)
+            {
+                _zlIsLoading = false;
+                ConsoleDebug("no more urls to load.", _zipLoaderPrefixes);
+                return;
+            }
             VRCStringDownloader.LoadUrl(UsGetUrl(_zlSourceUrl), (IUdonEventReceiver)this);
         }
 
@@ -216,17 +229,17 @@ namespace jp.ootr.ImageDeviceController
             SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
         }
 
-        protected virtual void ZlOnLoadProgress(string source, float progress)
+        protected virtual void ZlOnLoadProgress([CanBeNull]string source, float progress)
         {
             ConsoleError("ZipOnLoadProgress should not be called from base class", _zipLoaderPrefixes);
         }
 
-        protected virtual void ZlOnLoadSuccess(string source, string[] fileNames)
+        protected virtual void ZlOnLoadSuccess([CanBeNull]string source, [CanBeNull]string[] fileNames)
         {
             ConsoleError("ZipOnLoadSuccess should not be called from base class", _zipLoaderPrefixes);
         }
 
-        protected virtual void ZlOnLoadError(string source, LoadError error)
+        protected virtual void ZlOnLoadError([CanBeNull]string source, LoadError error)
         {
             ConsoleError("ZipOnLoadError should not be called from base class", _zipLoaderPrefixes);
         }

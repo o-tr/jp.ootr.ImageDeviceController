@@ -41,6 +41,7 @@ namespace jp.ootr.ImageDeviceController
         LiveVideoNotSupported,
         PlayerError,
         RateLimited,
+        InvalidOptions,
 
         //HTTP1.1 4xx
         HttpBadRequest = 400,

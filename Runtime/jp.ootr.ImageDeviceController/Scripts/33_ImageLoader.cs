@@ -1,7 +1,8 @@
+using JetBrains.Annotations;
+using jp.ootr.common;
 using UnityEngine;
 using VRC.SDK3.Image;
 using VRC.Udon.Common.Interfaces;
-using static jp.ootr.common.ArrayUtils;
 
 namespace jp.ootr.ImageDeviceController
 {
@@ -29,12 +30,18 @@ namespace jp.ootr.ImageDeviceController
             _textureInfo.AnisoLevel = 16;
         }
 
-        protected virtual void IlLoadImage(string url)
+        protected virtual void IlLoadImage([CanBeNull]string url)
         {
             if (!_ilInited)
             {
                 _ilInited = true;
                 IlInit();
+            }
+            
+            if (url.IsNullOrEmpty())
+            {
+                ConsoleWarn("url is null", _imageLoaderPrefixes);
+                return;
             }
 
             if (_ilQueuedUrlStrings.Has(url))
@@ -90,12 +97,12 @@ namespace jp.ootr.ImageDeviceController
             SendCustomEventDelayedFrames(nameof(IlLoadNext), IlDelayFrames);
         }
 
-        protected virtual void IlOnLoadSuccess(string source, string[] fileNames)
+        protected virtual void IlOnLoadSuccess([CanBeNull]string source, [CanBeNull]string[] fileNames)
         {
             ConsoleError("IlOnLoadSuccess should not be called from base class", _imageLoaderPrefixes);
         }
 
-        protected virtual void IlOnLoadError(string source, LoadError error)
+        protected virtual void IlOnLoadError([CanBeNull]string source, LoadError error)
         {
             ConsoleError("IlOnLoadError should not be called from base class", _imageLoaderPrefixes);
         }

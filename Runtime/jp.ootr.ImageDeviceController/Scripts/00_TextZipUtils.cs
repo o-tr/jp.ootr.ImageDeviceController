@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using jp.ootr.common;
 using UnityEngine;
 using VRC.SDK3.Data;
@@ -38,8 +39,13 @@ namespace jp.ootr.ImageDeviceController
             return ParseResult.UnknownVersion;
         }
 
-        private static ParseResult ValidateManifestV0(DataList manifest, out DataList files)
+        private static ParseResult ValidateManifestV0([CanBeNull]DataList manifest, out DataList files)
         {
+            if (manifest == null)
+            {
+                files = null;
+                return ParseResult.InvalidValueType;
+            }
             files = manifest;
             var length = files.Count;
             for (var i = 0; i < length; i++)
@@ -83,8 +89,9 @@ namespace jp.ootr.ImageDeviceController
             return ParseResult.Success;
         }
 
-        private static bool IsValidFilesV1(DataList files)
+        private static bool IsValidFilesV1([CanBeNull]DataList files)
         {
+            if (files == null) return false;
             var length = files.Count;
             for (var i = 0; i < length; i++)
                 if (
@@ -102,11 +109,12 @@ namespace jp.ootr.ImageDeviceController
             return true;
         }
 
-        public static ParseResult TryGetFileMetadata(this DataDictionary file, out string path,
+        public static ParseResult TryGetFileMetadata([CanBeNull]this DataDictionary file, out string path,
             out TextureFormat format,
             out int width, out int height, out DataDictionary ext)
         {
             if (
+                file == null ||
                 !file.TryGetValue("path", TokenType.String, out var pathToken) ||
                 !file.TryGetValue("rect", TokenType.DataDictionary, out var rectToken) ||
                 !rectToken.DataDictionary.TryGetValue("width", TokenType.Double, out var widthToken) ||
@@ -145,13 +153,19 @@ namespace jp.ootr.ImageDeviceController
             return ParseResult.Success;
         }
 
-        public static bool IsValidTextZip(this IVRCStringDownload result)
+        public static bool IsValidTextZip([CanBeNull]this IVRCStringDownload result)
         {
+            if (result == null) return false;
             return result.Result.Substring(0, 6) == "UEsDBA";
         }
 
-        public static bool ParseTextureFormatString(string input, out TextureFormat result)
+        public static bool ParseTextureFormatString([CanBeNull]string input, out TextureFormat result)
         {
+            if (input == null)
+            {
+                result = TextureFormat.RGBA32;
+                return false;
+            }
             var textureFormats = new[]
             {
                 "-",

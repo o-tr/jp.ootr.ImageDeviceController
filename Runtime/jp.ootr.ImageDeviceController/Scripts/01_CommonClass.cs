@@ -1,4 +1,5 @@
-﻿using jp.ootr.common;
+﻿using JetBrains.Annotations;
+using jp.ootr.common;
 
 namespace jp.ootr.ImageDeviceController
 {
@@ -23,7 +24,7 @@ namespace jp.ootr.ImageDeviceController
 
         public readonly int SupportedManifestVersion = 1;
 
-        protected virtual LoadError ParseStringDownloadError(string message, int code)
+        protected virtual LoadError ParseStringDownloadError([CanBeNull]string message, int code)
         {
             if (message == "Client has too many requests (limit is 1000)." && code == 429)
                 return LoadError.TooManyRequests;
@@ -42,12 +43,12 @@ namespace jp.ootr.ImageDeviceController
             return LoadError.Unknown;
         }
 
-        protected virtual LoadError ParseImageDownloadError(LoadError error, string message)
+        protected virtual LoadError ParseImageDownloadError(LoadError error, [CanBeNull]string message)
         {
             if (error == LoadError.DownloadError && message == "Redirect limit exceeded")
                 return LoadError.RedirectNotAllowed;
 
-            if (error == LoadError.DownloadError)
+            if (error == LoadError.DownloadError && message != null)
             {
                 var split = message.Split(' ');
                 if (split.Length > 2 && int.TryParse(split[1], out var code)) return (LoadError)code;
