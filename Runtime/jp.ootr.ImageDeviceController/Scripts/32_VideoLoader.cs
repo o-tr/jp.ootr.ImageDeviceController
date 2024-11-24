@@ -197,7 +197,6 @@ namespace jp.ootr.ImageDeviceController
             request.TryGetData(data);
             if (data.MayBlank(100))
             {
-                _vlRetryCount++;
                 ConsoleDebug($"Texture may blank. wait for {VlDelaySeconds}s", _videoLoaderPrefixes);
                 SendCustomEventDelayedFrames(nameof(VlOnVideoReady), 1);
                 return;
