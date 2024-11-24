@@ -1,4 +1,5 @@
-﻿using jp.ootr.common;
+﻿using System;
+using jp.ootr.common;
 using UnityEngine;
 using VRC.SDK3.Components.Video;
 using VRC.SDK3.Rendering;
@@ -39,6 +40,10 @@ namespace jp.ootr.ImageDeviceController
 
         private int _vlTextureWidth;
         private RenderTexture _vlTmpRenderTexture;
+        
+        private DateTime _vlLastLoadTime;
+
+        private readonly int _vlLoadMinInterval = 5;
 
         protected virtual void VlLoadVideo(string url, string options = "")
         {
@@ -67,6 +72,15 @@ namespace jp.ootr.ImageDeviceController
                 _vlIsLoading = false;
                 return;
             }
+            
+            if (_vlLastLoadTime.AddSeconds(_vlLoadMinInterval) > DateTime.Now)
+            {
+                ConsoleWarn($"Timeout. source: {_vlSourceUrl}", _videoLoaderPrefixes);
+                SendCustomEventDelayedSeconds(nameof(VlLoadNext), _vlLoadMinInterval);
+                return;
+            }
+            
+            _vlLastLoadTime = DateTime.Now;
 
             _vlQueuedUrls = _vlQueuedUrls.__Shift(out var url);
             _vlQueuedOptions = _vlQueuedOptions.__Shift(out var options);
@@ -81,8 +95,13 @@ namespace jp.ootr.ImageDeviceController
             _vlSourceUrl = url;
             _vlSourceRawUrl = url;
             _vlSourceOptions = options;
+            VlLoadVideo();
+        }
+
+        public void VlLoadVideo()
+        {
             vlVideoPlayer.Stop();
-            vlVideoPlayer.LoadURL(UsGetUrl(url));
+            vlVideoPlayer.LoadURL(UsGetUrl(_vlSourceUrl));
         }
 
         public override void OnVideoReady()
@@ -108,6 +127,12 @@ namespace jp.ootr.ImageDeviceController
 
         public override void OnVideoError(VideoError videoError)
         {
+            if (videoError == VideoError.RateLimited)
+            {
+                ConsoleWarn($"Rate limited. retry after {_vlLoadMinInterval}s", _videoLoaderPrefixes);
+                SendCustomEventDelayedSeconds(nameof(VlLoadVideo), _vlLoadMinInterval);
+                return;
+            }
             VlOnLoadError(_vlSourceUrl, ToLoadError(videoError));
             SendCustomEventDelayedSeconds(nameof(VlLoadNext), VlDelaySeconds);
         }
