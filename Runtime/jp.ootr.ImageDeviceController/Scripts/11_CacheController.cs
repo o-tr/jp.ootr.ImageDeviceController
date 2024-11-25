@@ -34,9 +34,10 @@ namespace jp.ootr.ImageDeviceController
             if (!CcHasTexture(sourceName, fileName)) return null;
             var source = CacheFiles.GetSource(sourceName);
             var file = source.GetFile(fileName);
-            source.IncreaseUsedCount();
-            file.IncreaseUsedCount();
+            var sourceCount = source.IncreaseUsedCount();
+            var fileCount = file.IncreaseUsedCount();
             var texture = file.GetTexture();
+            ConsoleInfo($"get texture: {sourceName}/{fileName} ({sourceCount}/{fileCount})", _cacheControllerPrefixes);
             if (texture == null) return TryRegenerateTexture(file);
             return texture;
         }
@@ -79,7 +80,8 @@ namespace jp.ootr.ImageDeviceController
             if (!CcHasTexture(sourceName, fileName)) return;
             var source = CacheFiles.GetSource(sourceName);
             var file = source.GetFile(fileName);
-            if (source.DecreaseUsedCount() < 1)
+            var sourceCount = source.DecreaseUsedCount();
+            if (sourceCount < 1)
             {
                 foreach (var tmpFileName in source.GetFileNames()) source.GetFile(tmpFileName).DestroyTexture();
                 var keys = CacheFiles.RemoveSource(sourceName);
@@ -89,16 +91,18 @@ namespace jp.ootr.ImageDeviceController
                     _cacheBinary = _cacheBinary.Remove(index);
                     _cacheBinaryNames = _cacheBinaryNames.Remove(index);
                 }
+                ConsoleInfo($"destroy source: {sourceName}", _cacheControllerPrefixes);
 
                 return;
             }
-
-            if (file.DecreaseUsedCount() < 1)
+            
+            var fileCount = file.DecreaseUsedCount();
+            if (fileCount < 1)
             {
                 var key = file.GetCacheKey();
                 if (key.IsNullOrEmpty() && _cacheBinaryNames.Has(key))
                 {
-                    ConsoleInfo($"release texture: {sourceName}/{fileName}", _cacheControllerPrefixes);
+                    ConsoleInfo($"destroy texture: {sourceName}/{fileName}", _cacheControllerPrefixes);
                     file.DestroyTexture();
                 }
                 else
@@ -106,6 +110,7 @@ namespace jp.ootr.ImageDeviceController
                     ConsoleInfo($"cannot release texture: {sourceName}/{fileName}", _cacheControllerPrefixes);
                 }
             }
+            ConsoleInfo($"release texture: {sourceName}/{fileName} ({sourceCount}/{fileCount})", _cacheControllerPrefixes);
         }
 
         [CanBeNull]
