@@ -70,12 +70,12 @@ namespace jp.ootr.ImageDeviceController
 
         public static bool ParseSourceOptions([CanBeNull] this string options, out URLType type)
         {
-            return options.ParseSourceOptions(out type, out var v1, out var v2);
+            return options.ParseSourceOptions(out type, out var void1, out var void2);
         }
 
         public static bool ParseSourceOptions([CanBeNull] this string options)
         {
-            return options.ParseSourceOptions(out var v1, out var v2, out var v3);
+            return options.ParseSourceOptions(out var void1, out var void2, out var void3);
         }
 
         public static void ParseFileName([CanBeNull] this string fileName, out URLType type,
