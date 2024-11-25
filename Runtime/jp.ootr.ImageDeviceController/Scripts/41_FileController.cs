@@ -113,11 +113,11 @@ namespace jp.ootr.ImageDeviceController
             ConsoleDebug(
                 $"TextZip loaded successfully. {fileNames.Length} files. device count: {_loadingDevices[loadingIndex].Length}, {source}",
                 _fileControllerPrefixes);
+            _loadedUrls = _loadedUrls.Append(source);
+            _cachedData = _cachedData.Append(fileNames);
             foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadSuccess(source, fileNames);
             _loadingUrls = _loadingUrls.Remove(loadingIndex);
             _loadingDevices = _loadingDevices.Remove(loadingIndex);
-            _loadedUrls = _loadedUrls.Append(source);
-            _cachedData = _cachedData.Append(fileNames);
         }
 
         protected override void ZlOnLoadError([CanBeNull] string source, LoadError error)
@@ -134,11 +134,11 @@ namespace jp.ootr.ImageDeviceController
         {
             if (source == null || fileNames == null || !_loadingUrls.Has(source, out var loadingIndex)) return;
             ConsoleDebug($"Image loaded successfully. {source} ", _fileControllerPrefixes);
+            _loadedUrls = _loadedUrls.Append(source);
+            _cachedData = _cachedData.Append(fileNames);
             foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadSuccess(source, fileNames);
             _loadingUrls = _loadingUrls.Remove(loadingIndex);
             _loadingDevices = _loadingDevices.Remove(loadingIndex);
-            _loadedUrls = _loadedUrls.Append(source);
-            _cachedData = _cachedData.Append(fileNames);
         }
 
         protected override void IlOnLoadError([CanBeNull] string source, LoadError error)
@@ -163,11 +163,11 @@ namespace jp.ootr.ImageDeviceController
         {
             if (!_loadingUrls.Has(source, out var loadingIndex) || source == null || fileNames == null) return;
             ConsoleDebug($"Video loaded successfully. {source}", _fileControllerPrefixes);
+            _loadedUrls = _loadedUrls.Append(source);
+            _cachedData = _cachedData.Append(fileNames);
             foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadSuccess(source, fileNames);
             _loadingUrls = _loadingUrls.Remove(loadingIndex);
             _loadingDevices = _loadingDevices.Remove(loadingIndex);
-            _loadedUrls = _loadedUrls.Append(source);
-            _cachedData = _cachedData.Append(fileNames);
         }
 
         protected override void VlOnLoadProgress([CanBeNull] string source, float progress)
@@ -189,11 +189,11 @@ namespace jp.ootr.ImageDeviceController
         {
             if (!_loadingUrls.Has(source, out var loadingIndex) || source == null || fileNames == null) return;
             ConsoleDebug($"Local file loaded successfully. {source}", _fileControllerPrefixes);
+            _loadedUrls = _loadedUrls.Append(source);
+            _cachedData = _cachedData.Append(fileNames);
             foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadSuccess(source, fileNames);
             _loadingUrls = _loadingUrls.Remove(loadingIndex);
             _loadingDevices = _loadingDevices.Remove(loadingIndex);
-            _loadedUrls = _loadedUrls.Append(source);
-            _cachedData = _cachedData.Append(fileNames);
         }
 
         #endregion

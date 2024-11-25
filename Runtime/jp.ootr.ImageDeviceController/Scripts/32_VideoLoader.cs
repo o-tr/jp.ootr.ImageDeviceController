@@ -98,7 +98,7 @@ namespace jp.ootr.ImageDeviceController
 
             if (_vlLastLoadTime.AddSeconds(_vlLoadMinInterval) > DateTime.Now)
             {
-                ConsoleWarn($"Timeout. source: {_vlSourceUrl}", _videoLoaderPrefixes);
+                ConsoleDebug($"Rate limited. retry after {_vlLoadMinInterval}s", _videoLoaderPrefixes);
                 SendCustomEventDelayedSeconds(nameof(VlLoadNext), _vlLoadMinInterval);
                 return;
             }
