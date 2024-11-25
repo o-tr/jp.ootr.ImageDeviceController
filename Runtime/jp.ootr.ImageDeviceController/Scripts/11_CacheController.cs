@@ -31,7 +31,11 @@ namespace jp.ootr.ImageDeviceController
         [CanBeNull]
         public virtual Texture2D CcGetTexture([CanBeNull] string sourceName, [CanBeNull] string fileName)
         {
-            if (!CcHasTexture(sourceName, fileName)) return null;
+            if (!CcHasTexture(sourceName, fileName))
+            {
+                ConsoleError($"texture not found: {sourceName}/{fileName}", _cacheControllerPrefixes);
+                return null;
+            }
             var source = CacheFiles.GetSource(sourceName);
             var file = source.GetFile(fileName);
             var sourceCount = source.IncreaseUsedCount();
@@ -154,6 +158,14 @@ namespace jp.ootr.ImageDeviceController
 
         protected virtual void CcOnRelease([CanBeNull] string source)
         {
+        }
+        
+        [CanBeNull]
+        public string[] CcGetFileNames([CanBeNull] string sourceName)
+        {
+            var source = CacheFiles.GetSource(sourceName);
+            if (source == null) return null;
+            return source.GetFileNames();
         }
 
         [NotNull]
