@@ -5,7 +5,8 @@ namespace jp.ootr.ImageDeviceController
 {
     public class DeviceController : FileController
     {
-        [ItemCanBeNull][SerializeField] protected internal CommonDevice.CommonDevice[] devices = new CommonDevice.CommonDevice[0];
+        [ItemCanBeNull] [SerializeField]
+        protected internal CommonDevice.CommonDevice[] devices = new CommonDevice.CommonDevice[0];
 
         public virtual void Start()
         {

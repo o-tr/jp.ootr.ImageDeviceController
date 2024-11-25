@@ -17,8 +17,9 @@ namespace jp.ootr.ImageDeviceController
 
     public static class TextZipUtils
     {
-        public static ParseResult ValidateManifest(DataToken manifest, [CanBeNull]out DataList files, out int manifestVersion,
-            [CanBeNull]out string[] requiredFeatures, [CanBeNull]out string[] extension)
+        public static ParseResult ValidateManifest(DataToken manifest, [CanBeNull] out DataList files,
+            out int manifestVersion,
+            [CanBeNull] out string[] requiredFeatures, [CanBeNull] out string[] extension)
         {
             switch (manifest.TokenType)
             {
@@ -39,30 +40,32 @@ namespace jp.ootr.ImageDeviceController
             return ParseResult.UnknownVersion;
         }
 
-        private static ParseResult ValidateManifestV0([CanBeNull]DataList manifest, [CanBeNull]out DataList files)
+        private static ParseResult ValidateManifestV0([CanBeNull] DataList manifest, [CanBeNull] out DataList files)
         {
             if (manifest == null)
             {
                 files = null;
                 return ParseResult.InvalidValueType;
             }
+
             files = manifest;
             var length = files.Count;
             for (var i = 0; i < length; i++)
                 if (
                     !files.TryGetValue(i, TokenType.DataDictionary, out var file) ||
-                    !file.DataDictionary.TryGetValue("path", TokenType.String, out var path) ||
+                    !file.DataDictionary.TryGetValue("path", TokenType.String, out var void1) ||
                     !file.DataDictionary.TryGetValue("rect", TokenType.DataDictionary, out var rect) ||
-                    !rect.DataDictionary.TryGetValue("width", TokenType.Double, out var width) ||
-                    !rect.DataDictionary.TryGetValue("height", TokenType.Double, out var height)
+                    !rect.DataDictionary.TryGetValue("width", TokenType.Double, out var void2) ||
+                    !rect.DataDictionary.TryGetValue("height", TokenType.Double, out var void3)
                 )
                     return ParseResult.InvalidValueType;
 
             return ParseResult.Success;
         }
 
-        private static ParseResult ValidateManifestV1(DataToken manifest, [CanBeNull]out DataList files, out int manifestVersion,
-            [CanBeNull]out string[] requiredFeatures, [CanBeNull]out string[] extension)
+        private static ParseResult ValidateManifestV1(DataToken manifest, [CanBeNull] out DataList files,
+            out int manifestVersion,
+            [CanBeNull] out string[] requiredFeatures, [CanBeNull] out string[] extension)
         {
             if (
                 !manifest.DataDictionary.TryGetValue("files", TokenType.DataList, out var filesToken) ||
@@ -89,18 +92,18 @@ namespace jp.ootr.ImageDeviceController
             return ParseResult.Success;
         }
 
-        private static bool IsValidFilesV1([CanBeNull]DataList files)
+        private static bool IsValidFilesV1([CanBeNull] DataList files)
         {
             if (files == null) return false;
             var length = files.Count;
             for (var i = 0; i < length; i++)
                 if (
                     !files.TryGetValue(i, TokenType.DataDictionary, out var file) ||
-                    !file.DataDictionary.TryGetValue("path", TokenType.String, out var path) ||
-                    !file.DataDictionary.TryGetValue("format", TokenType.String, out var format) ||
+                    !file.DataDictionary.TryGetValue("path", TokenType.String, out var void1) ||
+                    !file.DataDictionary.TryGetValue("format", TokenType.String, out var void2) ||
                     !file.DataDictionary.TryGetValue("rect", TokenType.DataDictionary, out var rect) ||
-                    !rect.DataDictionary.TryGetValue("width", TokenType.Double, out var width) ||
-                    !rect.DataDictionary.TryGetValue("height", TokenType.Double, out var height) ||
+                    !rect.DataDictionary.TryGetValue("width", TokenType.Double, out var void3) ||
+                    !rect.DataDictionary.TryGetValue("height", TokenType.Double, out var void4) ||
                     (file.DataDictionary.TryGetValue("extensions", TokenType.DataDictionary, out var ext) &&
                      !ext.IsStringDictionary())
                 )
@@ -109,9 +112,9 @@ namespace jp.ootr.ImageDeviceController
             return true;
         }
 
-        public static ParseResult TryGetFileMetadata([CanBeNull]this DataDictionary file, [CanBeNull]out string path,
+        public static ParseResult TryGetFileMetadata([CanBeNull] this DataDictionary file, [CanBeNull] out string path,
             out TextureFormat format,
-            out int width, out int height, [CanBeNull]out DataDictionary ext)
+            out int width, out int height, [CanBeNull] out DataDictionary ext)
         {
             if (
                 file == null ||
@@ -153,19 +156,20 @@ namespace jp.ootr.ImageDeviceController
             return ParseResult.Success;
         }
 
-        public static bool IsValidTextZip([CanBeNull]this IVRCStringDownload result)
+        public static bool IsValidTextZip([CanBeNull] this IVRCStringDownload result)
         {
             if (result == null) return false;
             return result.Result.Substring(0, 6) == "UEsDBA";
         }
 
-        public static bool ParseTextureFormatString([CanBeNull]string input, out TextureFormat result)
+        public static bool ParseTextureFormatString([CanBeNull] string input, out TextureFormat result)
         {
             if (input == null)
             {
                 result = TextureFormat.RGBA32;
                 return false;
             }
+
             var textureFormats = new[]
             {
                 "-",

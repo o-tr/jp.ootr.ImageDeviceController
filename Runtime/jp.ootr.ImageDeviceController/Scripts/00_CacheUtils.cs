@@ -2,7 +2,6 @@
 using jp.ootr.common;
 using UnityEngine;
 using VRC.SDK3.Data;
-using VRC.SDKBase;
 
 namespace jp.ootr.ImageDeviceController
 {
@@ -25,20 +24,20 @@ namespace jp.ootr.ImageDeviceController
     public static class CacheUtils
     {
         [CanBeNull]
-        public static Source GetSource([CanBeNull]this Cache sources, [CanBeNull]string source)
+        public static Source GetSource([CanBeNull] this Cache sources, [CanBeNull] string source)
         {
             if (sources == null || source == null || !sources.ContainsKey(source)) return null;
             return (Source)sources[source].DataDictionary;
         }
 
-        public static bool HasSource([CanBeNull]this Cache sources, [CanBeNull]string source)
+        public static bool HasSource([CanBeNull] this Cache sources, [CanBeNull] string source)
         {
             if (sources == null || source == null) return false;
             return sources.ContainsKey(source);
         }
 
         [CanBeNull]
-        public static Source AddSource([CanBeNull]this Cache sources, [CanBeNull]string source)
+        public static Source AddSource([CanBeNull] this Cache sources, [CanBeNull] string source)
         {
             if (sources == null || source == null) return null;
             var sourceData = new DataDictionary();
@@ -49,21 +48,22 @@ namespace jp.ootr.ImageDeviceController
         }
 
         [CanBeNull]
-        public static File GetFile([CanBeNull]this Source source, [CanBeNull]string fileName)
+        public static File GetFile([CanBeNull] this Source source, [CanBeNull] string fileName)
         {
             if (source == null || fileName == null || !source.HasFile(fileName)) return null;
             return (File)source["files"].DataDictionary[fileName].DataDictionary;
         }
 
-        public static bool HasFile([CanBeNull]this Source files, [CanBeNull] string fileName)
+        public static bool HasFile([CanBeNull] this Source files, [CanBeNull] string fileName)
         {
             if (files == null || fileName == null) return false;
             return files["files"].DataDictionary.ContainsKey(fileName);
         }
 
         [CanBeNull]
-        public static File AddFile([CanBeNull]this Source files,[CanBeNull] string fileName, [CanBeNull]Texture2D texture, [CanBeNull]DataDictionary metadata,
-            [CanBeNull]string cacheKey = null, TextureFormat format = TextureFormat.RGBA32)
+        public static File AddFile([CanBeNull] this Source files, [CanBeNull] string fileName,
+            [CanBeNull] Texture2D texture, [CanBeNull] DataDictionary metadata,
+            [CanBeNull] string cacheKey = null, TextureFormat format = TextureFormat.RGBA32)
         {
             if (files == null || fileName == null || texture == null || metadata == null) return null;
             var fileData = new DataDictionary();
@@ -79,7 +79,7 @@ namespace jp.ootr.ImageDeviceController
         }
 
         [NotNull]
-        public static string[] RemoveSource([CanBeNull]this Cache sources, [CanBeNull]string source)
+        public static string[] RemoveSource([CanBeNull] this Cache sources, [CanBeNull] string source)
         {
             if (sources == null || source == null || !sources.HasSource(source)) return new string[0];
             var sourceData = sources.GetSource(source);
@@ -97,13 +97,13 @@ namespace jp.ootr.ImageDeviceController
         }
 
         [NotNull]
-        public static string[] GetFileNames([CanBeNull]this Source files)
+        public static string[] GetFileNames([CanBeNull] this Source files)
         {
             if (files == null) return new string[0];
             return files["files"].DataDictionary.GetKeys().ToStringArray();
         }
 
-        public static int IncreaseUsedCount([CanBeNull]this Source files)
+        public static int IncreaseUsedCount([CanBeNull] this Source files)
         {
             if (files == null) return 0;
             var val = files["usedCount"].Int + 1;
@@ -111,7 +111,7 @@ namespace jp.ootr.ImageDeviceController
             return val;
         }
 
-        public static int DecreaseUsedCount([CanBeNull]this Source files)
+        public static int DecreaseUsedCount([CanBeNull] this Source files)
         {
             if (files == null) return 0;
             var val = files["usedCount"].Int - 1;
@@ -119,7 +119,7 @@ namespace jp.ootr.ImageDeviceController
             return val;
         }
 
-        public static void RemoveFile([CanBeNull]this Source files, [CanBeNull]string fileName)
+        public static void RemoveFile([CanBeNull] this Source files, [CanBeNull] string fileName)
         {
             if (files == null || fileName == null || !files.HasFile(fileName)) return;
             var file = files.GetFile(fileName);
@@ -127,7 +127,7 @@ namespace jp.ootr.ImageDeviceController
             files["files"].DataDictionary.Remove(fileName);
         }
 
-        public static int IncreaseUsedCount([CanBeNull]this File file)
+        public static int IncreaseUsedCount([CanBeNull] this File file)
         {
             if (file == null) return 0;
             var val = file["usedCount"].Int + 1;
@@ -135,7 +135,7 @@ namespace jp.ootr.ImageDeviceController
             return val;
         }
 
-        public static int DecreaseUsedCount([CanBeNull]this File file)
+        public static int DecreaseUsedCount([CanBeNull] this File file)
         {
             if (file == null) return 0;
             var val = file["usedCount"].Int - 1;
@@ -144,19 +144,19 @@ namespace jp.ootr.ImageDeviceController
         }
 
         [CanBeNull]
-        public static Texture2D GetTexture([CanBeNull]this File file)
+        public static Texture2D GetTexture([CanBeNull] this File file)
         {
             if (file == null) return null;
             return (Texture2D)file["texture"].Reference;
         }
 
-        public static void SetTexture([CanBeNull]this File file, [CanBeNull]Texture2D texture)
+        public static void SetTexture([CanBeNull] this File file, [CanBeNull] Texture2D texture)
         {
             if (file == null) return;
             file["texture"] = texture;
         }
 
-        public static void DestroyTexture([CanBeNull]this File file)
+        public static void DestroyTexture([CanBeNull] this File file)
         {
             if (file == null) return;
             var texture = file.GetTexture();
@@ -165,53 +165,54 @@ namespace jp.ootr.ImageDeviceController
         }
 
         [NotNull]
-        public static string GetCacheKey([CanBeNull]this File file)
+        public static string GetCacheKey([CanBeNull] this File file)
         {
             if (file == null) return "";
             return file["cacheKey"].String;
         }
 
-        public static TextureFormat GetTextureFormat([CanBeNull]this File file)
+        public static TextureFormat GetTextureFormat([CanBeNull] this File file)
         {
             if (file == null) return TextureFormat.RGBA32;
             return (TextureFormat)(int)file["format"].Double;
         }
 
         [CanBeNull]
-        public static Metadata GetMetadata([CanBeNull]this File file)
+        public static Metadata GetMetadata([CanBeNull] this File file)
         {
             if (file == null) return null;
             return (Metadata)file["metadata"].DataDictionary;
         }
-        
-        public static int GetWidth([CanBeNull]this File file)
+
+        public static int GetWidth([CanBeNull] this File file)
         {
             if (file == null) return 0;
             return file["width"].Int;
         }
-        
-        public static int GetHeight([CanBeNull]this File file)
+
+        public static int GetHeight([CanBeNull] this File file)
         {
             if (file == null) return 0;
             return file["height"].Int;
         }
-        
-        public static int GetUsedCount([CanBeNull]this Source file)
+
+        public static int GetUsedCount([CanBeNull] this Source file)
         {
             if (file == null) return 0;
             return file["usedCount"].Int;
         }
-        
-        public static int GetUsedCount([CanBeNull]this File file)
+
+        public static int GetUsedCount([CanBeNull] this File file)
         {
             if (file == null) return 0;
             return file["usedCount"].Int;
         }
 
         [CanBeNull]
-        public static DataDictionary GetExtensions([CanBeNull]this Metadata metadata)
+        public static DataDictionary GetExtensions([CanBeNull] this Metadata metadata)
         {
-            if (metadata == null || !metadata.TryGetValue("extensions", TokenType.DataDictionary, out var ext)) return new DataDictionary();
+            if (metadata == null || !metadata.TryGetValue("extensions", TokenType.DataDictionary, out var ext))
+                return new DataDictionary();
             return ext.DataDictionary;
         }
     }

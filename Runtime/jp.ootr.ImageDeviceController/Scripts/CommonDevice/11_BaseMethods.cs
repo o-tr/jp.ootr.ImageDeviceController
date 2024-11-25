@@ -2,7 +2,6 @@
 using jp.ootr.common;
 using UnityEngine;
 using UnityEngine.UI;
-using VRC.SDKBase;
 
 namespace jp.ootr.ImageDeviceController.CommonDevice
 {
@@ -13,9 +12,9 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
         [SerializeField] protected Animator animator;
         [SerializeField] public CommonDevice[] devices;
         [SerializeField] protected internal DeviceController controller;
-        [SerializeField][CanBeNull] internal RawImage splashImage;
-        [SerializeField][CanBeNull] internal AspectRatioFitter splashImageFitter;
-        [SerializeField][CanBeNull] internal Texture2D splashImageTexture;
+        [SerializeField] [CanBeNull] internal RawImage splashImage;
+        [SerializeField] [CanBeNull] internal AspectRatioFitter splashImageFitter;
+        [SerializeField] [CanBeNull] internal Texture2D splashImageTexture;
 
         public string deviceUuid;
 
@@ -46,7 +45,8 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
             return false;
         }
 
-        public virtual void LoadImage([CanBeNull]string source, [CanBeNull]string fileName, bool shouldPushHistory = false)
+        public virtual void LoadImage([CanBeNull] string source, [CanBeNull] string fileName,
+            bool shouldPushHistory = false)
         {
         }
 

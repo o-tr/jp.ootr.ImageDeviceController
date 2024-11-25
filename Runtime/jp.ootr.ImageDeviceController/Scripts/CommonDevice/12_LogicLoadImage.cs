@@ -6,23 +6,20 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
     public class LogicLoadImage : BaseMethods
     {
         [NotNull] private readonly DataList _oQueueList = new DataList();
-        [NotNull] private QueueList QueueList => (QueueList)_oQueueList;
-        
-        private int _retryCount;
 
-        protected virtual void LLIFetchImage([CanBeNull]string source, URLType type, [CanBeNull]string options = "")
+        private int _retryCount;
+        [NotNull] private QueueList QueueList => (QueueList)_oQueueList;
+
+        protected virtual void LLIFetchImage([CanBeNull] string source, URLType type, [CanBeNull] string options = "")
         {
             if (string.IsNullOrEmpty(source))
             {
                 ConsoleError("Source is empty");
                 return;
             }
-            
-            if (options == null)
-            {
-                options = UrlUtil.BuildSourceOptions(type, 0, 0);
-            }
-            
+
+            if (options == null) options = UrlUtil.BuildSourceOptions(type, 0, 0);
+
             var queue = QueueUtils.CreateQueue(source, options, (int)type);
             QueueList.AddQueue(queue);
 
@@ -49,7 +46,7 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
                 ConsoleError($"Index out of range: {nameof(FetchImageInternal)}");
                 return;
             }
-            
+
             queue.Get(out var source, out var options, out var type);
             if (controller.LoadFilesFromUrl((CommonDevice)this, source, type, options)) return;
             if (_retryCount >= SyncURLRetryCountLimit)
@@ -70,11 +67,11 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
             SendCustomEventDelayedFrames(nameof(FetchImageInternal), 1);
         }
 
-        public virtual void OnFileLoadProgress([NotNull]string source, float progress)
+        public virtual void OnFileLoadProgress([NotNull] string source, float progress)
         {
         }
 
-        public virtual void OnFilesLoadSuccess([NotNull]string source,[NotNull] string[] fileNames)
+        public virtual void OnFilesLoadSuccess([NotNull] string source, [NotNull] string[] fileNames)
         {
             FetchNextImage();
         }
