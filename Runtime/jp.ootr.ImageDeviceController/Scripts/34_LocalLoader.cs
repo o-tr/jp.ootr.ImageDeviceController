@@ -11,13 +11,14 @@ namespace jp.ootr.ImageDeviceController
 
         private readonly string[] _localLoaderPrefixes = { "LocalLoader" };
 
-        protected void LlLoadImage([CanBeNull]string url)
+        protected void LlLoadImage([CanBeNull] string url)
         {
-            if (!url.IsValidUrl())
+            if (!url.IsValidLocalUrl())
             {
                 LlOnLoadError(url, LoadError.InvalidURL);
                 return;
             }
+
             if (!localTextureUrls.Has(url, out var index)) LlOnLoadError(url, LoadError.HttpNotFound);
 
             if (!CcHasCache(url)) CcSetTexture(url, url, localTextures[index]);
@@ -25,12 +26,12 @@ namespace jp.ootr.ImageDeviceController
             LlOnLoadSuccess(url, new[] { url });
         }
 
-        protected virtual void LlOnLoadSuccess([CanBeNull]string source, [CanBeNull]string[] fileNames)
+        protected virtual void LlOnLoadSuccess([CanBeNull] string source, [CanBeNull] string[] fileNames)
         {
             ConsoleError("LlOnLoadSuccess should not be called from base class", _localLoaderPrefixes);
         }
 
-        protected virtual void LlOnLoadError([CanBeNull]string source, LoadError error)
+        protected virtual void LlOnLoadError([CanBeNull] string source, LoadError error)
         {
             ConsoleError("LlOnLoadError should not be called from base class", _localLoaderPrefixes);
         }

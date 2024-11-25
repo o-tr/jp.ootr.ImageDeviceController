@@ -5,7 +5,8 @@ namespace jp.ootr.ImageDeviceController
 {
     public static class UrlUtil
     {
-        public static bool GetUrlAndArgs([CanBeNull]string url, out string rawUrl, out string[] args)
+        public static bool GetUrlAndArgs([CanBeNull] string url, [CanBeNull] out string rawUrl,
+            [CanBeNull] out string[] args)
         {
             if (url == null)
             {
@@ -13,6 +14,7 @@ namespace jp.ootr.ImageDeviceController
                 args = null;
                 return false;
             }
+
             var urls = url.Split(@"\\\");
             rawUrl = null;
             args = null;
@@ -23,7 +25,7 @@ namespace jp.ootr.ImageDeviceController
             return true;
         }
 
-        public static bool IsValidUrl([CanBeNull]this string url, out LoadError error)
+        public static bool IsValidUrl([CanBeNull] this string url, out LoadError error)
         {
             if (url.IsInsecureUrl())
             {
@@ -41,7 +43,7 @@ namespace jp.ootr.ImageDeviceController
             return true;
         }
 
-        public static bool ParseSourceOptions([CanBeNull]this string options, out URLType type, out float offset,
+        public static bool ParseSourceOptions([CanBeNull] this string options, out URLType type, out float offset,
             out float interval)
         {
             if (options == null)
@@ -51,6 +53,7 @@ namespace jp.ootr.ImageDeviceController
                 interval = 0;
                 return false;
             }
+
             var split = options.Split(',');
             type = (URLType)int.Parse(split[0]);
             if (split.Length < 3)
@@ -65,17 +68,18 @@ namespace jp.ootr.ImageDeviceController
             return true;
         }
 
-        public static bool ParseSourceOptions([CanBeNull]this string options, out URLType type)
+        public static bool ParseSourceOptions([CanBeNull] this string options, out URLType type)
         {
-            return options.ParseSourceOptions(out type, out var v1, out var v2);
-        }
-        
-        public static bool ParseSourceOptions([CanBeNull]this string options)
-        {
-            return options.ParseSourceOptions(out var v1, out var v2, out var v3);
+            return options.ParseSourceOptions(out type, out var void1, out var void2);
         }
 
-        public static void ParseFileName([CanBeNull]this string fileName, out URLType type, out string options)
+        public static bool ParseSourceOptions([CanBeNull] this string options)
+        {
+            return options.ParseSourceOptions(out var void1, out var void2, out var void3);
+        }
+
+        public static void ParseFileName([CanBeNull] this string fileName, out URLType type,
+            [NotNull] out string options)
         {
             if (fileName == null)
             {
@@ -83,6 +87,7 @@ namespace jp.ootr.ImageDeviceController
                 options = "";
                 return;
             }
+
             options = "";
             if (fileName.StartsWith("zip://"))
             {

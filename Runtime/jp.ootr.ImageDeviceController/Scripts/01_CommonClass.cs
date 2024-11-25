@@ -24,7 +24,7 @@ namespace jp.ootr.ImageDeviceController
 
         public readonly int SupportedManifestVersion = 1;
 
-        protected virtual LoadError ParseStringDownloadError([CanBeNull]string message, int code)
+        protected virtual LoadError ParseStringDownloadError([CanBeNull] string message, int code)
         {
             if (message == "Client has too many requests (limit is 1000)." && code == 429)
                 return LoadError.TooManyRequests;
@@ -43,7 +43,7 @@ namespace jp.ootr.ImageDeviceController
             return LoadError.Unknown;
         }
 
-        protected virtual LoadError ParseImageDownloadError(LoadError error, [CanBeNull]string message)
+        protected virtual LoadError ParseImageDownloadError(LoadError error, [CanBeNull] string message)
         {
             if (error == LoadError.DownloadError && message == "Redirect limit exceeded")
                 return LoadError.RedirectNotAllowed;

@@ -9,22 +9,23 @@ namespace jp.ootr.ImageDeviceController
 {
     public class URLStore : CacheController
     {
-        [SerializeField] protected VRCUrl[] usUrls = new VRCUrl[0];
-        [SerializeField] protected string[] usUrlStrings = new string[0];
+        [ItemCanBeNull] [SerializeField] protected VRCUrl[] usUrls = new VRCUrl[0];
+        [ItemCanBeNull] [SerializeField] protected string[] usUrlStrings = new string[0];
 
         private readonly string[] _urlStorePrefixes = { "URLStore" };
         [UdonSynced] private URLStoreSyncAction _usSyncAction = URLStoreSyncAction.None;
-        [UdonSynced] private VRCUrl[] _usSyncUrl = new VRCUrl[0];
+        [ItemCanBeNull] [UdonSynced] private VRCUrl[] _usSyncUrl = new VRCUrl[0];
 
-        public VRCUrl UsGetUrl([CanBeNull]string url)
+        [CanBeNull]
+        public VRCUrl UsGetUrl([CanBeNull] string url)
         {
-            if (UrlUtil.GetUrlAndArgs(url, out var tmpUrl, out var voidArgs)) url = tmpUrl;
+            if (UrlUtil.GetUrlAndArgs(url, out var tmpUrl, out var void1)) url = tmpUrl;
 
             if (!usUrlStrings.Has(url, out var urlIndex)) return null;
             return usUrls[urlIndex];
         }
 
-        public void UsAddUrl([CanBeNull]VRCUrl url)
+        public void UsAddUrl([CanBeNull] VRCUrl url)
         {
             if (url == null || usUrlStrings.Has(url.ToString())) return;
             _usSyncAction = URLStoreSyncAction.AddUrl;
@@ -32,23 +33,23 @@ namespace jp.ootr.ImageDeviceController
             Sync();
         }
 
-        public void UsAddUrlLocal([CanBeNull]VRCUrl url)
+        public void UsAddUrlLocal([CanBeNull] VRCUrl url)
         {
             if (url == null || usUrlStrings.Has(url.ToString())) return;
             usUrls = usUrls.Append(url);
             usUrlStrings = usUrlStrings.Append(url.ToString());
         }
 
-        public bool UsHasUrl([CanBeNull]string url)
+        public bool UsHasUrl([CanBeNull] string url)
         {
-            if (UrlUtil.GetUrlAndArgs(url, out var tmpUrl, out var voidArgs)) url = tmpUrl;
+            if (UrlUtil.GetUrlAndArgs(url, out var tmpUrl, out var void1)) url = tmpUrl;
 
-            return usUrlStrings.Has(url, out var tmp);
+            return usUrlStrings.Has(url);
         }
 
         public override void _OnDeserialization()
         {
-            if (_usSyncUrl.Length < 1)
+            if (_usSyncUrl.Length < 1 || _usSyncUrl[0] == null)
             {
                 _usSyncAction = URLStoreSyncAction.None;
                 return;
@@ -75,7 +76,7 @@ namespace jp.ootr.ImageDeviceController
             _usSyncAction = URLStoreSyncAction.None;
         }
 
-        public override void OnPlayerJoined(VRCPlayerApi player)
+        public override void OnPlayerJoined([NotNull] VRCPlayerApi player)
         {
             if (!Networking.IsOwner(gameObject)) return;
             _usSyncAction = URLStoreSyncAction.SyncAll;

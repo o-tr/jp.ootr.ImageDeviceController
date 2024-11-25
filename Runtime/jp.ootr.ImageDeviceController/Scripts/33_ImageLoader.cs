@@ -15,7 +15,7 @@ namespace jp.ootr.ImageDeviceController
 
         private bool _ilIsLoading;
 
-        private string[] _ilQueuedUrlStrings = new string[0];
+        [ItemNotNull] private string[] _ilQueuedUrlStrings = new string[0];
         private string _ilSourceUrl;
         private VRCImageDownloader _imageDownloader;
         private TextureInfo _textureInfo;
@@ -30,17 +30,23 @@ namespace jp.ootr.ImageDeviceController
             _textureInfo.AnisoLevel = 16;
         }
 
-        protected virtual void IlLoadImage([CanBeNull]string url)
+        protected virtual void IlLoadImage([CanBeNull] string url)
         {
             if (!_ilInited)
             {
                 _ilInited = true;
                 IlInit();
             }
-            
+
             if (url.IsNullOrEmpty())
             {
                 ConsoleWarn("url is null", _imageLoaderPrefixes);
+                return;
+            }
+
+            if (!url.IsValidUrl())
+            {
+                ConsoleWarn($"invalid url: {url}", _imageLoaderPrefixes);
                 return;
             }
 
@@ -67,7 +73,7 @@ namespace jp.ootr.ImageDeviceController
          */
         public virtual void IlLoadNext()
         {
-            if (_ilQueuedUrlStrings.Length == 0)
+            if (_ilQueuedUrlStrings.Length == 0 || _ilQueuedUrlStrings[0].IsNullOrEmpty())
             {
                 _ilIsLoading = false;
                 return;
@@ -97,12 +103,12 @@ namespace jp.ootr.ImageDeviceController
             SendCustomEventDelayedFrames(nameof(IlLoadNext), IlDelayFrames);
         }
 
-        protected virtual void IlOnLoadSuccess([CanBeNull]string source, [CanBeNull]string[] fileNames)
+        protected virtual void IlOnLoadSuccess([CanBeNull] string source, [CanBeNull] string[] fileNames)
         {
             ConsoleError("IlOnLoadSuccess should not be called from base class", _imageLoaderPrefixes);
         }
 
-        protected virtual void IlOnLoadError([CanBeNull]string source, LoadError error)
+        protected virtual void IlOnLoadError([CanBeNull] string source, LoadError error)
         {
             ConsoleError("IlOnLoadError should not be called from base class", _imageLoaderPrefixes);
         }
