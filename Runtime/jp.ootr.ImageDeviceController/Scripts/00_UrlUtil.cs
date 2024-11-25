@@ -5,7 +5,7 @@ namespace jp.ootr.ImageDeviceController
 {
     public static class UrlUtil
     {
-        public static bool GetUrlAndArgs([CanBeNull]string url, out string rawUrl, out string[] args)
+        public static bool GetUrlAndArgs([CanBeNull]string url, [CanBeNull]out string rawUrl, [CanBeNull]out string[] args)
         {
             if (url == null)
             {
@@ -75,7 +75,7 @@ namespace jp.ootr.ImageDeviceController
             return options.ParseSourceOptions(out var v1, out var v2, out var v3);
         }
 
-        public static void ParseFileName([CanBeNull]this string fileName, out URLType type, out string options)
+        public static void ParseFileName([CanBeNull]this string fileName, out URLType type, [NotNull]out string options)
         {
             if (fileName == null)
             {

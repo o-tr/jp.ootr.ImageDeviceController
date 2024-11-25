@@ -9,13 +9,14 @@ namespace jp.ootr.ImageDeviceController
 {
     public class URLStore : CacheController
     {
-        [SerializeField] protected VRCUrl[] usUrls = new VRCUrl[0];
-        [SerializeField] protected string[] usUrlStrings = new string[0];
+        [ItemCanBeNull][SerializeField] protected VRCUrl[] usUrls = new VRCUrl[0];
+        [ItemCanBeNull][SerializeField] protected string[] usUrlStrings = new string[0];
 
         private readonly string[] _urlStorePrefixes = { "URLStore" };
         [UdonSynced] private URLStoreSyncAction _usSyncAction = URLStoreSyncAction.None;
-        [UdonSynced] private VRCUrl[] _usSyncUrl = new VRCUrl[0];
+        [ItemCanBeNull][UdonSynced] private VRCUrl[] _usSyncUrl = new VRCUrl[0];
 
+        [CanBeNull]
         public VRCUrl UsGetUrl([CanBeNull]string url)
         {
             if (UrlUtil.GetUrlAndArgs(url, out var tmpUrl, out var voidArgs)) url = tmpUrl;
@@ -48,7 +49,7 @@ namespace jp.ootr.ImageDeviceController
 
         public override void _OnDeserialization()
         {
-            if (_usSyncUrl.Length < 1)
+            if (_usSyncUrl.Length < 1 || _usSyncUrl[0] == null)
             {
                 _usSyncAction = URLStoreSyncAction.None;
                 return;
@@ -75,7 +76,7 @@ namespace jp.ootr.ImageDeviceController
             _usSyncAction = URLStoreSyncAction.None;
         }
 
-        public override void OnPlayerJoined(VRCPlayerApi player)
+        public override void OnPlayerJoined([NotNull]VRCPlayerApi player)
         {
             if (!Networking.IsOwner(gameObject)) return;
             _usSyncAction = URLStoreSyncAction.SyncAll;

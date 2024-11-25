@@ -13,7 +13,7 @@ namespace jp.ootr.ImageDeviceController
 
         protected void LlLoadImage([CanBeNull]string url)
         {
-            if (!url.IsValidUrl())
+            if (!url.IsValidLocalUrl())
             {
                 LlOnLoadError(url, LoadError.InvalidURL);
                 return;

@@ -4,6 +4,7 @@ namespace jp.ootr.ImageDeviceController
 {
     public static class DeviceUtils
     {
+        [CanBeNull]
         public static CommonDevice.CommonDevice FindByUuid([CanBeNull][ItemCanBeNull]this CommonDevice.CommonDevice[] devices, string uuid)
         {
             if (devices == null) return null;

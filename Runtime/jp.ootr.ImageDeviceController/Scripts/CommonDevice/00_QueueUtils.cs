@@ -25,12 +25,14 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
             queues.RemoveAt(0);
         }
 
+        [CanBeNull]
         public static Queue GetQueue([CanBeNull]this QueueList queues, int index)
         {
             if (queues == null ||index < 0 || index >= queues.Count) return null;
             return (Queue)queues[index].DataDictionary;
         }
 
+        [NotNull]
         public static Queue CreateQueue([NotNull]string source, [NotNull]string options, int type)
         {
             var queue = new DataDictionary();

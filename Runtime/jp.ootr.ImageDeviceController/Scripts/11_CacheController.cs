@@ -29,6 +29,7 @@ namespace jp.ootr.ImageDeviceController
         private string[] _cacheBinaryNames = new string[0];
         private Cache CacheFiles => (Cache)_oCacheFiles;
 
+        [CanBeNull]
         public virtual Texture2D CcGetTexture([CanBeNull]string sourceName, [CanBeNull]string fileName)
         {
             if (!CcHasTexture(sourceName, fileName)) return null;
@@ -41,6 +42,7 @@ namespace jp.ootr.ImageDeviceController
             return texture;
         }
 
+        [CanBeNull]
         private Texture2D TryRegenerateTexture([CanBeNull]File file)
         {
             if (file == null) return null;
@@ -61,6 +63,7 @@ namespace jp.ootr.ImageDeviceController
             return CacheFiles.HasSource(source);
         }
 
+        [CanBeNull]
         protected Source CcGetCache([CanBeNull]string source)
         {
             return CacheFiles.GetSource(source);
@@ -106,6 +109,7 @@ namespace jp.ootr.ImageDeviceController
             }
         }
 
+        [CanBeNull]
         public virtual Metadata CcGetMetadata([CanBeNull]string source, [CanBeNull]string fileName)
         {
             if (!CcHasTexture(source, fileName)) return null;
@@ -146,6 +150,7 @@ namespace jp.ootr.ImageDeviceController
         {
         }
 
+        [NotNull]
         public virtual string DumpCache()
         {
             var result = "";

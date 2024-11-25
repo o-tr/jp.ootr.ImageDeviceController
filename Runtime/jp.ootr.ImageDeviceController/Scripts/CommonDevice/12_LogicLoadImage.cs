@@ -43,7 +43,14 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
                 return;
             }
 
-            QueueList.GetQueue(0).Get(out var source, out var options, out var type);
+            var queue = QueueList.GetQueue(0);
+            if (queue == null)
+            {
+                ConsoleError($"Index out of range: {nameof(FetchImageInternal)}");
+                return;
+            }
+            
+            queue.Get(out var source, out var options, out var type);
             if (controller.LoadFilesFromUrl((CommonDevice)this, source, type, options)) return;
             if (_retryCount >= SyncURLRetryCountLimit)
             {

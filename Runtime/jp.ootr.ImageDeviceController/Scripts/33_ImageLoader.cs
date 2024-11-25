@@ -15,7 +15,7 @@ namespace jp.ootr.ImageDeviceController
 
         private bool _ilIsLoading;
 
-        private string[] _ilQueuedUrlStrings = new string[0];
+        [ItemNotNull]private string[] _ilQueuedUrlStrings = new string[0];
         private string _ilSourceUrl;
         private VRCImageDownloader _imageDownloader;
         private TextureInfo _textureInfo;
@@ -43,6 +43,12 @@ namespace jp.ootr.ImageDeviceController
                 ConsoleWarn("url is null", _imageLoaderPrefixes);
                 return;
             }
+            
+            if (!url.IsValidUrl())
+            {
+                ConsoleWarn($"invalid url: {url}", _imageLoaderPrefixes);
+                return;
+            }
 
             if (_ilQueuedUrlStrings.Has(url))
             {
@@ -67,7 +73,7 @@ namespace jp.ootr.ImageDeviceController
          */
         public virtual void IlLoadNext()
         {
-            if (_ilQueuedUrlStrings.Length == 0)
+            if (_ilQueuedUrlStrings.Length == 0 || _ilQueuedUrlStrings[0].IsNullOrEmpty())
             {
                 _ilIsLoading = false;
                 return;

@@ -17,15 +17,15 @@ namespace jp.ootr.ImageDeviceController
 
     public static class TextZipUtils
     {
-        public static ParseResult ValidateManifest(DataToken manifest, out DataList files, out int manifestVersion,
-            out string[] requiredFeatures, out string[] extension)
+        public static ParseResult ValidateManifest(DataToken manifest, [CanBeNull]out DataList files, out int manifestVersion,
+            [CanBeNull]out string[] requiredFeatures, [CanBeNull]out string[] extension)
         {
             switch (manifest.TokenType)
             {
                 case TokenType.DataList:
                     manifestVersion = 0;
-                    requiredFeatures = new string[0];
-                    extension = new string[0];
+                    requiredFeatures = null;
+                    extension = null;
                     return ValidateManifestV0(manifest.DataList, out files);
                 case TokenType.DataDictionary:
                     return ValidateManifestV1(manifest.DataDictionary, out files, out manifestVersion,
@@ -39,7 +39,7 @@ namespace jp.ootr.ImageDeviceController
             return ParseResult.UnknownVersion;
         }
 
-        private static ParseResult ValidateManifestV0([CanBeNull]DataList manifest, out DataList files)
+        private static ParseResult ValidateManifestV0([CanBeNull]DataList manifest, [CanBeNull]out DataList files)
         {
             if (manifest == null)
             {
@@ -61,8 +61,8 @@ namespace jp.ootr.ImageDeviceController
             return ParseResult.Success;
         }
 
-        private static ParseResult ValidateManifestV1(DataToken manifest, out DataList files, out int manifestVersion,
-            out string[] requiredFeatures, out string[] extension)
+        private static ParseResult ValidateManifestV1(DataToken manifest, [CanBeNull]out DataList files, out int manifestVersion,
+            [CanBeNull]out string[] requiredFeatures, [CanBeNull]out string[] extension)
         {
             if (
                 !manifest.DataDictionary.TryGetValue("files", TokenType.DataList, out var filesToken) ||
@@ -109,9 +109,9 @@ namespace jp.ootr.ImageDeviceController
             return true;
         }
 
-        public static ParseResult TryGetFileMetadata([CanBeNull]this DataDictionary file, out string path,
+        public static ParseResult TryGetFileMetadata([CanBeNull]this DataDictionary file, [CanBeNull]out string path,
             out TextureFormat format,
-            out int width, out int height, out DataDictionary ext)
+            out int width, out int height, [CanBeNull]out DataDictionary ext)
         {
             if (
                 file == null ||

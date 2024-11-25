@@ -30,9 +30,10 @@ namespace jp.ootr.ImageDeviceController
 
         private byte[] _vlPreviousTextureBuffer;
         private int _vlProcessIndex;
-        private string[] _vlQueuedOptions = new string[0];
-
-        private string[] _vlQueuedUrls = new string[0];
+        
+        [ItemNotNull]private string[] _vlQueuedOptions = new string[0];
+        [ItemNotNull]private string[] _vlQueuedUrls = new string[0];
+        
         private int _vlRetryCount;
         private string _vlSourceOptions;
         private string _vlSourceRawUrl;
@@ -46,7 +47,7 @@ namespace jp.ootr.ImageDeviceController
 
         private readonly int _vlLoadMinInterval = 5;
 
-        protected virtual void VlLoadVideo(string url, string options = "")
+        protected virtual void VlLoadVideo([CanBeNull]string url, [CanBeNull]string options = "")
         {
             if (vlVideoPlayer == null)
             {

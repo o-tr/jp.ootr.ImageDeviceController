@@ -24,6 +24,7 @@ namespace jp.ootr.ImageDeviceController
 
     public static class CacheUtils
     {
+        [CanBeNull]
         public static Source GetSource([CanBeNull]this Cache sources, [CanBeNull]string source)
         {
             if (sources == null || source == null || !sources.ContainsKey(source)) return null;
@@ -36,6 +37,7 @@ namespace jp.ootr.ImageDeviceController
             return sources.ContainsKey(source);
         }
 
+        [CanBeNull]
         public static Source AddSource([CanBeNull]this Cache sources, [CanBeNull]string source)
         {
             if (sources == null || source == null) return null;
@@ -46,6 +48,7 @@ namespace jp.ootr.ImageDeviceController
             return (Source)sourceData;
         }
 
+        [CanBeNull]
         public static File GetFile([CanBeNull]this Source source, [CanBeNull]string fileName)
         {
             if (source == null || fileName == null || !source.HasFile(fileName)) return null;
@@ -75,6 +78,7 @@ namespace jp.ootr.ImageDeviceController
             return (File)fileData;
         }
 
+        [NotNull]
         public static string[] RemoveSource([CanBeNull]this Cache sources, [CanBeNull]string source)
         {
             if (sources == null || source == null || !sources.HasSource(source)) return new string[0];
@@ -92,6 +96,7 @@ namespace jp.ootr.ImageDeviceController
             return keys;
         }
 
+        [NotNull]
         public static string[] GetFileNames([CanBeNull]this Source files)
         {
             if (files == null) return new string[0];
@@ -138,6 +143,7 @@ namespace jp.ootr.ImageDeviceController
             return val;
         }
 
+        [CanBeNull]
         public static Texture2D GetTexture([CanBeNull]this File file)
         {
             if (file == null) return null;
@@ -158,6 +164,7 @@ namespace jp.ootr.ImageDeviceController
             Object.Destroy(texture);
         }
 
+        [NotNull]
         public static string GetCacheKey([CanBeNull]this File file)
         {
             if (file == null) return "";
@@ -170,6 +177,7 @@ namespace jp.ootr.ImageDeviceController
             return (TextureFormat)(int)file["format"].Double;
         }
 
+        [CanBeNull]
         public static Metadata GetMetadata([CanBeNull]this File file)
         {
             if (file == null) return null;
@@ -200,6 +208,7 @@ namespace jp.ootr.ImageDeviceController
             return file["usedCount"].Int;
         }
 
+        [CanBeNull]
         public static DataDictionary GetExtensions([CanBeNull]this Metadata metadata)
         {
             if (metadata == null || !metadata.TryGetValue("extensions", TokenType.DataDictionary, out var ext)) return new DataDictionary();

@@ -4,7 +4,6 @@ using JetBrains.Annotations;
 using UnityEngine;
 using VRC.SDK3.Data;
 using VRC.SDK3.StringLoading;
-using VRC.SDKBase;
 using VRC.Udon.Common.Interfaces;
 using static jp.ootr.common.ArrayUtils;
 using static jp.ootr.common.String;
@@ -72,14 +71,30 @@ namespace jp.ootr.ImageDeviceController
                 return;
             }
 
-            _zlQueuedUrlStrings = _zlQueuedUrlStrings.Shift(out _zlSourceUrl, out var success);
+            _zlQueuedUrlStrings = _zlQueuedUrlStrings.Shift(out var sourceUrl, out var success);
             if (!success)
             {
                 _zlIsLoading = false;
                 ConsoleDebug("no more urls to load.", _zipLoaderPrefixes);
                 return;
             }
-            VRCStringDownloader.LoadUrl(UsGetUrl(_zlSourceUrl), (IUdonEventReceiver)this);
+            
+            if (string.IsNullOrEmpty(sourceUrl))
+            {
+                ConsoleError("url is empty.", _zipLoaderPrefixes);
+                SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
+                return;
+            }
+
+            var url = UsGetUrl(_zlSourceUrl);
+            if (url == null)
+            {
+                ConsoleError($"failed to get url: {_zlSourceUrl}", _zipLoaderPrefixes);
+                ZlOnLoadError(_zlSourceUrl, LoadError.InvalidURL);
+                SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
+                return;
+            }
+            VRCStringDownloader.LoadUrl(url, (IUdonEventReceiver)this);
         }
 
         /**
@@ -161,7 +176,7 @@ namespace jp.ootr.ImageDeviceController
             var metadata = zlUdonZip.GetFileData(file);
             VRCJson.TryDeserializeFromJson(Encoding.UTF8.GetString(metadata), out var metadataToken);
             if (TextZipUtils.ValidateManifest(metadataToken, out _zlMetadata, out var manifestVersion,
-                    out var requiredFeatures, out var extension) != ParseResult.Success)
+                    out var requiredFeatures, out var extension) != ParseResult.Success || requiredFeatures == null || _zlMetadata == null)
             {
                 ZlOnLoadError(_zlSourceUrl, LoadError.InvalidManifest);
                 ConsoleError($"invalid manifest. {_zlSourceUrl}", _zipLoaderPrefixes);
@@ -200,7 +215,7 @@ namespace jp.ootr.ImageDeviceController
             if (
                 !_zlMetadata.TryGetValue(_zlProcessIndex, TokenType.DataDictionary, out var metadataItem) ||
                 metadataItem.DataDictionary.TryGetFileMetadata(out var path, out var format, out var width,
-                    out var height, out var ext) != ParseResult.Success
+                    out var height, out var ext) != ParseResult.Success || path == null
             )
             {
                 ZlOnLoadError(_zlSourceUrl, LoadError.InvalidMetadata);
