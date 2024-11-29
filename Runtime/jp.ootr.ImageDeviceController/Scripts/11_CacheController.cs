@@ -41,7 +41,7 @@ namespace jp.ootr.ImageDeviceController
             var sourceCount = source.IncreaseUsedCount();
             var fileCount = file.IncreaseUsedCount();
             var texture = file.GetTexture();
-            ConsoleInfo($"get texture: {sourceName}/{fileName} ({sourceCount}/{fileCount})", _cacheControllerPrefixes);
+            ConsoleDebug($"get texture: {sourceName}/{fileName} ({sourceCount}/{fileCount})", _cacheControllerPrefixes);
             if (texture == null) return TryRegenerateTexture(file);
             return texture;
         }
@@ -95,7 +95,7 @@ namespace jp.ootr.ImageDeviceController
                     _cacheBinary = _cacheBinary.Remove(index);
                     _cacheBinaryNames = _cacheBinaryNames.Remove(index);
                 }
-                ConsoleInfo($"destroy source: {sourceName}", _cacheControllerPrefixes);
+                ConsoleDebug($"destroy source: {sourceName}", _cacheControllerPrefixes);
 
                 return;
             }
@@ -104,17 +104,17 @@ namespace jp.ootr.ImageDeviceController
             if (fileCount < 1)
             {
                 var key = file.GetCacheKey();
-                if (key.IsNullOrEmpty() && _cacheBinaryNames.Has(key))
+                if (!key.IsNullOrEmpty() && _cacheBinaryNames.Has(key))
                 {
-                    ConsoleInfo($"destroy texture: {sourceName}/{fileName}", _cacheControllerPrefixes);
+                    ConsoleDebug($"destroy texture: {sourceName}/{fileName}", _cacheControllerPrefixes);
                     file.DestroyTexture();
                 }
                 else
                 {
-                    ConsoleInfo($"cannot release texture: {sourceName}/{fileName}", _cacheControllerPrefixes);
+                    ConsoleWarn($"cannot release texture because it is not has binary cache: {sourceName}/{fileName}", _cacheControllerPrefixes);
                 }
             }
-            ConsoleInfo($"release texture: {sourceName}/{fileName} ({sourceCount}/{fileCount})", _cacheControllerPrefixes);
+            ConsoleDebug($"release texture: {sourceName}/{fileName} ({sourceCount}/{fileCount})", _cacheControllerPrefixes);
         }
 
         [CanBeNull]
