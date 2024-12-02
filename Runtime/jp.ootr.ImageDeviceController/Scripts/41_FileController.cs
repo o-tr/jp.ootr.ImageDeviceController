@@ -28,19 +28,20 @@ namespace jp.ootr.ImageDeviceController
                 return false;
             }
 
+            // ロード中でも部分的なキャッシュが見える場合があるため、ロード中かの判定を先に行う
+            if (_loadingUrls.Has(source, out var loadingIndex))
+            {
+                ConsoleDebug($"already loading. {source}", _fileControllerPrefixes);
+                _loadingDevices[loadingIndex] = _loadingDevices[loadingIndex].Append(self);
+                return true;
+            }
+            
             if (CcHasCache(source))
             {
                 var files = CcGetCache(source);
                 var fileNames = files.GetFileNames();
                 ConsoleDebug($"already loaded. {source}", _fileControllerPrefixes);
                 self.OnFilesLoadSuccess(source, fileNames);
-                return true;
-            }
-
-            if (_loadingUrls.Has(source, out var loadingIndex))
-            {
-                ConsoleDebug($"already loading. {source}", _fileControllerPrefixes);
-                _loadingDevices[loadingIndex] = _loadingDevices[loadingIndex].Append(self);
                 return true;
             }
 
