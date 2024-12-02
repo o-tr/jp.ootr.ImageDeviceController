@@ -1,6 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 using jp.ootr.common;
+using jp.ootr.common.Base;
 using UnityEngine;
 using VRC.SDK3.Components.Video;
 using VRC.SDK3.Rendering;
@@ -199,7 +200,11 @@ namespace jp.ootr.ImageDeviceController
 
             _vlTextureHeight = _vlMainTexture.height;
             _vlTextureWidth = _vlMainTexture.width;
-            CopyToRenderTexture(_vlMainTexture, false, true);
+            
+            //HACK: クエスト以外は縦が反転しているので補正
+            var flipVertical = CurrentPlatform != Platform.Android;
+            
+            CopyToRenderTexture(_vlMainTexture, false, flipVertical);
         }
 
         protected virtual void CopyToRenderTexture(Texture2D texture, bool flipHorizontal = false,
