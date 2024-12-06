@@ -116,9 +116,10 @@ namespace jp.ootr.ImageDeviceController
                 _fileControllerPrefixes);
             _loadedUrls = _loadedUrls.Append(source);
             _cachedData = _cachedData.Append(fileNames);
-            foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadSuccess(source, fileNames);
             _loadingUrls = _loadingUrls.Remove(loadingIndex);
-            _loadingDevices = _loadingDevices.Remove(loadingIndex);
+            _loadingDevices = _loadingDevices.Remove(loadingIndex, out var loadingDevices);
+            if (loadingDevices == null) return;
+            foreach (var device in loadingDevices) device.OnFilesLoadSuccess(source, fileNames);
         }
 
         protected override void ZlOnLoadError([CanBeNull] string source, LoadError error)
@@ -126,9 +127,10 @@ namespace jp.ootr.ImageDeviceController
             if (source == null) return;
             ConsoleDebug($"TextZip load failed: {error}, {source} ", _fileControllerPrefixes);
             if (!_loadingUrls.Has(source, out var loadingIndex)) return;
-            foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadFailed(error);
             _loadingUrls = _loadingUrls.Remove(loadingIndex);
-            _loadingDevices = _loadingDevices.Remove(loadingIndex);
+            _loadingDevices = _loadingDevices.Remove(loadingIndex, out var loadingDevices);
+            if (loadingDevices == null) return;
+            foreach (var device in loadingDevices) device.OnFilesLoadFailed(error);
         }
 
         protected override void IlOnLoadSuccess([CanBeNull] string source, [CanBeNull] string[] fileNames)
@@ -137,27 +139,30 @@ namespace jp.ootr.ImageDeviceController
             ConsoleDebug($"Image loaded successfully. {source} ", _fileControllerPrefixes);
             _loadedUrls = _loadedUrls.Append(source);
             _cachedData = _cachedData.Append(fileNames);
-            foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadSuccess(source, fileNames);
             _loadingUrls = _loadingUrls.Remove(loadingIndex);
-            _loadingDevices = _loadingDevices.Remove(loadingIndex);
+            _loadingDevices = _loadingDevices.Remove(loadingIndex, out var loadingDevices);
+            if (loadingDevices == null) return;
+            foreach (var device in loadingDevices) device.OnFilesLoadSuccess(source, fileNames);
         }
 
         protected override void IlOnLoadError([CanBeNull] string source, LoadError error)
         {
             if (!_loadingUrls.Has(source, out var loadingIndex)) return;
             ConsoleDebug($"Image load failed: {error}, {source}", _fileControllerPrefixes);
-            foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadFailed(error);
             _loadingUrls = _loadingUrls.Remove(loadingIndex);
-            _loadingDevices = _loadingDevices.Remove(loadingIndex);
+            _loadingDevices = _loadingDevices.Remove(loadingIndex, out var loadingDevices);
+            if (loadingDevices == null) return;
+            foreach (var device in loadingDevices) device.OnFilesLoadFailed(error);
         }
 
         protected override void VlOnLoadError([CanBeNull] string source, LoadError error)
         {
             if (!_loadingUrls.Has(source, out var loadingIndex)) return;
             ConsoleDebug($"Video load failed: {error}, {source} ", _fileControllerPrefixes);
-            foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadFailed(error);
             _loadingUrls = _loadingUrls.Remove(loadingIndex);
-            _loadingDevices = _loadingDevices.Remove(loadingIndex);
+            _loadingDevices = _loadingDevices.Remove(loadingIndex, out var loadingDevices);
+            if (loadingDevices == null) return;
+            foreach (var device in loadingDevices) device.OnFilesLoadFailed(error);
         }
 
         protected override void VlOnLoadSuccess([CanBeNull] string source, [CanBeNull] string[] fileNames)
@@ -166,9 +171,10 @@ namespace jp.ootr.ImageDeviceController
             ConsoleDebug($"Video loaded successfully. {source}", _fileControllerPrefixes);
             _loadedUrls = _loadedUrls.Append(source);
             _cachedData = _cachedData.Append(fileNames);
-            foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadSuccess(source, fileNames);
             _loadingUrls = _loadingUrls.Remove(loadingIndex);
-            _loadingDevices = _loadingDevices.Remove(loadingIndex);
+            _loadingDevices = _loadingDevices.Remove(loadingIndex, out var loadingDevices);
+            if (loadingDevices == null) return;
+            foreach (var device in loadingDevices) device.OnFilesLoadSuccess(source, fileNames);
         }
 
         protected override void VlOnLoadProgress([CanBeNull] string source, float progress)
@@ -181,9 +187,10 @@ namespace jp.ootr.ImageDeviceController
         {
             if (!_loadingUrls.Has(source, out var loadingIndex)) return;
             ConsoleDebug($"Local file load failed: {error}, {source} ", _fileControllerPrefixes);
-            foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadFailed(error);
             _loadingUrls = _loadingUrls.Remove(loadingIndex);
-            _loadingDevices = _loadingDevices.Remove(loadingIndex);
+            _loadingDevices = _loadingDevices.Remove(loadingIndex, out var loadingDevices);
+            if (loadingDevices == null) return;
+            foreach (var device in loadingDevices) device.OnFilesLoadFailed(error);
         }
 
         protected override void LlOnLoadSuccess([CanBeNull] string source, [CanBeNull] string[] fileNames)
@@ -192,9 +199,10 @@ namespace jp.ootr.ImageDeviceController
             ConsoleDebug($"Local file loaded successfully. {source}", _fileControllerPrefixes);
             _loadedUrls = _loadedUrls.Append(source);
             _cachedData = _cachedData.Append(fileNames);
-            foreach (var device in _loadingDevices[loadingIndex]) device.OnFilesLoadSuccess(source, fileNames);
             _loadingUrls = _loadingUrls.Remove(loadingIndex);
-            _loadingDevices = _loadingDevices.Remove(loadingIndex);
+            _loadingDevices = _loadingDevices.Remove(loadingIndex, out var loadingDevices);
+            if (loadingDevices == null) return;
+            foreach (var device in loadingDevices) device.OnFilesLoadSuccess(source, fileNames);
         }
 
         #endregion
