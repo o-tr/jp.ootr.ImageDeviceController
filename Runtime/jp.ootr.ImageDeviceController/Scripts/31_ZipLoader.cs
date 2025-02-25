@@ -217,7 +217,7 @@ namespace jp.ootr.ImageDeviceController
             if (
                 !_zlMetadata.TryGetValue(_zlProcessIndex, TokenType.DataDictionary, out var metadataItem) ||
                 metadataItem.DataDictionary.TryGetFileMetadata(out var path, out var format, out var width,
-                    out var height, out var void1) != ParseResult.Success || path == null
+                    out var height, out var extensions) != ParseResult.Success || path == null || extensions == null
             )
             {
                 ZlOnLoadError(_zlSourceUrl, LoadError.InvalidMetadata);
@@ -226,8 +226,7 @@ namespace jp.ootr.ImageDeviceController
                 return;
             }
 
-            var imageFile = zlUdonZip.GetFile(_zlObject, path);
-            var imageBytes = zlUdonZip.GetFileData(imageFile);
+            var imageBytes = GenerateImageBytes(extensions, width, format, path);
             var texture = new Texture2D(width, height, format, false);
             texture.LoadRawTextureData(imageBytes);
             texture.Apply();
@@ -244,6 +243,42 @@ namespace jp.ootr.ImageDeviceController
 
             ZlOnLoadSuccess(_zlSourceUrl, _zlFilenames);
             SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
+        }
+
+        [CanBeNull]
+        private byte[] GenerateImageBytes(DataDictionary extensions, int width, TextureFormat format, string path)
+        {
+
+            if (extensions.TryGetCroppedMetadata(out var basePath, out var rects) == ParseResult.Success)
+            {
+                var fileName = $"zip://{_zlSourceUrl.Substring(8)}/{basePath}";
+                var baseImage = CcGetBinary(_zlSourceUrl, fileName);
+                if (baseImage == null)
+                {
+                    ZlOnLoadError(_zlSourceUrl, LoadError.InvalidMetadata);
+                    ConsoleError($"missing base image: {basePath}", _zipLoaderPrefixes);
+                    SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
+                    return null;
+                }
+
+                var bytePerPixel = format.GetBytePerPixel();
+
+                for (int i = 0; i < rects.Count; i++)
+                {
+                    if (!rects.TryGetValue(i, TokenType.DataDictionary, out var rect)) continue;
+                    if (rect.DataDictionary.TryGetRectMetadata(out var baseX, out var baseY, out var w, out var h, out var rectPath) != ParseResult.Success)continue;
+                    var rectFile = zlUdonZip.GetFile(_zlObject, rectPath);
+                    var rectBytes = zlUdonZip.GetFileData(rectFile);
+                    for(var y = 0; y < h; y++)
+                    {
+                        Array.Copy(rectBytes, y * w * bytePerPixel, baseImage, (baseY + y) * width * bytePerPixel + baseX * bytePerPixel, w * bytePerPixel);
+                    }                    
+                }
+                
+                return baseImage;
+            }
+            var imageFile = zlUdonZip.GetFile(_zlObject, path);
+            return zlUdonZip.GetFileData(imageFile);
         }
 
         protected virtual void ZlOnLoadProgress([CanBeNull] string source, float progress)
