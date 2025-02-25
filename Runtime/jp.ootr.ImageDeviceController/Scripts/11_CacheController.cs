@@ -45,6 +45,27 @@ namespace jp.ootr.ImageDeviceController
             if (texture == null) return TryRegenerateTexture(file);
             return texture;
         }
+        
+        [CanBeNull]
+        public virtual byte[] CcGetBinary([CanBeNull] string sourceName, [CanBeNull] string fileName)
+        {
+            ConsoleDebug($"get binary: {sourceName}/{fileName}", _cacheControllerPrefixes);
+            if (!CcHasTexture(sourceName, fileName))
+            {
+                ConsoleError($"texture not found: {sourceName}/{fileName}", _cacheControllerPrefixes);
+                return null;
+            }
+            var source = CacheFiles.GetSource(sourceName);
+            var file = source.GetFile(fileName);
+            var key = file.GetCacheKey();
+            if (key.IsNullOrEmpty() || !_cacheBinaryNames.Has(key, out var index))
+            {
+                ConsoleError($"binary not found: {sourceName}/{fileName}", _cacheControllerPrefixes);
+                return null;
+            }
+            ConsoleDebug($"get binary: {sourceName}/{fileName}", _cacheControllerPrefixes);
+            return _cacheBinary[index];
+        }
 
         [CanBeNull]
         private Texture2D TryRegenerateTexture([CanBeNull] File file)
@@ -152,6 +173,7 @@ namespace jp.ootr.ImageDeviceController
                 _cacheBinary = _cacheBinary.Append(bytes);
                 _cacheBinaryNames = _cacheBinaryNames.Append(cacheKey);
             }
+            ConsoleDebug($"add texture: {source}/{fileName}, {cacheKey}", _cacheControllerPrefixes);
 
             files.AddFile(fileName, texture, metadata, cacheKey, format);
         }
