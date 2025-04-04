@@ -11,7 +11,7 @@ using VRC.Udon.Common.Interfaces;
 
 namespace jp.ootr.ImageDeviceController
 {
-    public class VideoLoader : ZipLoader
+    public class VideoLoader : StringLoader
     {
         private const float VlDelaySeconds = 0.05f;
         [SerializeField] protected VRCAVProVideoPlayer vlVideoPlayer;

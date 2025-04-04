@@ -6,7 +6,8 @@
     "VRC.Udon.Serialization.OdinSerializer",
     "Unity.TextMeshPro",
     "jp.ootr.common",
-    "jp.ootr.UdonZip"
+    "jp.ootr.UdonZip",
+    "jp.ootr.UdonBase64CSVRLE"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

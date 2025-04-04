@@ -54,7 +54,7 @@ namespace jp.ootr.ImageDeviceController
                     IlLoadImage(source);
                     break;
                 case URLType.TextZip:
-                    ZlLoadZip(source);
+                    SlLoadString(source);
                     break;
                 case URLType.Video:
                     VlLoadVideo(source, options);
@@ -102,17 +102,17 @@ namespace jp.ootr.ImageDeviceController
         }
 
 
-        protected override void ZlOnLoadProgress([CanBeNull] string source, float progress)
+        protected override void SlOnLoadProgress([CanBeNull] string source, float progress)
         {
             if (source == null || !_loadingUrls.Has(source, out var loadingIndex)) return;
             foreach (var device in _loadingDevices[loadingIndex]) device.OnFileLoadProgress(source, progress);
         }
 
-        protected override void ZlOnLoadSuccess([CanBeNull] string source, [CanBeNull] string[] fileNames)
+        protected override void SlOnLoadSuccess([CanBeNull] string source, [CanBeNull] string[] fileNames)
         {
             if (source == null || fileNames == null || !_loadingUrls.Has(source, out var loadingIndex)) return;
             ConsoleDebug(
-                $"TextZip loaded successfully. {fileNames.Length} files. device count: {_loadingDevices[loadingIndex].Length}, {source}",
+                $"StringKindArchive loaded successfully. {fileNames.Length} files. device count: {_loadingDevices[loadingIndex].Length}, {source}",
                 _fileControllerPrefixes);
             _loadedUrls = _loadedUrls.Append(source);
             _cachedData = _cachedData.Append(fileNames);
@@ -122,10 +122,10 @@ namespace jp.ootr.ImageDeviceController
             foreach (var device in loadingDevices) device.OnFilesLoadSuccess(source, fileNames);
         }
 
-        protected override void ZlOnLoadError([CanBeNull] string source, LoadError error)
+        protected override void SlOnLoadError([CanBeNull] string source, LoadError error)
         {
             if (source == null) return;
-            ConsoleDebug($"TextZip load failed: {error}, {source} ", _fileControllerPrefixes);
+            ConsoleDebug($"StringKindArchive load failed: {error}, {source} ", _fileControllerPrefixes);
             if (!_loadingUrls.Has(source, out var loadingIndex)) return;
             _loadingUrls = _loadingUrls.Remove(loadingIndex);
             _loadingDevices = _loadingDevices.Remove(loadingIndex, out var loadingDevices);
