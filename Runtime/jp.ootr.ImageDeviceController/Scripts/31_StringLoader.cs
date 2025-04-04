@@ -108,6 +108,23 @@ namespace jp.ootr.ImageDeviceController
             SlOnLoadError(source, error);
             SendCustomEvent(nameof(SlLoadNext));
         }
+        
+        protected sealed override void ETIOnLoadProgress(string source, float progress)
+        {
+            SlOnLoadProgress(source, progress);
+        }
+        
+        protected sealed override void ETIOnLoadSuccess(string source, string[] fileNames)
+        {
+            SlOnLoadSuccess(source, fileNames);
+            SendCustomEvent(nameof(SlLoadNext));
+        }
+        
+        protected sealed override void ETIOnLoadError(string source, LoadError error)
+        {
+            SlOnLoadError(source, error);
+            SendCustomEvent(nameof(SlLoadNext));
+        }
 
         protected virtual void SlOnLoadProgress([CanBeNull] string source, float progress)
         {

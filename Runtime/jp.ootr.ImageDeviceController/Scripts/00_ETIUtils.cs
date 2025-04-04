@@ -8,7 +8,7 @@ namespace jp.ootr.ImageDeviceController
         public static bool IsValidETI([CanBeNull] this IVRCStringDownload result)
         {
             if (result == null) return false;
-            return result.Result.Substring(0, 5) == "ETI@{";
+            return result.Result.Substring(0, 5) == "ETI^{";
         }
     }
 }

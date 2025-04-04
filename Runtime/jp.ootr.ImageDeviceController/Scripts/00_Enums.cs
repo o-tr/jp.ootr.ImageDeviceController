@@ -42,6 +42,10 @@ namespace jp.ootr.ImageDeviceController
         PlayerError,
         RateLimited,
         InvalidOptions,
+        
+        //ETILoader
+        MissingBase64RLE,
+        InvalidETIFile,
 
         //HTTP1.1 4xx
         HttpBadRequest = 400,
