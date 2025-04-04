@@ -12,6 +12,8 @@ namespace jp.ootr.ImageDeviceController
         private readonly string[] _etiLoaderPrefixes = { "ETILoader" };
         [SerializeField] private UdonBase64CSVRLE base64Rle;
         
+        private const int EtiDelayFrames = 1;
+        
         private string _etiSourceUrl;
         private DataDictionary _etiCurrentManifest;
         private DataList _etiCurrentFiles;
@@ -75,7 +77,7 @@ namespace jp.ootr.ImageDeviceController
             _etiCurrentIndex = 0;
             ConsoleLog($"success to load ETI manifest: {_etiCurrentManifest["i"].DataList.Count} files", _etiLoaderPrefixes);
             
-            SendCustomEventDelayedFrames(nameof(ETIParseManifest), 10, EventTiming.LateUpdate);
+            SendCustomEventDelayedFrames(nameof(ETIParseManifest), EtiDelayFrames, EventTiming.LateUpdate);
         }
 
         public void ETIParseManifest()
@@ -133,7 +135,7 @@ namespace jp.ootr.ImageDeviceController
                 return;
             }
                 
-            SendCustomEventDelayedFrames(nameof(ETIParseManifest), 10, EventTiming.LateUpdate);
+            SendCustomEventDelayedFrames(nameof(ETIParseManifest), EtiDelayFrames, EventTiming.LateUpdate);
         }
 
 
@@ -193,7 +195,7 @@ namespace jp.ootr.ImageDeviceController
                 ETIOnLoadSuccess(_etiSourceUrl, _etiCurrentFileNames);
                 return;
             }
-            SendCustomEventDelayedFrames(nameof(ETIParseManifest), 10, EventTiming.LateUpdate);
+            SendCustomEventDelayedFrames(nameof(ETIParseManifest), EtiDelayFrames, EventTiming.LateUpdate);
         }
         
         protected virtual void ETIOnLoadProgress([CanBeNull] string source, float progress)
