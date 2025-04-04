@@ -174,7 +174,6 @@ namespace jp.ootr.ImageDeviceController
                 {
                     ZlOnLoadError(_zlSourceUrl, LoadError.InvalidMetadata);
                     ConsoleError($"missing base image: {basePath}", _zipLoaderPrefixes);
-                    SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
                     return null;
                 }
 
