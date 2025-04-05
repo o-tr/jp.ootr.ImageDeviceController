@@ -27,7 +27,7 @@ namespace jp.ootr.ImageDeviceController
         private DataList _zlMetadata;
         private object _zlObject;
         private int _zlProcessIndex;
-        private string[] _zlSource;
+        private string[] _zlContent;
         private string _zlSourceUrl;
 
         protected virtual void OnZipLoadSuccess(IVRCStringDownload result)
@@ -47,8 +47,8 @@ namespace jp.ootr.ImageDeviceController
             }
 
             _zlSourceUrl = result.Url.ToString();
-            _zlSource = result.Result.Split(zlPartLength);
-            _zlDecodedData = new byte[_zlSource.Length * zlPartLength];
+            _zlContent = result.Result.Split(zlPartLength);
+            _zlDecodedData = new byte[_zlContent.Length * zlPartLength];
             _zlProcessIndex = 0;
             _zlDecodedBytes = 0;
             SendCustomEventDelayedFrames(nameof(ZlDecodePart), zlDelayFrames);
@@ -60,7 +60,7 @@ namespace jp.ootr.ImageDeviceController
          */
         public virtual void ZlDecodePart()
         {
-            var data = Convert.FromBase64String(_zlSource[_zlProcessIndex]);
+            var data = Convert.FromBase64String(_zlContent[_zlProcessIndex]);
             if (_zlDecodedBytes + data.Length >= _zlDecodedData.Length)
             {
                 var tmp = new byte[_zlDecodedBytes + data.Length];
@@ -74,8 +74,8 @@ namespace jp.ootr.ImageDeviceController
 
             _zlDecodedBytes += data.Length;
             _zlProcessIndex++;
-            ZlOnLoadProgress(_zlSourceUrl, (float)_zlProcessIndex / _zlSource.Length / 2);
-            if (_zlProcessIndex < _zlSource.Length)
+            ZlOnLoadProgress(_zlSourceUrl, (float)_zlProcessIndex / _zlContent.Length / 2);
+            if (_zlProcessIndex < _zlContent.Length)
             {
                 SendCustomEventDelayedFrames(nameof(ZlDecodePart), zlDelayFrames);
             }
@@ -197,17 +197,17 @@ namespace jp.ootr.ImageDeviceController
             return zlUdonZip.GetFileData(imageFile);
         }
 
-        protected virtual void ZlOnLoadProgress([CanBeNull] string source, float progress)
+        protected virtual void ZlOnLoadProgress([CanBeNull] string sourceUrl, float progress)
         {
             ConsoleError("ZipOnLoadProgress should not be called from base class", _zipLoaderPrefixes);
         }
 
-        protected virtual void ZlOnLoadSuccess([CanBeNull] string source, [CanBeNull] string[] fileNames)
+        protected virtual void ZlOnLoadSuccess([CanBeNull] string sourceUrl, [CanBeNull] string[] fileUrls)
         {
             ConsoleError("ZipOnLoadSuccess should not be called from base class", _zipLoaderPrefixes);
         }
 
-        protected virtual void ZlOnLoadError([CanBeNull] string source, LoadError error)
+        protected virtual void ZlOnLoadError([CanBeNull] string sourceUrl, LoadError error)
         {
             ConsoleError("ZipOnLoadError should not be called from base class", _zipLoaderPrefixes);
         }

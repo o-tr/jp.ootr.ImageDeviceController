@@ -24,48 +24,48 @@ namespace jp.ootr.ImageDeviceController
     public static class CacheUtils
     {
         [CanBeNull]
-        public static Source GetSource([CanBeNull] this Cache sources, [CanBeNull] string source)
+        public static Source GetSource([CanBeNull] this Cache sources, [CanBeNull] string sourceUrl)
         {
-            if (sources == null || source == null || !sources.ContainsKey(source)) return null;
-            return (Source)sources[source].DataDictionary;
+            if (sources == null || sourceUrl == null || !sources.ContainsKey(sourceUrl)) return null;
+            return (Source)sources[sourceUrl].DataDictionary;
         }
 
-        public static bool HasSource([CanBeNull] this Cache sources, [CanBeNull] string source)
+        public static bool HasSource([CanBeNull] this Cache sources, [CanBeNull] string sourceUrl)
         {
-            if (sources == null || source == null) return false;
-            return sources.ContainsKey(source);
+            if (sources == null || sourceUrl == null) return false;
+            return sources.ContainsKey(sourceUrl);
         }
 
         [CanBeNull]
-        public static Source AddSource([CanBeNull] this Cache sources, [CanBeNull] string source)
+        public static Source AddSource([CanBeNull] this Cache sources, [CanBeNull] string sourceUrl)
         {
-            if (sources == null || source == null) return null;
+            if (sources == null || sourceUrl == null) return null;
             var sourceData = new DataDictionary();
             sourceData["files"] = new DataDictionary();
             sourceData["usedCount"] = 0;
-            sources[source] = sourceData;
+            sources[sourceUrl] = sourceData;
             return (Source)sourceData;
         }
 
         [CanBeNull]
-        public static File GetFile([CanBeNull] this Source source, [CanBeNull] string fileName)
+        public static File GetFile([CanBeNull] this Source source, [CanBeNull] string fileUrl)
         {
-            if (source == null || fileName == null || !source.HasFile(fileName)) return null;
-            return (File)source["files"].DataDictionary[fileName].DataDictionary;
+            if (source == null || fileUrl == null || !source.HasFile(fileUrl)) return null;
+            return (File)source["files"].DataDictionary[fileUrl].DataDictionary;
         }
 
-        public static bool HasFile([CanBeNull] this Source files, [CanBeNull] string fileName)
+        public static bool HasFile([CanBeNull] this Source files, [CanBeNull] string fileUrl)
         {
-            if (files == null || fileName == null) return false;
-            return files["files"].DataDictionary.ContainsKey(fileName);
+            if (files == null || fileUrl == null) return false;
+            return files["files"].DataDictionary.ContainsKey(fileUrl);
         }
 
         [CanBeNull]
-        public static File AddFile([CanBeNull] this Source files, [CanBeNull] string fileName,
+        public static File AddFile([CanBeNull] this Source files, [CanBeNull] string fileUrl,
             [CanBeNull] Texture2D texture, [CanBeNull] DataDictionary metadata,
             [CanBeNull] string cacheKey = null, TextureFormat format = TextureFormat.RGBA32)
         {
-            if (files == null || fileName == null || texture == null || metadata == null) return null;
+            if (files == null || fileUrl == null || texture == null || metadata == null) return null;
             var fileData = new DataDictionary();
             fileData["texture"] = texture;
             fileData["usedCount"] = 0;
@@ -74,16 +74,16 @@ namespace jp.ootr.ImageDeviceController
             fileData["height"] = texture.height;
             fileData["metadata"] = metadata;
             fileData["format"] = (int)format;
-            files["files"].DataDictionary[fileName] = fileData;
+            files["files"].DataDictionary[fileUrl] = fileData;
             return (File)fileData;
         }
 
         [NotNull]
-        public static string[] RemoveSource([CanBeNull] this Cache sources, [CanBeNull] string source)
+        public static string[] RemoveSource([CanBeNull] this Cache sources, [CanBeNull] string sourceUrl)
         {
-            if (sources == null || source == null || !sources.HasSource(source)) return new string[0];
-            var sourceData = sources.GetSource(source);
-            var fileNames = sourceData.GetFileNames();
+            if (sources == null || sourceUrl == null || !sources.HasSource(sourceUrl)) return new string[0];
+            var sourceData = sources.GetSource(sourceUrl);
+            var fileNames = sourceData.GetFileUrls();
             var keys = new string[fileNames.Length];
             var index = 0;
             foreach (var fileName in fileNames)
@@ -92,12 +92,12 @@ namespace jp.ootr.ImageDeviceController
                 sourceData.RemoveFile(fileName);
             }
 
-            sources.Remove(source);
+            sources.Remove(sourceUrl);
             return keys;
         }
 
         [NotNull]
-        public static string[] GetFileNames([CanBeNull] this Source files)
+        public static string[] GetFileUrls([CanBeNull] this Source files)
         {
             if (files == null) return new string[0];
             return files["files"].DataDictionary.GetKeys().ToStringArray();
@@ -119,12 +119,12 @@ namespace jp.ootr.ImageDeviceController
             return val;
         }
 
-        public static void RemoveFile([CanBeNull] this Source files, [CanBeNull] string fileName)
+        public static void RemoveFile([CanBeNull] this Source files, [CanBeNull] string fileUrl)
         {
-            if (files == null || fileName == null || !files.HasFile(fileName)) return;
-            var file = files.GetFile(fileName);
+            if (files == null || fileUrl == null || !files.HasFile(fileUrl)) return;
+            var file = files.GetFile(fileUrl);
             file.DestroyTexture();
-            files["files"].DataDictionary.Remove(fileName);
+            files["files"].DataDictionary.Remove(fileUrl);
         }
 
         public static int IncreaseUsedCount([CanBeNull] this File file)

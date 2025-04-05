@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace jp.ootr.ImageDeviceController
 {
-    public class DeviceController : FileController
+    public class DeviceController : SourceController
     {
         [ItemCanBeNull] [SerializeField]
         protected internal CommonDevice.CommonDevice[] devices = new CommonDevice.CommonDevice[0];

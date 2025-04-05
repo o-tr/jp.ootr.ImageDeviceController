@@ -20,9 +20,9 @@ namespace jp.ootr.ImageDeviceController
         private string _etiCurrentContent;
         private int _etiCurrentIndex;
         
-        private string[] _etiCurrentFileNames = new string[0];
+        private string[] _etiCurrentFileUrls = new string[0];
         
-        private string[] _etiParsedFileNames = new string[0];
+        private string[] _etiParsedFileUrls = new string[0];
         private string[] _etiParsedFileBuffers = new string[0];
         private DataDictionary[] _etiParsedFileManifests = new DataDictionary[0];
         
@@ -71,7 +71,7 @@ namespace jp.ootr.ImageDeviceController
                 return;
             }
             
-            _etiCurrentFileNames = new string[0];
+            _etiCurrentFileUrls = new string[0];
             _etiCurrentContent = content.Substring(etiManifestEnd+1);
             _etiCurrentFiles = etiCurrentFiles.DataList;
             _etiCurrentIndex = 0;
@@ -96,18 +96,18 @@ namespace jp.ootr.ImageDeviceController
                 return;
             }
             
-            var sourceUrl = $"dynamic-eti{_etiSourceUrl.Substring(5)}/{fileName.String}";
+            var fileUrl = $"dynamic-eti{_etiSourceUrl.Substring(5)}/{fileName.String}";
 
             if (fileType.String == "m")
             {
-                ETIParseMasterImage(fileManifest.DataDictionary, sourceUrl, fileName.String, (int)fileWidth.Double, (int)fileHeight.Double);
+                ETIParseMasterImage(fileManifest.DataDictionary, fileUrl, fileName.String, (int)fileWidth.Double, (int)fileHeight.Double);
                 return;
             }
             
-            ETIParseCroppedImage(fileManifest.DataDictionary, sourceUrl, fileName.String, (int)fileWidth.Double, (int)fileHeight.Double);
+            ETIParseCroppedImage(fileManifest.DataDictionary, fileUrl, fileName.String, (int)fileWidth.Double, (int)fileHeight.Double);
         }
 
-        private void ETIParseMasterImage(DataDictionary fileManifest, string sourceUrl, string fileName, int fileWidth, int fileHeight)
+        private void ETIParseMasterImage(DataDictionary fileManifest, string fileUrl, string fileName, int fileWidth, int fileHeight)
         {
             if (
                 !fileManifest.TryGetValue("s", TokenType.Double, out var fileBufferStartToken)
@@ -121,8 +121,8 @@ namespace jp.ootr.ImageDeviceController
             var fileBufferStart = (int)fileBufferStartToken.Double;
             var fileBufferLength = (int)fileBufferLengthToken.Double;
 
-            _etiCurrentFileNames = _etiCurrentFileNames.Append(sourceUrl);
-            _etiParsedFileNames = _etiParsedFileNames.Append(sourceUrl);
+            _etiCurrentFileUrls = _etiCurrentFileUrls.Append(fileUrl);
+            _etiParsedFileUrls = _etiParsedFileUrls.Append(fileUrl);
             _etiParsedFileBuffers = _etiParsedFileBuffers.Append(_etiCurrentContent.Substring(fileBufferStart, fileBufferLength));
             _etiParsedFileManifests = _etiParsedFileManifests.Append(fileManifest);
                 
@@ -131,7 +131,7 @@ namespace jp.ootr.ImageDeviceController
             if (_etiCurrentIndex >= _etiCurrentFiles.Count)
             {
                 ConsoleLog("ETI file manifest parsing complete", _etiLoaderPrefixes);
-                ETIOnLoadSuccess(_etiSourceUrl, _etiCurrentFileNames);
+                ETIOnLoadSuccess(_etiSourceUrl, _etiCurrentFileUrls);
                 return;
             }
                 
@@ -139,7 +139,7 @@ namespace jp.ootr.ImageDeviceController
         }
 
 
-        private void ETIParseCroppedImage(DataDictionary _fileManifest, string sourceUrl, string fileName, int fileWidth, int fileHeight)
+        private void ETIParseCroppedImage(DataDictionary _fileManifest, string fileUrl, string fileName, int fileWidth, int fileHeight)
         {
             var fileManifest = _fileManifest.DeepClone();
             if (
@@ -182,8 +182,8 @@ namespace jp.ootr.ImageDeviceController
                 rect.DataDictionary.SetValue("s", rectStart - fileBufferFirstStart);
             }
             
-            _etiCurrentFileNames = _etiCurrentFileNames.Append(sourceUrl);
-            _etiParsedFileNames = _etiParsedFileNames.Append(sourceUrl);
+            _etiCurrentFileUrls = _etiCurrentFileUrls.Append(fileUrl);
+            _etiParsedFileUrls = _etiParsedFileUrls.Append(fileUrl);
             _etiParsedFileBuffers = _etiParsedFileBuffers.Append(_etiCurrentContent.Substring(fileBufferFirstStart, fileBufferLength));
             _etiParsedFileManifests = _etiParsedFileManifests.Append(fileManifest);
             
@@ -192,23 +192,23 @@ namespace jp.ootr.ImageDeviceController
             if (_etiCurrentIndex >= _etiCurrentFiles.Count)
             {
                 ConsoleLog("ETI file manifest parsing complete", _etiLoaderPrefixes);
-                ETIOnLoadSuccess(_etiSourceUrl, _etiCurrentFileNames);
+                ETIOnLoadSuccess(_etiSourceUrl, _etiCurrentFileUrls);
                 return;
             }
             SendCustomEventDelayedFrames(nameof(ETIParseManifest), EtiDelayFrames, EventTiming.LateUpdate);
         }
         
-        protected virtual void ETIOnLoadProgress([CanBeNull] string source, float progress)
+        protected virtual void ETIOnLoadProgress([CanBeNull] string sourceUrl, float progress)
         {
             ConsoleError("ETIOnLoadProgress should not be called from base class", _etiLoaderPrefixes);
         }
 
-        protected virtual void ETIOnLoadSuccess([CanBeNull] string source, [CanBeNull] string[] fileNames)
+        protected virtual void ETIOnLoadSuccess([CanBeNull] string sourceUrl, [CanBeNull] string[] fileUrls)
         {
             ConsoleError("ETIOnLoadSuccess should not be called from base class", _etiLoaderPrefixes);
         }
 
-        protected virtual void ETIOnLoadError([CanBeNull] string source, LoadError error)
+        protected virtual void ETIOnLoadError([CanBeNull] string sourceUrl, LoadError error)
         {
             ConsoleError("ETIOnLoadError should not be called from base class", _etiLoaderPrefixes);
         }

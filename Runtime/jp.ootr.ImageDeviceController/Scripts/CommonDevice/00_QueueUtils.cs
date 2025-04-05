@@ -33,20 +33,20 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
         }
 
         [NotNull]
-        public static Queue CreateQueue([NotNull] string source, [NotNull] string options, int type)
+        public static Queue CreateQueue([NotNull] string sourceUrl, [NotNull] string options, int type)
         {
             var queue = new DataDictionary();
-            queue["source"] = source;
+            queue["url"] = sourceUrl;
             queue["options"] = options;
             queue["type"] = type;
             return (Queue)queue;
         }
 
-        public static void Get([NotNull] this Queue queue, out string source, out string options, out URLType type)
+        public static void Get([NotNull] this Queue queue, out string sourceUrl, out string options, out SourceType type)
         {
-            source = queue["source"].String;
+            sourceUrl = queue["url"].String;
             options = queue["options"].String;
-            type = (URLType)(int)queue["type"].Double;
+            type = (SourceType)(int)queue["type"].Double;
         }
     }
 }

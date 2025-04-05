@@ -15,7 +15,7 @@ namespace jp.ootr.ImageDeviceController
 
         private bool _ilIsLoading;
 
-        [ItemNotNull] private string[] _ilQueuedUrlStrings = new string[0];
+        [ItemNotNull] private string[] _ilQueuedSourceUrls = new string[0];
         private string _ilSourceUrl;
         private VRCImageDownloader _imageDownloader;
         private TextureInfo _textureInfo;
@@ -30,7 +30,7 @@ namespace jp.ootr.ImageDeviceController
             _textureInfo.AnisoLevel = 16;
         }
 
-        protected virtual void IlLoadImage([CanBeNull] string url)
+        protected virtual void IlLoadImage([CanBeNull] string sourceUrl)
         {
             if (!_ilInited)
             {
@@ -38,28 +38,28 @@ namespace jp.ootr.ImageDeviceController
                 IlInit();
             }
 
-            if (url.IsNullOrEmpty())
+            if (sourceUrl.IsNullOrEmpty())
             {
-                ConsoleWarn("url is null", _imageLoaderPrefixes);
+                ConsoleWarn("source is null", _imageLoaderPrefixes);
                 return;
             }
 
-            if (!url.IsValidUrl())
+            if (!sourceUrl.IsValidUrl())
             {
-                ConsoleWarn($"invalid url: {url}", _imageLoaderPrefixes);
+                ConsoleWarn($"invalid source: {sourceUrl}", _imageLoaderPrefixes);
                 return;
             }
 
-            if (_ilQueuedUrlStrings.Has(url))
+            if (_ilQueuedSourceUrls.Has(sourceUrl))
             {
-                ConsoleWarn($"already in queue: {url}", _imageLoaderPrefixes);
+                ConsoleWarn($"already in queue: {sourceUrl}", _imageLoaderPrefixes);
                 return;
             }
 
-            _ilQueuedUrlStrings = _ilQueuedUrlStrings.Append(url);
+            _ilQueuedSourceUrls = _ilQueuedSourceUrls.Append(sourceUrl);
             if (_ilIsLoading)
             {
-                ConsoleDebug($"added to queue: {url}", _imageLoaderPrefixes);
+                ConsoleDebug($"added to queue: {sourceUrl}", _imageLoaderPrefixes);
                 return;
             }
 
@@ -73,13 +73,13 @@ namespace jp.ootr.ImageDeviceController
          */
         public virtual void IlLoadNext()
         {
-            if (_ilQueuedUrlStrings.Length == 0 || _ilQueuedUrlStrings[0].IsNullOrEmpty())
+            if (_ilQueuedSourceUrls.Length == 0 || _ilQueuedSourceUrls[0].IsNullOrEmpty())
             {
                 _ilIsLoading = false;
                 return;
             }
 
-            _ilSourceUrl = _ilQueuedUrlStrings[0];
+            _ilSourceUrl = _ilQueuedSourceUrls[0];
             ConsoleDebug($"Loading next image: {_ilSourceUrl}", _imageLoaderPrefixes);
             _imageDownloader.DownloadImage(UsGetUrl(_ilSourceUrl), null, (IUdonEventReceiver)this, _textureInfo);
         }
@@ -89,26 +89,26 @@ namespace jp.ootr.ImageDeviceController
             var texture = result.Result;
             CcSetTexture(_ilSourceUrl, _ilSourceUrl, texture);
             IlOnLoadSuccess(_ilSourceUrl, new[] { _ilSourceUrl });
-            _ilQueuedUrlStrings = _ilQueuedUrlStrings.Remove(0);
+            _ilQueuedSourceUrls = _ilQueuedSourceUrls.Remove(0);
             SendCustomEventDelayedFrames(nameof(IlLoadNext), IlDelayFrames);
         }
 
         public override void OnImageLoadError(IVRCImageDownload result)
         {
             ConsoleError(
-                $"Error loading image: url: {_ilSourceUrl}, error code: {result.Error}, message: {result.ErrorMessage}",
+                $"Error loading image: source: {_ilSourceUrl}, error code: {result.Error}, message: {result.ErrorMessage}",
                 _imageLoaderPrefixes);
             IlOnLoadError(_ilSourceUrl, ParseImageDownloadError((LoadError)result.Error, result.ErrorMessage));
-            _ilQueuedUrlStrings = _ilQueuedUrlStrings.Remove(0);
+            _ilQueuedSourceUrls = _ilQueuedSourceUrls.Remove(0);
             SendCustomEventDelayedFrames(nameof(IlLoadNext), IlDelayFrames);
         }
 
-        protected virtual void IlOnLoadSuccess([CanBeNull] string source, [CanBeNull] string[] fileNames)
+        protected virtual void IlOnLoadSuccess([CanBeNull] string sourceUrl, [CanBeNull] string[] fileUrls)
         {
             ConsoleError("IlOnLoadSuccess should not be called from base class", _imageLoaderPrefixes);
         }
 
-        protected virtual void IlOnLoadError([CanBeNull] string source, LoadError error)
+        protected virtual void IlOnLoadError([CanBeNull] string sourceUrl, LoadError error)
         {
             ConsoleError("IlOnLoadError should not be called from base class", _imageLoaderPrefixes);
         }

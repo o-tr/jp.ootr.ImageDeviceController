@@ -10,38 +10,38 @@ namespace jp.ootr.ImageDeviceController
 
         private readonly string[] _stringLoaderPrefixes = { "StringLoader" };
         private bool _slIsLoading;
-        private string[] _slQueuedUrlStrings = new string[0];
-        private string _slCurrentUrlString = string.Empty;
+        private string[] _slQueuedSourceUrls = new string[0];
+        private string _slCurrentSourceUrl = string.Empty;
         
-        protected void SlLoadString([CanBeNull] string url)
+        protected void SlLoadString([CanBeNull] string sourceUrl)
         {
-            if (string.IsNullOrEmpty(url)) {
+            if (string.IsNullOrEmpty(sourceUrl)) {
                 return;
             }
 
-            _slQueuedUrlStrings = _slQueuedUrlStrings.Append(url);
+            _slQueuedSourceUrls = _slQueuedSourceUrls.Append(sourceUrl);
             
             if (_slIsLoading)
             {
-                ConsoleDebug($"Loading already in progress, queuing {url}", _stringLoaderPrefixes);
+                ConsoleDebug($"Loading already in progress, queuing {sourceUrl}", _stringLoaderPrefixes);
                 return;
             }
             
-            ConsoleDebug($"Loading {url}", _stringLoaderPrefixes);
+            ConsoleDebug($"Loading {sourceUrl}", _stringLoaderPrefixes);
             _slIsLoading = true;
             SlLoadNext();
         }
         
         public void SlLoadNext()
         {
-            if (_slQueuedUrlStrings.Length == 0)
+            if (_slQueuedSourceUrls.Length == 0)
             {
                 ConsoleDebug("No more URLs to load", _stringLoaderPrefixes);
                 _slIsLoading = false;
                 return;
             }
 
-            _slQueuedUrlStrings = _slQueuedUrlStrings.Shift(out var sourceUrl, out var success);
+            _slQueuedSourceUrls = _slQueuedSourceUrls.Shift(out var sourceUrl, out var success);
             if (!success)
             {
                 _slIsLoading = false;
@@ -56,8 +56,8 @@ namespace jp.ootr.ImageDeviceController
                 return;
             }
 
-            var url = UsGetUrl(sourceUrl);
-            if (url == null)
+            var source = UsGetUrl(sourceUrl);
+            if (source == null)
             {
                 ConsoleError($"Failed to get URL for {sourceUrl}", _stringLoaderPrefixes);
                 SlOnLoadError(sourceUrl, LoadError.URLNotSynced);
@@ -65,15 +65,15 @@ namespace jp.ootr.ImageDeviceController
                 return;
             }
             
-            _slCurrentUrlString = sourceUrl;
-            VRCStringDownloader.LoadUrl(url, (IUdonEventReceiver)this);
+            _slCurrentSourceUrl = sourceUrl;
+            VRCStringDownloader.LoadUrl(source, (IUdonEventReceiver)this);
         }
 
         public override void OnStringLoadSuccess(IVRCStringDownload result)
         {
-            if (result.Url.ToString() != _slCurrentUrlString)
+            if (result.Url.ToString() != _slCurrentSourceUrl)
             {
-                ConsoleDebug($"Ignoring success for {result.Url}, current is {_slCurrentUrlString}", _stringLoaderPrefixes);
+                ConsoleDebug($"Ignoring success for {result.Url}, current is {_slCurrentSourceUrl}", _stringLoaderPrefixes);
                 return;
             }
             ConsoleLog($"Download success from {result.Url}", _stringLoaderPrefixes);
@@ -92,51 +92,51 @@ namespace jp.ootr.ImageDeviceController
             ConsoleError($"Invalid file format from {result.Url}", _stringLoaderPrefixes);
         }
 
-        protected sealed override void ZlOnLoadProgress(string source, float progress)
+        protected sealed override void ZlOnLoadProgress(string sourceUrl, float progress)
         {
-            SlOnLoadProgress(source, progress);
+            SlOnLoadProgress(sourceUrl, progress);
         }
         
-        protected sealed override void ZlOnLoadSuccess(string source, string[] fileNames)
+        protected sealed override void ZlOnLoadSuccess(string sourceUrl, string[] fileUrls)
         {
-            SlOnLoadSuccess(source, fileNames);
+            SlOnLoadSuccess(sourceUrl, fileUrls);
             SendCustomEvent(nameof(SlLoadNext));
         }
         
-        protected sealed override void ZlOnLoadError(string source, LoadError error)
+        protected sealed override void ZlOnLoadError(string sourceUrl, LoadError error)
         {
-            SlOnLoadError(source, error);
+            SlOnLoadError(sourceUrl, error);
             SendCustomEvent(nameof(SlLoadNext));
         }
         
-        protected sealed override void ETIOnLoadProgress(string source, float progress)
+        protected sealed override void ETIOnLoadProgress(string sourceUrl, float progress)
         {
-            SlOnLoadProgress(source, progress);
+            SlOnLoadProgress(sourceUrl, progress);
         }
         
-        protected sealed override void ETIOnLoadSuccess(string source, string[] fileNames)
+        protected sealed override void ETIOnLoadSuccess(string sourceUrl, string[] fileUrls)
         {
-            SlOnLoadSuccess(source, fileNames);
+            SlOnLoadSuccess(sourceUrl, fileUrls);
             SendCustomEvent(nameof(SlLoadNext));
         }
         
-        protected sealed override void ETIOnLoadError(string source, LoadError error)
+        protected sealed override void ETIOnLoadError(string sourceUrl, LoadError error)
         {
-            SlOnLoadError(source, error);
+            SlOnLoadError(sourceUrl, error);
             SendCustomEvent(nameof(SlLoadNext));
         }
 
-        protected virtual void SlOnLoadProgress([CanBeNull] string source, float progress)
+        protected virtual void SlOnLoadProgress([CanBeNull] string sourceUrl, float progress)
         {
             ConsoleError("ZipOnLoadProgress should not be called from base class", _stringLoaderPrefixes);
         }
 
-        protected virtual void SlOnLoadSuccess([CanBeNull] string source, [CanBeNull] string[] fileNames)
+        protected virtual void SlOnLoadSuccess([CanBeNull] string sourceUrl, [CanBeNull] string[] fileUrls)
         {
             ConsoleError("ZipOnLoadSuccess should not be called from base class", _stringLoaderPrefixes);
         }
 
-        protected virtual void SlOnLoadError([CanBeNull] string source, LoadError error)
+        protected virtual void SlOnLoadError([CanBeNull] string sourceUrl, LoadError error)
         {
             ConsoleError("ZipOnLoadError should not be called from base class", _stringLoaderPrefixes);
         }

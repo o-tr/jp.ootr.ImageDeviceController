@@ -43,19 +43,19 @@ namespace jp.ootr.ImageDeviceController
             return true;
         }
 
-        public static bool ParseSourceOptions([CanBeNull] this string options, out URLType type, out float offset,
+        public static bool ParseSourceOptions([CanBeNull] this string options, out SourceType type, out float offset,
             out float interval)
         {
             if (options == null)
             {
-                type = URLType.Image;
+                type = SourceType.Image;
                 offset = 0;
                 interval = 0;
                 return false;
             }
 
             var split = options.Split(',');
-            type = (URLType)int.Parse(split[0]);
+            type = (SourceType)int.Parse(split[0]);
             if (split.Length < 3)
             {
                 offset = 0;
@@ -68,7 +68,7 @@ namespace jp.ootr.ImageDeviceController
             return true;
         }
 
-        public static bool ParseSourceOptions([CanBeNull] this string options, out URLType type)
+        public static bool ParseSourceOptions([CanBeNull] this string options, out SourceType type)
         {
             return options.ParseSourceOptions(out type, out var void1, out var void2);
         }
@@ -78,12 +78,12 @@ namespace jp.ootr.ImageDeviceController
             return options.ParseSourceOptions(out var void1, out var void2, out var void3);
         }
 
-        public static void ParseFileName([CanBeNull] this string fileName, out URLType type,
+        public static void ParseFileName([CanBeNull] this string fileName, out SourceType type,
             [NotNull] out string options)
         {
             if (fileName == null)
             {
-                type = URLType.Image;
+                type = SourceType.Image;
                 options = "";
                 return;
             }
@@ -91,21 +91,21 @@ namespace jp.ootr.ImageDeviceController
             options = "";
             if (fileName.StartsWith("zip://"))
             {
-                type = URLType.TextZip;
+                type = SourceType.TextZip;
                 return;
             }
 
             if (fileName.StartsWith("video://"))
             {
                 options = fileName.Substring(8).Split("@")[0];
-                type = URLType.Video;
+                type = SourceType.Video;
                 return;
             }
 
-            type = URLType.Image;
+            type = SourceType.Image;
         }
 
-        public static string BuildSourceOptions(URLType type, float offset, float interval)
+        public static string BuildSourceOptions(SourceType type, float offset, float interval)
         {
             return $"{(int)type},{offset},{interval}";
         }

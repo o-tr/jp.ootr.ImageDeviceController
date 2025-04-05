@@ -10,9 +10,9 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
         private int _retryCount;
         [NotNull] private QueueList QueueList => (QueueList)_oQueueList;
 
-        protected virtual void LLIFetchImage([CanBeNull] string source, URLType type, [CanBeNull] string options = "")
+        protected virtual void LLIFetchImage([CanBeNull] string sourceUrl, SourceType type, [CanBeNull] string options = "")
         {
-            if (string.IsNullOrEmpty(source))
+            if (string.IsNullOrEmpty(sourceUrl))
             {
                 ConsoleError("Source is empty");
                 return;
@@ -20,7 +20,7 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
 
             if (options == null) options = UrlUtil.BuildSourceOptions(type, 0, 0);
 
-            var queue = QueueUtils.CreateQueue(source, options, (int)type);
+            var queue = QueueUtils.CreateQueue(sourceUrl, options, (int)type);
             QueueList.AddQueue(queue);
 
             if (QueueList.Count > 1) return;
@@ -47,11 +47,11 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
                 return;
             }
 
-            queue.Get(out var source, out var options, out var type);
-            if (controller.LoadFilesFromUrl((CommonDevice)this, source, type, options)) return;
+            queue.Get(out var sourceUrl, out var options, out var type);
+            if (controller.LoadSource((CommonDevice)this, sourceUrl, type, options)) return;
             if (_retryCount >= SyncURLRetryCountLimit)
             {
-                OnFilesLoadFailed(LoadError.URLNotSynced);
+                OnSourceLoadFailed(LoadError.URLNotSynced);
                 return;
             }
 
@@ -67,16 +67,16 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
             SendCustomEventDelayedFrames(nameof(FetchImageInternal), 1);
         }
 
-        public virtual void OnFileLoadProgress([NotNull] string source, float progress)
+        public virtual void OnSourceLoadProgress([NotNull] string sourceUrl, float progress)
         {
         }
 
-        public virtual void OnFilesLoadSuccess([NotNull] string source, [NotNull] string[] fileNames)
+        public virtual void OnSourceLoadSuccess([NotNull] string sourceUrl, [NotNull] string[] fileUrls)
         {
             FetchNextImage();
         }
 
-        public virtual void OnFilesLoadFailed(LoadError error)
+        public virtual void OnSourceLoadFailed(LoadError error)
         {
             FetchNextImage();
         }

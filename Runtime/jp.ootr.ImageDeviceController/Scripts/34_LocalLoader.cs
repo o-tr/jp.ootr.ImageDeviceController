@@ -1,37 +1,38 @@
 ﻿using JetBrains.Annotations;
 using jp.ootr.common;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace jp.ootr.ImageDeviceController
 {
     public class LocalLoader : ImageLoader
     {
         [SerializeField] protected Texture2D[] localTextures;
-        [SerializeField] protected string[] localTextureUrls;
+        [FormerlySerializedAs("localTextureUrls")] [SerializeField] protected string[] localTextureSourceUrls;
 
         private readonly string[] _localLoaderPrefixes = { "LocalLoader" };
 
-        protected void LlLoadImage([CanBeNull] string url)
+        protected void LlLoadLocal([CanBeNull] string sourceUrl)
         {
-            if (!url.IsValidLocalUrl())
+            if (!sourceUrl.IsValidLocalUrl())
             {
-                LlOnLoadError(url, LoadError.InvalidURL);
+                LlOnLoadError(sourceUrl, LoadError.InvalidURL);
                 return;
             }
 
-            if (!localTextureUrls.Has(url, out var index)) LlOnLoadError(url, LoadError.HttpNotFound);
+            if (!localTextureSourceUrls.Has(sourceUrl, out var index)) LlOnLoadError(sourceUrl, LoadError.HttpNotFound);
 
-            if (!CcHasCache(url)) CcSetTexture(url, url, localTextures[index]);
+            if (!CcHasCache(sourceUrl)) CcSetTexture(sourceUrl, sourceUrl, localTextures[index]);
 
-            LlOnLoadSuccess(url, new[] { url });
+            LlOnLoadSuccess(sourceUrl, new[] { sourceUrl });
         }
 
-        protected virtual void LlOnLoadSuccess([CanBeNull] string source, [CanBeNull] string[] fileNames)
+        protected virtual void LlOnLoadSuccess([CanBeNull] string sourceUrl, [CanBeNull] string[] fileUrls)
         {
             ConsoleError("LlOnLoadSuccess should not be called from base class", _localLoaderPrefixes);
         }
 
-        protected virtual void LlOnLoadError([CanBeNull] string source, LoadError error)
+        protected virtual void LlOnLoadError([CanBeNull] string sourceUrl, LoadError error)
         {
             ConsoleError("LlOnLoadError should not be called from base class", _localLoaderPrefixes);
         }
