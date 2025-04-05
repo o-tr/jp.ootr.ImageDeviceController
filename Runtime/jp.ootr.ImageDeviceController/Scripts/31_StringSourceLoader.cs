@@ -5,7 +5,7 @@ using VRC.Udon.Common.Interfaces;
 
 namespace jp.ootr.ImageDeviceController
 {
-    public class StringLoader : ETILoader
+    public class StringSourceLoader : EtiSourceLoader
     {
 
         private readonly string[] _stringLoaderPrefixes = { "StringLoader" };
@@ -60,7 +60,7 @@ namespace jp.ootr.ImageDeviceController
             if (source == null)
             {
                 ConsoleError($"Failed to get URL for {sourceUrl}", _stringLoaderPrefixes);
-                SlOnLoadError(sourceUrl, LoadError.URLNotSynced);
+                OnSourceLoadError(sourceUrl, LoadError.URLNotSynced);
                 SendCustomEvent(nameof(SlLoadNext));
                 return;
             }
@@ -94,51 +94,36 @@ namespace jp.ootr.ImageDeviceController
 
         protected sealed override void ZlOnLoadProgress(string sourceUrl, float progress)
         {
-            SlOnLoadProgress(sourceUrl, progress);
+            OnSourceLoadProgress(sourceUrl, progress);
         }
         
         protected sealed override void ZlOnLoadSuccess(string sourceUrl, string[] fileUrls)
         {
-            SlOnLoadSuccess(sourceUrl, fileUrls);
+            OnSourceLoadSuccess(sourceUrl, fileUrls);
             SendCustomEvent(nameof(SlLoadNext));
         }
         
         protected sealed override void ZlOnLoadError(string sourceUrl, LoadError error)
         {
-            SlOnLoadError(sourceUrl, error);
+            OnSourceLoadError(sourceUrl, error);
             SendCustomEvent(nameof(SlLoadNext));
         }
         
         protected sealed override void ETIOnLoadProgress(string sourceUrl, float progress)
         {
-            SlOnLoadProgress(sourceUrl, progress);
+            OnSourceLoadProgress(sourceUrl, progress);
         }
         
         protected sealed override void ETIOnLoadSuccess(string sourceUrl, string[] fileUrls)
         {
-            SlOnLoadSuccess(sourceUrl, fileUrls);
+            OnSourceLoadSuccess(sourceUrl, fileUrls);
             SendCustomEvent(nameof(SlLoadNext));
         }
         
         protected sealed override void ETIOnLoadError(string sourceUrl, LoadError error)
         {
-            SlOnLoadError(sourceUrl, error);
+            OnSourceLoadError(sourceUrl, error);
             SendCustomEvent(nameof(SlLoadNext));
-        }
-
-        protected virtual void SlOnLoadProgress([CanBeNull] string sourceUrl, float progress)
-        {
-            ConsoleError("ZipOnLoadProgress should not be called from base class", _stringLoaderPrefixes);
-        }
-
-        protected virtual void SlOnLoadSuccess([CanBeNull] string sourceUrl, [CanBeNull] string[] fileUrls)
-        {
-            ConsoleError("ZipOnLoadSuccess should not be called from base class", _stringLoaderPrefixes);
-        }
-
-        protected virtual void SlOnLoadError([CanBeNull] string sourceUrl, LoadError error)
-        {
-            ConsoleError("ZipOnLoadError should not be called from base class", _stringLoaderPrefixes);
         }
     }
 }

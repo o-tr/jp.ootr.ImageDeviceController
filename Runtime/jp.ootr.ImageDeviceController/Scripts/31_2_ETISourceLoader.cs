@@ -8,11 +8,11 @@ using VRC.Udon.Common.Enums;
 
 namespace jp.ootr.ImageDeviceController
 {
-    public class ETILoader : ZipLoader {
-        private readonly string[] _etiLoaderPrefixes = { "ETILoader" };
-        [SerializeField] private UdonBase64CSVRLE base64Rle;
+    public class EtiSourceLoader : ZipSourceLoader {
+        private readonly string[] _etiLoaderPrefixes = { "ETISourceLoader" };
+        [SerializeField] protected UdonBase64CSVRLE base64Rle;
         
-        private const int EtiDelayFrames = 1;
+        protected const int EtiDelayFrames = 1;
         
         private string _etiSourceUrl;
         private DataDictionary _etiCurrentManifest;
@@ -22,9 +22,9 @@ namespace jp.ootr.ImageDeviceController
         
         private string[] _etiCurrentFileUrls = new string[0];
         
-        private string[] _etiParsedFileUrls = new string[0];
-        private string[] _etiParsedFileBuffers = new string[0];
-        private DataDictionary[] _etiParsedFileManifests = new DataDictionary[0];
+        protected string[] EtiParsedFileUrls = new string[0];
+        protected string[] EtiParsedFileBuffers = new string[0];
+        protected DataDictionary[] EtiParsedFileManifests = new DataDictionary[0];
         
         protected void OnETILoadSuccess(IVRCStringDownload result)
         {
@@ -122,9 +122,9 @@ namespace jp.ootr.ImageDeviceController
             var fileBufferLength = (int)fileBufferLengthToken.Double;
 
             _etiCurrentFileUrls = _etiCurrentFileUrls.Append(fileUrl);
-            _etiParsedFileUrls = _etiParsedFileUrls.Append(fileUrl);
-            _etiParsedFileBuffers = _etiParsedFileBuffers.Append(_etiCurrentContent.Substring(fileBufferStart, fileBufferLength));
-            _etiParsedFileManifests = _etiParsedFileManifests.Append(fileManifest);
+            EtiParsedFileUrls = EtiParsedFileUrls.Append(fileUrl);
+            EtiParsedFileBuffers = EtiParsedFileBuffers.Append(_etiCurrentContent.Substring(fileBufferStart, fileBufferLength));
+            EtiParsedFileManifests = EtiParsedFileManifests.Append(fileManifest);
                 
             ConsoleLog($"ETI file manifest: {fileName} ({fileWidth}x{fileHeight})", _etiLoaderPrefixes);
             _etiCurrentIndex++;
@@ -183,9 +183,9 @@ namespace jp.ootr.ImageDeviceController
             }
             
             _etiCurrentFileUrls = _etiCurrentFileUrls.Append(fileUrl);
-            _etiParsedFileUrls = _etiParsedFileUrls.Append(fileUrl);
-            _etiParsedFileBuffers = _etiParsedFileBuffers.Append(_etiCurrentContent.Substring(fileBufferFirstStart, fileBufferLength));
-            _etiParsedFileManifests = _etiParsedFileManifests.Append(fileManifest);
+            EtiParsedFileUrls = EtiParsedFileUrls.Append(fileUrl);
+            EtiParsedFileBuffers = EtiParsedFileBuffers.Append(_etiCurrentContent.Substring(fileBufferFirstStart, fileBufferLength));
+            EtiParsedFileManifests = EtiParsedFileManifests.Append(fileManifest);
             
             ConsoleLog($"ETI file manifest: {fileName} ({fileWidth}x{fileHeight}) with {fileRectToken.DataList.Count} rects", _etiLoaderPrefixes);
             _etiCurrentIndex++;

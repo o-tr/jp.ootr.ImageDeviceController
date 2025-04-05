@@ -3,7 +3,7 @@ using static jp.ootr.common.ArrayUtils;
 
 namespace jp.ootr.ImageDeviceController
 {
-    public class SourceController : LocalLoader
+    public class SourceController : ETIFileLoader
     {
         private readonly string[] _fileControllerPrefixes = { "FileController" };
         private string[][] _cachedData = new string[0][];
@@ -100,18 +100,17 @@ namespace jp.ootr.ImageDeviceController
             _cachedData = _cachedData.Remove(loadedIndex);
         }
 
-
-        protected override void SlOnLoadProgress([CanBeNull] string sourceUrl, float progress)
+        protected override void OnSourceLoadProgress(string sourceUrl, float progress)
         {
             if (sourceUrl == null || !_loadingSourceUrls.Has(sourceUrl, out var loadingIndex)) return;
             foreach (var device in _loadingDevices[loadingIndex]) device.OnSourceLoadProgress(sourceUrl, progress);
         }
 
-        protected override void SlOnLoadSuccess([CanBeNull] string sourceUrl, [CanBeNull] string[] fileUrls)
+        protected override void OnSourceLoadSuccess(string sourceUrl, string[] fileUrls)
         {
             if (sourceUrl == null || fileUrls == null || !_loadingSourceUrls.Has(sourceUrl, out var loadingIndex)) return;
             ConsoleDebug(
-                $"StringKindArchive loaded successfully. {fileUrls.Length} files. device count: {_loadingDevices[loadingIndex].Length}, {sourceUrl}",
+                $"source loaded successfully. {fileUrls.Length} files. device count: {_loadingDevices[loadingIndex].Length}, {sourceUrl}",
                 _fileControllerPrefixes);
             _loadedSourceUrls = _loadedSourceUrls.Append(sourceUrl);
             _cachedData = _cachedData.Append(fileUrls);
@@ -121,7 +120,7 @@ namespace jp.ootr.ImageDeviceController
             foreach (var device in loadingDevices) device.OnSourceLoadSuccess(sourceUrl, fileUrls);
         }
 
-        protected override void SlOnLoadError([CanBeNull] string sourceUrl, LoadError error)
+        protected override void OnSourceLoadError(string sourceUrl, LoadError error)
         {
             if (sourceUrl == null) return;
             ConsoleDebug($"StringKindArchive load failed: {error}, {sourceUrl} ", _fileControllerPrefixes);
@@ -130,78 +129,6 @@ namespace jp.ootr.ImageDeviceController
             _loadingDevices = _loadingDevices.Remove(loadingIndex, out var loadingDevices);
             if (loadingDevices == null) return;
             foreach (var device in loadingDevices) device.OnSourceLoadFailed(error);
-        }
-
-        protected override void IlOnLoadSuccess([CanBeNull] string sourceUrl, [CanBeNull] string[] fileUrls)
-        {
-            if (sourceUrl == null || fileUrls == null || !_loadingSourceUrls.Has(sourceUrl, out var loadingIndex)) return;
-            ConsoleDebug($"Image loaded successfully. {sourceUrl} ", _fileControllerPrefixes);
-            _loadedSourceUrls = _loadedSourceUrls.Append(sourceUrl);
-            _cachedData = _cachedData.Append(fileUrls);
-            _loadingSourceUrls = _loadingSourceUrls.Remove(loadingIndex);
-            _loadingDevices = _loadingDevices.Remove(loadingIndex, out var loadingDevices);
-            if (loadingDevices == null) return;
-            foreach (var device in loadingDevices) device.OnSourceLoadSuccess(sourceUrl, fileUrls);
-        }
-
-        protected override void IlOnLoadError([CanBeNull] string sourceUrl, LoadError error)
-        {
-            if (!_loadingSourceUrls.Has(sourceUrl, out var loadingIndex)) return;
-            ConsoleDebug($"Image load failed: {error}, {sourceUrl}", _fileControllerPrefixes);
-            _loadingSourceUrls = _loadingSourceUrls.Remove(loadingIndex);
-            _loadingDevices = _loadingDevices.Remove(loadingIndex, out var loadingDevices);
-            if (loadingDevices == null) return;
-            foreach (var device in loadingDevices) device.OnSourceLoadFailed(error);
-        }
-
-        protected override void VlOnLoadError([CanBeNull] string sourceUrl, LoadError error)
-        {
-            if (!_loadingSourceUrls.Has(sourceUrl, out var loadingIndex)) return;
-            ConsoleDebug($"Video load failed: {error}, {sourceUrl} ", _fileControllerPrefixes);
-            _loadingSourceUrls = _loadingSourceUrls.Remove(loadingIndex);
-            _loadingDevices = _loadingDevices.Remove(loadingIndex, out var loadingDevices);
-            if (loadingDevices == null) return;
-            foreach (var device in loadingDevices) device.OnSourceLoadFailed(error);
-        }
-
-        protected override void VlOnLoadSuccess([CanBeNull] string sourceUrl, [CanBeNull] string[] fileNames)
-        {
-            if (!_loadingSourceUrls.Has(sourceUrl, out var loadingIndex) || sourceUrl == null || fileNames == null) return;
-            ConsoleDebug($"Video loaded successfully. {sourceUrl}", _fileControllerPrefixes);
-            _loadedSourceUrls = _loadedSourceUrls.Append(sourceUrl);
-            _cachedData = _cachedData.Append(fileNames);
-            _loadingSourceUrls = _loadingSourceUrls.Remove(loadingIndex);
-            _loadingDevices = _loadingDevices.Remove(loadingIndex, out var loadingDevices);
-            if (loadingDevices == null) return;
-            foreach (var device in loadingDevices) device.OnSourceLoadSuccess(sourceUrl, fileNames);
-        }
-
-        protected override void VlOnLoadProgress([CanBeNull] string sourceUrl, float progress)
-        {
-            if (!_loadingSourceUrls.Has(sourceUrl, out var loadingIndex) || sourceUrl == null) return;
-            foreach (var device in _loadingDevices[loadingIndex]) device.OnSourceLoadProgress(sourceUrl, progress);
-        }
-
-        protected override void LlOnLoadError([CanBeNull] string sourceUrl, LoadError error)
-        {
-            if (!_loadingSourceUrls.Has(sourceUrl, out var loadingIndex)) return;
-            ConsoleDebug($"Local file load failed: {error}, {sourceUrl} ", _fileControllerPrefixes);
-            _loadingSourceUrls = _loadingSourceUrls.Remove(loadingIndex);
-            _loadingDevices = _loadingDevices.Remove(loadingIndex, out var loadingDevices);
-            if (loadingDevices == null) return;
-            foreach (var device in loadingDevices) device.OnSourceLoadFailed(error);
-        }
-
-        protected override void LlOnLoadSuccess([CanBeNull] string sourceUrl, [CanBeNull] string[] fileUrls)
-        {
-            if (!_loadingSourceUrls.Has(sourceUrl, out var loadingIndex) || sourceUrl == null || fileUrls == null) return;
-            ConsoleDebug($"Local file loaded successfully. {sourceUrl}", _fileControllerPrefixes);
-            _loadedSourceUrls = _loadedSourceUrls.Append(sourceUrl);
-            _cachedData = _cachedData.Append(fileUrls);
-            _loadingSourceUrls = _loadingSourceUrls.Remove(loadingIndex);
-            _loadingDevices = _loadingDevices.Remove(loadingIndex, out var loadingDevices);
-            if (loadingDevices == null) return;
-            foreach (var device in loadingDevices) device.OnSourceLoadSuccess(sourceUrl, fileUrls);
         }
 
         #endregion

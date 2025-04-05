@@ -10,7 +10,7 @@ using static jp.ootr.common.String;
 
 namespace jp.ootr.ImageDeviceController
 {
-    public class ZipLoader : URLStore
+    public class ZipSourceLoader : URLStore
     {
         [SerializeField] private UdonZip.UdonZip zlUdonZip;
 

@@ -6,7 +6,7 @@ using VRC.Udon.Common.Interfaces;
 
 namespace jp.ootr.ImageDeviceController
 {
-    public class ImageLoader : VideoLoader
+    public class ImageSourceLoader : VideoSourceLoader
     {
         private const int IlDelayFrames = 10;
 
@@ -88,7 +88,7 @@ namespace jp.ootr.ImageDeviceController
         {
             var texture = result.Result;
             CcSetTexture(_ilSourceUrl, _ilSourceUrl, texture);
-            IlOnLoadSuccess(_ilSourceUrl, new[] { _ilSourceUrl });
+            OnSourceLoadSuccess(_ilSourceUrl, new[] { _ilSourceUrl });
             _ilQueuedSourceUrls = _ilQueuedSourceUrls.Remove(0);
             SendCustomEventDelayedFrames(nameof(IlLoadNext), IlDelayFrames);
         }
@@ -98,19 +98,9 @@ namespace jp.ootr.ImageDeviceController
             ConsoleError(
                 $"Error loading image: source: {_ilSourceUrl}, error code: {result.Error}, message: {result.ErrorMessage}",
                 _imageLoaderPrefixes);
-            IlOnLoadError(_ilSourceUrl, ParseImageDownloadError((LoadError)result.Error, result.ErrorMessage));
+            OnSourceLoadError(_ilSourceUrl, ParseImageDownloadError((LoadError)result.Error, result.ErrorMessage));
             _ilQueuedSourceUrls = _ilQueuedSourceUrls.Remove(0);
             SendCustomEventDelayedFrames(nameof(IlLoadNext), IlDelayFrames);
-        }
-
-        protected virtual void IlOnLoadSuccess([CanBeNull] string sourceUrl, [CanBeNull] string[] fileUrls)
-        {
-            ConsoleError("IlOnLoadSuccess should not be called from base class", _imageLoaderPrefixes);
-        }
-
-        protected virtual void IlOnLoadError([CanBeNull] string sourceUrl, LoadError error)
-        {
-            ConsoleError("IlOnLoadError should not be called from base class", _imageLoaderPrefixes);
         }
     }
 }
