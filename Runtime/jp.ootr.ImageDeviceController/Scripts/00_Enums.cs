@@ -47,6 +47,9 @@ namespace jp.ootr.ImageDeviceController
         //ETILoader
         MissingBase64RLE,
         InvalidETIFile,
+        
+        // FileLoadError
+        InvalidFileURL,
 
         //HTTP1.1 4xx
         HttpBadRequest = 400,

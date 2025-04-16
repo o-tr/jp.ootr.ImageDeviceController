@@ -8,8 +8,8 @@ using VRC.Udon.Common.Enums;
 
 namespace jp.ootr.ImageDeviceController
 {
-    public class EtiSourceLoader : ZipSourceLoader {
-        private readonly string[] _etiLoaderPrefixes = { "ETISourceLoader" };
+    public class EiaSourceLoader : ZipSourceLoader {
+        private readonly string[] _eiaSourceLoaderPrefixes = { "EIASourceLoader" };
         [SerializeField] protected UdonBase64CSVRLE base64Rle;
         
         protected const int EtiDelayFrames = 1;
@@ -30,15 +30,15 @@ namespace jp.ootr.ImageDeviceController
         {
             if (base64Rle == null)
             {
-                ConsoleError("UdonBase64CSVRLE component is not set.", _etiLoaderPrefixes);
+                ConsoleError("UdonBase64CSVRLE component is not set.", _eiaSourceLoaderPrefixes);
                 ETIOnLoadError(result.Url.ToString(), LoadError.MissingBase64RLE);
                 return;
             }
-            ConsoleLog($"download success from {result.Url}", _etiLoaderPrefixes);
+            ConsoleLog($"download success from {result.Url}", _eiaSourceLoaderPrefixes);
             if (!result.IsValidETI())
             {
                 ETIOnLoadError(result.Url.ToString(), LoadError.InvalidETIFile);
-                ConsoleError("invalid ETI file.", _etiLoaderPrefixes);
+                ConsoleError("invalid ETI file.", _eiaSourceLoaderPrefixes);
                 return;
             }
             
@@ -50,7 +50,7 @@ namespace jp.ootr.ImageDeviceController
             
             if (etiManifestStart < 0 || etiManifestEnd < 0 || etiManifestStart > etiManifestEnd)
             {
-                ConsoleError("Invalid ETI manifest format", _etiLoaderPrefixes);
+                ConsoleError("Invalid ETI manifest format", _eiaSourceLoaderPrefixes);
                 ETIOnLoadError(_etiSourceUrl, LoadError.InvalidETIFile);
                 return;
             }
@@ -58,7 +58,7 @@ namespace jp.ootr.ImageDeviceController
             var etiManifestStr = content.Substring(etiManifestStart + 1, etiManifestEnd - etiManifestStart - 1);
             if (!VRCJson.TryDeserializeFromJson(etiManifestStr, out var etiManifest) || etiManifest.TokenType != TokenType.DataDictionary)
             {
-                ConsoleError("Failed to parse ETI manifest", _etiLoaderPrefixes);
+                ConsoleError("Failed to parse ETI manifest", _eiaSourceLoaderPrefixes);
                 ETIOnLoadError(_etiSourceUrl, LoadError.InvalidETIFile);
                 return;
             }
@@ -66,7 +66,7 @@ namespace jp.ootr.ImageDeviceController
             _etiCurrentManifest = etiManifest.DataDictionary;
             if (!_etiCurrentManifest.TryGetValue("i", TokenType.DataList, out var etiCurrentFiles))
             {
-                ConsoleError("ETI manifest does not contain 'i' key", _etiLoaderPrefixes);
+                ConsoleError("ETI manifest does not contain 'i' key", _eiaSourceLoaderPrefixes);
                 ETIOnLoadError(_etiSourceUrl, LoadError.InvalidETIFile);
                 return;
             }
@@ -75,7 +75,7 @@ namespace jp.ootr.ImageDeviceController
             _etiCurrentContent = content.Substring(etiManifestEnd+1);
             _etiCurrentFiles = etiCurrentFiles.DataList;
             _etiCurrentIndex = 0;
-            ConsoleLog($"success to load ETI manifest: {_etiCurrentManifest["i"].DataList.Count} files", _etiLoaderPrefixes);
+            ConsoleLog($"success to load ETI manifest: {_etiCurrentManifest["i"].DataList.Count} files", _eiaSourceLoaderPrefixes);
             
             SendCustomEventDelayedFrames(nameof(ETIParseManifest), EtiDelayFrames, EventTiming.LateUpdate);
         }
@@ -91,12 +91,12 @@ namespace jp.ootr.ImageDeviceController
                 || !fileManifest.DataDictionary.TryGetValue("h", TokenType.Double, out var fileHeight)
             )
             {
-                ConsoleError("ETI manifest does not contain file manifest", _etiLoaderPrefixes);
+                ConsoleError("ETI manifest does not contain file manifest", _eiaSourceLoaderPrefixes);
                 ETIOnLoadError(_etiSourceUrl, LoadError.InvalidETIFile);
                 return;
             }
             
-            var fileUrl = $"dynamic-eti{_etiSourceUrl.Substring(5)}/{fileName.String}";
+            var fileUrl = ETIBuildFileName(_etiSourceUrl, fileName.String);
 
             if (fileType.String == "m")
             {
@@ -114,7 +114,7 @@ namespace jp.ootr.ImageDeviceController
                 || !fileManifest.TryGetValue("l", TokenType.Double, out var fileBufferLengthToken)
             )
             {
-                ConsoleError("ETI manifest does not contain file buffer", _etiLoaderPrefixes);
+                ConsoleError("ETI manifest does not contain file buffer", _eiaSourceLoaderPrefixes);
                 ETIOnLoadError(_etiSourceUrl, LoadError.InvalidETIFile);
                 return;
             }
@@ -126,11 +126,11 @@ namespace jp.ootr.ImageDeviceController
             EtiParsedFileBuffers = EtiParsedFileBuffers.Append(_etiCurrentContent.Substring(fileBufferStart, fileBufferLength));
             EtiParsedFileManifests = EtiParsedFileManifests.Append(fileManifest);
                 
-            ConsoleLog($"ETI file manifest: {fileName} ({fileWidth}x{fileHeight})", _etiLoaderPrefixes);
+            ConsoleLog($"ETI file manifest: {fileName} ({fileWidth}x{fileHeight})", _eiaSourceLoaderPrefixes);
             _etiCurrentIndex++;
             if (_etiCurrentIndex >= _etiCurrentFiles.Count)
             {
-                ConsoleLog("ETI file manifest parsing complete", _etiLoaderPrefixes);
+                ConsoleLog("ETI file manifest parsing complete", _eiaSourceLoaderPrefixes);
                 ETIOnLoadSuccess(_etiSourceUrl, _etiCurrentFileUrls);
                 return;
             }
@@ -143,7 +143,8 @@ namespace jp.ootr.ImageDeviceController
         {
             var fileManifest = _fileManifest.DeepClone();
             if (
-                !fileManifest.TryGetValue("r", TokenType.DataList, out var fileRectToken)
+                !fileManifest.TryGetValue("b", TokenType.String, out var basePathToken)
+                || !fileManifest.TryGetValue("r", TokenType.DataList, out var fileRectToken)
                 || fileRectToken.DataList.Count == 0
                 || !fileRectToken.DataList.TryGetValue(0, TokenType.DataDictionary, out var firstRectToken)
                 || !firstRectToken.DataDictionary.TryGetValue("s", TokenType.Double, out var fileBufferFirstStartToken)
@@ -152,7 +153,7 @@ namespace jp.ootr.ImageDeviceController
                 || !lastRectToken.DataDictionary.TryGetValue("l", TokenType.Double, out var fileBufferLastLengthToken)
             )
             {
-                ConsoleError("ETI manifest does not contain file rect", _etiLoaderPrefixes);
+                ConsoleError("ETI manifest does not contain file rect", _eiaSourceLoaderPrefixes);
                 ETIOnLoadError(_etiSourceUrl, LoadError.InvalidETIFile);
                 return;
             }
@@ -168,49 +169,56 @@ namespace jp.ootr.ImageDeviceController
                     || !rect.DataDictionary.TryGetValue("s", TokenType.Double, out var rectStartToken)
                 )
                 {
-                    ConsoleError("ETI manifest does not contain file rect", _etiLoaderPrefixes);
+                    ConsoleError("ETI manifest does not contain file rect", _eiaSourceLoaderPrefixes);
                     ETIOnLoadError(_etiSourceUrl, LoadError.InvalidETIFile);
                     return;
                 }
                 var rectStart = (int)rectStartToken.Double;
                 if (rectStart < fileBufferFirstStart || rectStart >= fileBufferLastEnd)
                 {
-                    ConsoleError("ETI manifest does not contain file rect", _etiLoaderPrefixes);
+                    ConsoleError("ETI manifest does not contain file rect", _eiaSourceLoaderPrefixes);
                     ETIOnLoadError(_etiSourceUrl, LoadError.InvalidETIFile);
                     return;
                 }
                 rect.DataDictionary.SetValue("s", rectStart - fileBufferFirstStart);
             }
             
+            fileManifest.SetValue("b", ETIBuildFileName(_etiSourceUrl, basePathToken.String));
+            
             _etiCurrentFileUrls = _etiCurrentFileUrls.Append(fileUrl);
             EtiParsedFileUrls = EtiParsedFileUrls.Append(fileUrl);
             EtiParsedFileBuffers = EtiParsedFileBuffers.Append(_etiCurrentContent.Substring(fileBufferFirstStart, fileBufferLength));
             EtiParsedFileManifests = EtiParsedFileManifests.Append(fileManifest);
             
-            ConsoleLog($"ETI file manifest: {fileName} ({fileWidth}x{fileHeight}) with {fileRectToken.DataList.Count} rects", _etiLoaderPrefixes);
+            ConsoleLog($"ETI file manifest: {fileName} ({fileWidth}x{fileHeight}) with {fileRectToken.DataList.Count} rects", _eiaSourceLoaderPrefixes);
             _etiCurrentIndex++;
             if (_etiCurrentIndex >= _etiCurrentFiles.Count)
             {
-                ConsoleLog("ETI file manifest parsing complete", _etiLoaderPrefixes);
+                ConsoleLog("ETI file manifest parsing complete", _eiaSourceLoaderPrefixes);
                 ETIOnLoadSuccess(_etiSourceUrl, _etiCurrentFileUrls);
                 return;
             }
             SendCustomEventDelayedFrames(nameof(ETIParseManifest), EtiDelayFrames, EventTiming.LateUpdate);
         }
+
+        private string ETIBuildFileName(string sourceUrl, string fileName)
+        {
+            return $"dynamic-eti{sourceUrl.Substring(5)}/{fileName}";
+        }
         
         protected virtual void ETIOnLoadProgress([CanBeNull] string sourceUrl, float progress)
         {
-            ConsoleError("ETIOnLoadProgress should not be called from base class", _etiLoaderPrefixes);
+            ConsoleError("ETIOnLoadProgress should not be called from base class", _eiaSourceLoaderPrefixes);
         }
 
         protected virtual void ETIOnLoadSuccess([CanBeNull] string sourceUrl, [CanBeNull] string[] fileUrls)
         {
-            ConsoleError("ETIOnLoadSuccess should not be called from base class", _etiLoaderPrefixes);
+            ConsoleError("ETIOnLoadSuccess should not be called from base class", _eiaSourceLoaderPrefixes);
         }
 
         protected virtual void ETIOnLoadError([CanBeNull] string sourceUrl, LoadError error)
         {
-            ConsoleError("ETIOnLoadError should not be called from base class", _etiLoaderPrefixes);
+            ConsoleError("ETIOnLoadError should not be called from base class", _eiaSourceLoaderPrefixes);
         }
     }
 }

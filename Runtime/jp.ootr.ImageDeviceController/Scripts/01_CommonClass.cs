@@ -71,5 +71,20 @@ namespace jp.ootr.ImageDeviceController
         {
             ConsoleError("OnSourceLoadError should not be called from base class");
         }
+        
+        protected virtual void OnFileLoadProgress([CanBeNull] string fileUrl, float progress)
+        {
+            ConsoleError("OnFileLoadProgress should not be called from base class");
+        }
+        
+        protected virtual void OnFileLoadSuccess([CanBeNull] string fileUrl, [CanBeNull] byte[] data)
+        {
+            ConsoleError("OnFileLoadSuccess should not be called from base class");
+        }
+        
+        protected virtual void OnFileLoadError([CanBeNull] string fileUrl, LoadError error)
+        {
+            ConsoleError("OnFileLoadError should not be called from base class");
+        }
     }
 }

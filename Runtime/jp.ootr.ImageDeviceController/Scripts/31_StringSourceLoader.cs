@@ -5,7 +5,7 @@ using VRC.Udon.Common.Interfaces;
 
 namespace jp.ootr.ImageDeviceController
 {
-    public class StringSourceLoader : EtiSourceLoader
+    public class StringSourceLoader : EiaSourceLoader
     {
 
         private readonly string[] _stringLoaderPrefixes = { "StringLoader" };
