@@ -110,10 +110,12 @@ GameObject:
   m_Component:
   - component: {fileID: 7139136613703228805}
   - component: {fileID: 8618641500546763302}
+  - component: {fileID: 117218853444572652}
   - component: {fileID: 5264130291220661168}
   - component: {fileID: 2008138403809544947}
   - component: {fileID: 6850015312808278782}
   - component: {fileID: 8005686339308456890}
+  - component: {fileID: 8780707516610453537}
   m_Layer: 0
   m_Name: ImageDeviceController
   m_TagString: Untagged
@@ -159,6 +161,28 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 6850015312808278782}
+--- !u!114 &117218853444572652
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4438028537480981985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20afa28b73ff43cdba6a226918160db3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  _udonSharpBackingUdonBehaviour: {fileID: 8780707516610453537}
 --- !u!114 &5264130291220661168
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -179,14 +203,226 @@ MonoBehaviour:
     Prefab: {fileID: 0}
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
-    SerializationNodes: []
+    SerializationNodes:
+    - Name: SupportedExtensions
+      Entry: 7
+      Data: 0|System.String[], mscorlib
+    - Name: 
+      Entry: 12
+      Data: 1
+    - Name: 
+      Entry: 1
+      Data: note
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: SupportedFeatures
+      Entry: 7
+      Data: 1|System.String[], mscorlib
+    - Name: 
+      Entry: 12
+      Data: 56
+    - Name: 
+      Entry: 1
+      Data: Format:Alpha8
+    - Name: 
+      Entry: 1
+      Data: Format:ARGB4444
+    - Name: 
+      Entry: 1
+      Data: Format:RGB24
+    - Name: 
+      Entry: 1
+      Data: Format:RGBA32
+    - Name: 
+      Entry: 1
+      Data: Format:ARGB32
+    - Name: 
+      Entry: 1
+      Data: Format:RGB565
+    - Name: 
+      Entry: 1
+      Data: Format:R16
+    - Name: 
+      Entry: 1
+      Data: Format:DXT1
+    - Name: 
+      Entry: 1
+      Data: Format:DXT5
+    - Name: 
+      Entry: 1
+      Data: Format:RGBA4444
+    - Name: 
+      Entry: 1
+      Data: Format:BGRA32
+    - Name: 
+      Entry: 1
+      Data: Format:RHalf
+    - Name: 
+      Entry: 1
+      Data: Format:RGHalf
+    - Name: 
+      Entry: 1
+      Data: Format:RGBAHalf
+    - Name: 
+      Entry: 1
+      Data: Format:RFloat
+    - Name: 
+      Entry: 1
+      Data: Format:RGFloat
+    - Name: 
+      Entry: 1
+      Data: Format:RGBAFloat
+    - Name: 
+      Entry: 1
+      Data: Format:YUY2
+    - Name: 
+      Entry: 1
+      Data: Format:RGB9e5Float
+    - Name: 
+      Entry: 1
+      Data: Format:BC6H
+    - Name: 
+      Entry: 1
+      Data: Format:BC7
+    - Name: 
+      Entry: 1
+      Data: Format:BC4
+    - Name: 
+      Entry: 1
+      Data: Format:BC5
+    - Name: 
+      Entry: 1
+      Data: Format:DXT1Crunched
+    - Name: 
+      Entry: 1
+      Data: Format:DXT5Crunched
+    - Name: 
+      Entry: 1
+      Data: Format:PVRTC_RGB2
+    - Name: 
+      Entry: 1
+      Data: Format:PVRTC_RGBA2
+    - Name: 
+      Entry: 1
+      Data: Format:PVRTC_RGB4
+    - Name: 
+      Entry: 1
+      Data: Format:PVRTC_RGBA4
+    - Name: 
+      Entry: 1
+      Data: Format:ETC_RGB4
+    - Name: 
+      Entry: 1
+      Data: Format:EAC_R
+    - Name: 
+      Entry: 1
+      Data: Format:EAC_R_SIGNED
+    - Name: 
+      Entry: 1
+      Data: Format:EAC_RG
+    - Name: 
+      Entry: 1
+      Data: Format:EAC_RG_SIGNED
+    - Name: 
+      Entry: 1
+      Data: Format:ETC2_RGB
+    - Name: 
+      Entry: 1
+      Data: Format:ETC2_RGBA1
+    - Name: 
+      Entry: 1
+      Data: Format:ETC2_RGBA8
+    - Name: 
+      Entry: 1
+      Data: Format:ASTC_4x4
+    - Name: 
+      Entry: 1
+      Data: Format:ASTC_5x5
+    - Name: 
+      Entry: 1
+      Data: Format:ASTC_6x6
+    - Name: 
+      Entry: 1
+      Data: Format:ASTC_8x8
+    - Name: 
+      Entry: 1
+      Data: Format:ASTC_10x10
+    - Name: 
+      Entry: 1
+      Data: Format:ASTC_12x12
+    - Name: 
+      Entry: 1
+      Data: Format:RG16
+    - Name: 
+      Entry: 1
+      Data: Format:R8
+    - Name: 
+      Entry: 1
+      Data: Format:ETC_RGB4Crunched
+    - Name: 
+      Entry: 1
+      Data: Format:ETC2_RGBA8Crunched
+    - Name: 
+      Entry: 1
+      Data: Format:ASTC_HDR_4x4
+    - Name: 
+      Entry: 1
+      Data: Format:ASTC_HDR_5x5
+    - Name: 
+      Entry: 1
+      Data: Format:ASTC_HDR_6x6
+    - Name: 
+      Entry: 1
+      Data: Format:ASTC_HDR_8x8
+    - Name: 
+      Entry: 1
+      Data: Format:ASTC_HDR_10x10
+    - Name: 
+      Entry: 1
+      Data: Format:ASTC_HDR_12x12
+    - Name: 
+      Entry: 1
+      Data: Format:RG32
+    - Name: 
+      Entry: 1
+      Data: Format:RGB48
+    - Name: 
+      Entry: 1
+      Data: Format:RGBA64
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: SupportedManifestVersion
+      Entry: 3
+      Data: 1
   _udonSharpBackingUdonBehaviour: {fileID: 2008138403809544947}
+  colorSchemaNames: []
+  colorSchemas: []
+  logLevel: 0
+  defaultLanguage: 0
+  supportedLanguages: 
+  localizationKeys: []
+  localizationValues: []
+  localizationTargetKeys: []
+  localizationTargets: []
+  usUrls: []
+  usUrlStrings: []
   zlUdonZip: {fileID: 8618641500546763302}
   zlPartLength: 102400
   zlDelayFrames: 1
+  udonLZ4: {fileID: 117218853444572652}
   vlVideoPlayer: {fileID: 8005686339308456890}
   vlVideoRenderer: {fileID: 531877535981540944}
   vlLoadTimeout: 5
+  localTextures: []
+  localTextureSourceUrls: []
   devices: []
 --- !u!114 &2008138403809544947
 MonoBehaviour:
@@ -257,3 +493,28 @@ MonoBehaviour:
   loop: 1
   maximumResolution: 720
   useLowLatency: 0
+--- !u!114 &8780707516610453537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4438028537480981985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45115577ef41a5b4ca741ed302693907, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactTextPlacement: {fileID: 0}
+  interactText: Use
+  interactTextGO: {fileID: 0}
+  proximity: 2
+  SynchronizePosition: 0
+  AllowCollisionOwnershipTransfer: 0
+  Reliable: 0
+  _syncMethod: 2
+  serializedProgramAsset: {fileID: 11400000, guid: dcae271695d62224191c5952557465ea, type: 2}
+  programSource: {fileID: 11400000, guid: 51d6326028c4c0341a89de7f37201fc0, type: 2}
+  serializedPublicVariablesBytesString: Ai8AAAAAATIAAABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlAFQAYQBiAGwAZQAsACAAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4AAAAAAAYBAAAAAAAAACcBBAAAAHQAeQBwAGUAAWgAAABTAHkAcwB0AGUAbQAuAEMAbwBsAGwAZQBjAHQAaQBvAG4AcwAuAEcAZQBuAGUAcgBpAGMALgBMAGkAcwB0AGAAMQBbAFsAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4ALgBJAG4AdABlAHIAZgBhAGMAZQBzAC4ASQBVAGQAbwBuAFYAYQByAGkAYQBiAGwAZQAsACAAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4AXQBdACwAIABtAHMAYwBvAHIAbABpAGIAAQEJAAAAVgBhAHIAaQBhAGIAbABlAHMALwEAAAABaAAAAFMAeQBzAHQAZQBtAC4AQwBvAGwAbABlAGMAdABpAG8AbgBzAC4ARwBlAG4AZQByAGkAYwAuAEwAaQBzAHQAYAAxAFsAWwBWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAEkAbgB0AGUAcgBmAGEAYwBlAHMALgBJAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlACwAIABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgBdAF0ALAAgAG0AcwBjAG8AcgBsAGkAYgABAAAABgEAAAAAAAAAAi8CAAAAAUkAAABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlAGAAMQBbAFsAUwB5AHMAdABlAG0ALgBJAG4AdAAzADIALAAgAG0AcwBjAG8AcgBsAGkAYgBdAF0ALAAgAFYAUgBDAC4AVQBkAG8AbgAuAEMAbwBtAG0AbwBuAAIAAAAGAgAAAAAAAAAnAQQAAAB0AHkAcABlAAEXAAAAUwB5AHMAdABlAG0ALgBTAHQAcgBpAG4AZwAsACAAbQBzAGMAbwByAGwAaQBiACcBCgAAAFMAeQBtAGIAbwBsAE4AYQBtAGUAAR8AAABfAF8AXwBVAGQAbwBuAFMAaABhAHIAcABCAGUAaABhAHYAaQBvAHUAcgBWAGUAcgBzAGkAbwBuAF8AXwBfACcBBAAAAHQAeQBwAGUAARYAAABTAHkAcwB0AGUAbQAuAEkAbgB0ADMAMgAsACAAbQBzAGMAbwByAGwAaQBiABcBBQAAAFYAYQBsAHUAZQACAAAABwUHBQcF
+  publicVariablesUnityEngineObjects: []
+  publicVariablesSerializationDataFormat: 0

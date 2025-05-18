@@ -29,41 +29,41 @@ namespace jp.ootr.ImageDeviceController
         private Cache CacheFiles => (Cache)_oCacheFiles;
 
         [CanBeNull]
-        public virtual Texture2D CcGetTexture([CanBeNull] string sourceName, [CanBeNull] string fileName)
+        public virtual Texture2D CcGetTexture([CanBeNull] string sourceUrl, [CanBeNull] string fileUrl)
         {
-            if (!CcHasTexture(sourceName, fileName))
+            if (!CcHasTexture(sourceUrl, fileUrl))
             {
-                ConsoleError($"texture not found: {sourceName}/{fileName}", _cacheControllerPrefixes);
+                ConsoleError($"texture not found: {sourceUrl}/{fileUrl}", _cacheControllerPrefixes);
                 return null;
             }
-            var source = CacheFiles.GetSource(sourceName);
-            var file = source.GetFile(fileName);
+            var source = CacheFiles.GetSource(sourceUrl);
+            var file = source.GetFile(fileUrl);
             var sourceCount = source.IncreaseUsedCount();
             var fileCount = file.IncreaseUsedCount();
             var texture = file.GetTexture();
-            ConsoleDebug($"get texture: {sourceName}/{fileName} ({sourceCount}/{fileCount})", _cacheControllerPrefixes);
+            ConsoleDebug($"get texture: {sourceUrl}/{fileUrl} ({sourceCount}/{fileCount})", _cacheControllerPrefixes);
             if (texture == null) return TryRegenerateTexture(file);
             return texture;
         }
         
         [CanBeNull]
-        public virtual byte[] CcGetBinary([CanBeNull] string sourceName, [CanBeNull] string fileName)
+        public virtual byte[] CcGetBinary([CanBeNull] string sourceUrl, [CanBeNull] string fileUrl)
         {
-            ConsoleDebug($"get binary: {sourceName}/{fileName}", _cacheControllerPrefixes);
-            if (!CcHasTexture(sourceName, fileName))
+            ConsoleDebug($"get binary: {sourceUrl}/{fileUrl}", _cacheControllerPrefixes);
+            if (!CcHasTexture(sourceUrl, fileUrl))
             {
-                ConsoleError($"texture not found: {sourceName}/{fileName}", _cacheControllerPrefixes);
+                ConsoleError($"texture not found: {sourceUrl}/{fileUrl}", _cacheControllerPrefixes);
                 return null;
             }
-            var source = CacheFiles.GetSource(sourceName);
-            var file = source.GetFile(fileName);
+            var source = CacheFiles.GetSource(sourceUrl);
+            var file = source.GetFile(fileUrl);
             var key = file.GetCacheKey();
             if (key.IsNullOrEmpty() || !_cacheBinaryNames.Has(key, out var index))
             {
-                ConsoleError($"binary not found: {sourceName}/{fileName}", _cacheControllerPrefixes);
+                ConsoleError($"binary not found: {sourceUrl}/{fileUrl}", _cacheControllerPrefixes);
                 return null;
             }
-            ConsoleDebug($"get binary: {sourceName}/{fileName}", _cacheControllerPrefixes);
+            ConsoleDebug($"get binary: {sourceUrl}/{fileUrl}", _cacheControllerPrefixes);
             return _cacheBinary[index];
         }
 
@@ -83,40 +83,40 @@ namespace jp.ootr.ImageDeviceController
             return texture;
         }
 
-        protected bool CcHasCache([CanBeNull] string source)
+        protected bool CcHasCache([CanBeNull] string sourceUrl)
         {
-            return CacheFiles.HasSource(source);
+            return CacheFiles.HasSource(sourceUrl);
         }
 
         [CanBeNull]
-        protected Source CcGetCache([CanBeNull] string source)
+        protected Source CcGetCache([CanBeNull] string sourceUrl)
         {
-            return CacheFiles.GetSource(source);
+            return CacheFiles.GetSource(sourceUrl);
         }
 
-        protected virtual bool CcHasTexture([CanBeNull] string source, [CanBeNull] string fileName)
+        protected virtual bool CcHasTexture([CanBeNull] string sourceUrl, [CanBeNull] string fileUrl)
         {
-            return CacheFiles.HasSource(source) &&
-                   CacheFiles.GetSource(source).HasFile(fileName);
+            return CacheFiles.HasSource(sourceUrl) &&
+                   CacheFiles.GetSource(sourceUrl).HasFile(fileUrl);
         }
 
-        public virtual void CcReleaseTexture([CanBeNull] string sourceName, [CanBeNull] string fileName)
+        public virtual void CcReleaseTexture([CanBeNull] string sourceUrl, [CanBeNull] string fileUrl)
         {
-            if (!CcHasTexture(sourceName, fileName)) return;
-            var source = CacheFiles.GetSource(sourceName);
-            var file = source.GetFile(fileName);
+            if (!CcHasTexture(sourceUrl, fileUrl)) return;
+            var source = CacheFiles.GetSource(sourceUrl);
+            var file = source.GetFile(fileUrl);
             var sourceCount = source.DecreaseUsedCount();
             if (sourceCount < 1)
             {
-                foreach (var tmpFileName in source.GetFileNames()) source.GetFile(tmpFileName).DestroyTexture();
-                var keys = CacheFiles.RemoveSource(sourceName);
+                foreach (var tmpFileUrl in source.GetFileUrls()) source.GetFile(tmpFileUrl).DestroyTexture();
+                var keys = CacheFiles.RemoveSource(sourceUrl);
                 foreach (var key in keys)
                 {
                     if (!_cacheBinaryNames.Has(key, out var index)) continue;
                     _cacheBinary = _cacheBinary.Remove(index);
                     _cacheBinaryNames = _cacheBinaryNames.Remove(index);
                 }
-                ConsoleDebug($"destroy source: {sourceName}", _cacheControllerPrefixes);
+                ConsoleDebug($"destroy source: {sourceUrl}", _cacheControllerPrefixes);
 
                 return;
             }
@@ -127,15 +127,15 @@ namespace jp.ootr.ImageDeviceController
                 var key = file.GetCacheKey();
                 if (!key.IsNullOrEmpty() && _cacheBinaryNames.Has(key))
                 {
-                    ConsoleDebug($"destroy texture: {sourceName}/{fileName}", _cacheControllerPrefixes);
+                    ConsoleDebug($"destroy texture: {sourceUrl}/{fileUrl}", _cacheControllerPrefixes);
                     file.DestroyTexture();
                 }
                 else
                 {
-                    ConsoleWarn($"cannot release texture because it is not has binary cache: {sourceName}/{fileName}", _cacheControllerPrefixes);
+                    ConsoleWarn($"cannot release texture because it is not has binary cache: {sourceUrl}/{fileUrl}", _cacheControllerPrefixes);
                 }
             }
-            ConsoleDebug($"release texture: {sourceName}/{fileName} ({sourceCount}/{fileCount})", _cacheControllerPrefixes);
+            ConsoleDebug($"release texture: {sourceUrl}/{fileUrl} ({sourceCount}/{fileCount})", _cacheControllerPrefixes);
         }
 
         [CanBeNull]
@@ -187,7 +187,7 @@ namespace jp.ootr.ImageDeviceController
         {
             var source = CacheFiles.GetSource(sourceName);
             if (source == null) return null;
-            return source.GetFileNames();
+            return source.GetFileUrls();
         }
 
         [NotNull]
@@ -198,7 +198,7 @@ namespace jp.ootr.ImageDeviceController
             foreach (var key in cacheKeys)
             {
                 var source = CacheFiles.GetSource(key);
-                var fileNames = source.GetFileNames();
+                var fileNames = source.GetFileUrls();
                 result += $"{key}: {source.GetUsedCount()}\n";
                 foreach (var fileName in fileNames)
                 {

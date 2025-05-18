@@ -11,7 +11,7 @@ using VRC.Udon.Common.Interfaces;
 
 namespace jp.ootr.ImageDeviceController
 {
-    public class VideoLoader : ZipLoader
+    public class VideoSourceLoader : StringSourceLoader
     {
         private const float VlDelaySeconds = 0.05f;
         [SerializeField] protected VRCAVProVideoPlayer vlVideoPlayer;
@@ -37,30 +37,29 @@ namespace jp.ootr.ImageDeviceController
         private int _vlProcessIndex;
 
         [ItemNotNull] private string[] _vlQueuedOptions = new string[0];
-        [ItemNotNull] private string[] _vlQueuedUrls = new string[0];
+        [ItemNotNull] private string[] _vlQueuedSourceUrls = new string[0];
 
         private int _vlRetryCount;
         private string _vlSourceOptions;
-        private string _vlSourceRawUrl;
         private string _vlSourceUrl;
         private int _vlTextureHeight;
 
         private int _vlTextureWidth;
         private RenderTexture _vlTmpRenderTexture;
 
-        protected virtual void VlLoadVideo([CanBeNull] string url, [CanBeNull] string options = "")
+        protected virtual void VlLoadVideo([CanBeNull] string sourceUrl, [CanBeNull] string options = "")
         {
             if (vlVideoPlayer == null)
             {
                 ConsoleError("VRCAVProVideoPlayer component is not set.", _videoLoaderPrefixes);
-                VlOnLoadError(url, LoadError.MissingVRCAVProVideoPlayer);
+                OnSourceLoadError(sourceUrl, LoadError.MissingVRCAVProVideoPlayer);
                 return;
             }
 
-            if (!url.IsValidUrl(out var error))
+            if (!sourceUrl.IsValidUrl(out var error))
             {
-                ConsoleError($"Invalid URL: {url}", _videoLoaderPrefixes);
-                VlOnLoadError(url, error);
+                ConsoleError($"Invalid URL: {sourceUrl}", _videoLoaderPrefixes);
+                OnSourceLoadError(sourceUrl, error);
                 return;
             }
 
@@ -68,17 +67,17 @@ namespace jp.ootr.ImageDeviceController
                 !options.ParseSourceOptions(out var void1, out var void2, out var void3))
             {
                 ConsoleWarn("Options is empty or invalid.", _videoLoaderPrefixes);
-                VlOnLoadError(url, LoadError.InvalidOptions);
+                OnSourceLoadError(sourceUrl, LoadError.InvalidOptions);
                 return;
             }
 
-            if (_vlQueuedUrls.Has(url, out var index) && _vlQueuedOptions[index] == options)
+            if (_vlQueuedSourceUrls.Has(sourceUrl, out var index) && _vlQueuedOptions[index] == options)
             {
                 ConsoleDebug("Already queued.", _videoLoaderPrefixes);
                 return;
             }
 
-            _vlQueuedUrls = _vlQueuedUrls.Append(url);
+            _vlQueuedSourceUrls = _vlQueuedSourceUrls.Append(sourceUrl);
             _vlQueuedOptions = _vlQueuedOptions.Append(options);
             if (_vlIsLoading) return;
             VlLoadNext();
@@ -90,7 +89,7 @@ namespace jp.ootr.ImageDeviceController
          */
         public virtual void VlLoadNext()
         {
-            if (_vlQueuedUrls.Length < 1)
+            if (_vlQueuedSourceUrls.Length < 1)
             {
                 ConsoleDebug("no more urls to load.", _videoLoaderPrefixes);
                 _vlIsLoading = false;
@@ -106,18 +105,17 @@ namespace jp.ootr.ImageDeviceController
 
             _vlLastLoadTime = DateTime.Now;
 
-            _vlQueuedUrls = _vlQueuedUrls.Shift(out var url);
+            _vlQueuedSourceUrls = _vlQueuedSourceUrls.Shift(out var sourceUrl);
             _vlQueuedOptions = _vlQueuedOptions.Shift(out var options);
 
             options.ParseSourceOptions(out var void1, out var offset, out var duration);
 
-            ConsoleDebug($"Loading video: {url}", _videoLoaderPrefixes);
+            ConsoleDebug($"Loading video: {sourceUrl}", _videoLoaderPrefixes);
             _vlIsLoading = true;
             _vlInterval = duration;
             _vlCurrentTime = offset;
             _vlOffset = offset;
-            _vlSourceUrl = url;
-            _vlSourceRawUrl = url;
+            _vlSourceUrl = sourceUrl;
             _vlSourceOptions = options;
             VlLoadVideo();
         }
@@ -137,7 +135,7 @@ namespace jp.ootr.ImageDeviceController
             {
                 ConsoleWarn($"Video duration is infinity. source: {_vlSourceUrl}", _videoLoaderPrefixes);
 
-                VlOnLoadError(_vlSourceUrl, LoadError.LiveVideoNotSupported);
+                OnSourceLoadError(_vlSourceUrl, LoadError.LiveVideoNotSupported);
                 SendCustomEventDelayedSeconds(nameof(VlLoadNext), VlDelaySeconds);
                 return;
             }
@@ -158,7 +156,7 @@ namespace jp.ootr.ImageDeviceController
                 return;
             }
 
-            VlOnLoadError(_vlSourceUrl, ToLoadError(videoError));
+            OnSourceLoadError(_vlSourceUrl, ToLoadError(videoError));
             SendCustomEventDelayedSeconds(nameof(VlLoadNext), VlDelaySeconds);
         }
 
@@ -247,9 +245,9 @@ namespace jp.ootr.ImageDeviceController
             _vlPreviousTextureBuffer = data;
             var fileName = $"video://{_vlSourceOptions}@{_vlSourceUrl.Substring(8)}/{_vlCurrentTime:0.00}";
             _vlFilenames[_vlProcessIndex] = fileName;
-            CcSetTexture(_vlSourceRawUrl, fileName, readableText, data);
+            CcSetTexture(_vlSourceUrl, fileName, readableText, data);
             _vlProcessIndex++;
-            VlOnLoadProgress(_vlSourceRawUrl, (float)_vlProcessIndex / _vlPageCount);
+            OnSourceLoadProgress(_vlSourceUrl, (float)_vlProcessIndex / _vlPageCount);
             if (_vlProcessIndex < _vlPageCount)
             {
                 _vlCurrentTime += _vlInterval;
@@ -260,23 +258,8 @@ namespace jp.ootr.ImageDeviceController
             }
 
             ConsoleDebug($"Video load complete: {_vlSourceUrl}", _videoLoaderPrefixes);
-            VlOnLoadSuccess(_vlSourceRawUrl, _vlFilenames);
+            OnSourceLoadSuccess(_vlSourceUrl, _vlFilenames);
             SendCustomEventDelayedSeconds(nameof(VlLoadNext), VlDelaySeconds);
-        }
-
-        protected virtual void VlOnLoadProgress([CanBeNull] string source, float progress)
-        {
-            ConsoleError("VideoOnLoadProgress should not be called from base class", _videoLoaderPrefixes);
-        }
-
-        protected virtual void VlOnLoadSuccess([CanBeNull] string source, [CanBeNull] string[] fileNames)
-        {
-            ConsoleError("VideoOnLoadSuccess should not be called from base class", _videoLoaderPrefixes);
-        }
-
-        protected virtual void VlOnLoadError([CanBeNull] string source, LoadError error)
-        {
-            ConsoleError("VideoOnLoadError should not be called from base class", _videoLoaderPrefixes);
         }
 
 

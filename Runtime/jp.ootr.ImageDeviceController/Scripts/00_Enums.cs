@@ -1,4 +1,5 @@
-﻿using jp.ootr.common;
+﻿using System;
+using jp.ootr.common;
 
 namespace jp.ootr.ImageDeviceController
 {
@@ -42,6 +43,13 @@ namespace jp.ootr.ImageDeviceController
         PlayerError,
         RateLimited,
         InvalidOptions,
+        
+        //EIALoader
+        MissingBase64RLE,
+        InvalidEIAFile,
+        
+        // FileLoadError
+        InvalidFileURL,
 
         //HTTP1.1 4xx
         HttpBadRequest = 400,
@@ -88,13 +96,16 @@ namespace jp.ootr.ImageDeviceController
         HttpNetworkAuthenticationRequired = 511
     }
 
-    public enum URLType
+    public enum SourceType
     {
         Image,
-        TextZip,
+        StringKind,
         Video,
         Local,
-        Unknown
+        Unknown,
+        
+        [Obsolete("Use StringKind instead", false)]
+        TextZip = 1,
     }
 
     public static class LoadErrorExtensions

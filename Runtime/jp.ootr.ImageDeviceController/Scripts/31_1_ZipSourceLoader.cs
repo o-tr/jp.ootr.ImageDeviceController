@@ -10,7 +10,7 @@ using static jp.ootr.common.String;
 
 namespace jp.ootr.ImageDeviceController
 {
-    public class ZipLoader : URLStore
+    public class ZipSourceLoader : URLStore
     {
         [SerializeField] private UdonZip.UdonZip zlUdonZip;
 
@@ -27,94 +27,28 @@ namespace jp.ootr.ImageDeviceController
         private DataList _zlMetadata;
         private object _zlObject;
         private int _zlProcessIndex;
-        private string[] _zlQueuedUrlStrings = new string[0];
-        private string[] _zlSource;
+        private string[] _zlContent;
         private string _zlSourceUrl;
 
-        protected virtual void ZlLoadZip([CanBeNull] string url)
+        protected virtual void OnZipLoadSuccess(IVRCStringDownload result)
         {
             if (zlUdonZip == null)
             {
                 ConsoleError("UdonZip component is not set.", _zipLoaderPrefixes);
-                ZlOnLoadError(url, LoadError.MissingUdonZip);
+                ZlOnLoadError(result.Url.ToString(), LoadError.MissingUdonZip);
                 return;
             }
-
-            if (string.IsNullOrEmpty(url))
-            {
-                ConsoleError("url is empty.", _zipLoaderPrefixes);
-                return;
-            }
-
-            if (_zlIsLoading)
-            {
-                ConsoleDebug($"{url} queued.", _zipLoaderPrefixes);
-                _zlQueuedUrlStrings = _zlQueuedUrlStrings.Append(url);
-                return;
-            }
-
-            _zlSourceUrl = url;
-            _zlIsLoading = true;
-            VRCStringDownloader.LoadUrl(UsGetUrl(url), (IUdonEventReceiver)this);
-        }
-
-        /**
-         * @private
-         * コールバック用にpublicにしているが、外部から直接呼び出さないこと
-         */
-        public virtual void ZlLoadNext()
-        {
-            if (_zlQueuedUrlStrings.Length < 1)
-            {
-                _zlIsLoading = false;
-                ConsoleDebug("no more urls to load.", _zipLoaderPrefixes);
-                return;
-            }
-
-            _zlQueuedUrlStrings = _zlQueuedUrlStrings.Shift(out var sourceUrl, out var success);
-            if (!success)
-            {
-                _zlIsLoading = false;
-                ConsoleDebug("no more urls to load.", _zipLoaderPrefixes);
-                return;
-            }
-
-            if (string.IsNullOrEmpty(sourceUrl))
-            {
-                ConsoleError("url is empty.", _zipLoaderPrefixes);
-                SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
-                return;
-            }
-
-            var url = UsGetUrl(_zlSourceUrl);
-            if (url == null)
-            {
-                ConsoleError($"failed to get url: {_zlSourceUrl}", _zipLoaderPrefixes);
-                ZlOnLoadError(_zlSourceUrl, LoadError.InvalidURL);
-                SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
-                return;
-            }
-
-            VRCStringDownloader.LoadUrl(url, (IUdonEventReceiver)this);
-        }
-
-        /**
-         * @private
-         * コールバック用にpublicにしているが、外部から直接呼び出さないこと
-         */
-        public override void OnStringLoadSuccess(IVRCStringDownload result)
-        {
             ConsoleLog($"download success from {result.Url}", _zipLoaderPrefixes);
             if (!result.IsValidTextZip())
             {
                 ZlOnLoadError(result.Url.ToString(), LoadError.InvalidZipFile);
                 ConsoleError("invalid text-zip file.", _zipLoaderPrefixes);
-                SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
                 return;
             }
 
-            _zlSource = result.Result.Split(zlPartLength);
-            _zlDecodedData = new byte[_zlSource.Length * zlPartLength];
+            _zlSourceUrl = result.Url.ToString();
+            _zlContent = result.Result.Split(zlPartLength);
+            _zlDecodedData = new byte[_zlContent.Length * zlPartLength];
             _zlProcessIndex = 0;
             _zlDecodedBytes = 0;
             SendCustomEventDelayedFrames(nameof(ZlDecodePart), zlDelayFrames);
@@ -124,21 +58,9 @@ namespace jp.ootr.ImageDeviceController
          * @private
          * コールバック用にpublicにしているが、外部から直接呼び出さないこと
          */
-        public override void OnStringLoadError(IVRCStringDownload result)
-        {
-            ConsoleError($"failed to download string from ${result.Url}: {result.ErrorCode} - {result.Error}",
-                _zipLoaderPrefixes);
-            ZlOnLoadError(_zlSourceUrl, ParseStringDownloadError(result.Result, result.ErrorCode));
-            SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
-        }
-
-        /**
-         * @private
-         * コールバック用にpublicにしているが、外部から直接呼び出さないこと
-         */
         public virtual void ZlDecodePart()
         {
-            var data = Convert.FromBase64String(_zlSource[_zlProcessIndex]);
+            var data = Convert.FromBase64String(_zlContent[_zlProcessIndex]);
             if (_zlDecodedBytes + data.Length >= _zlDecodedData.Length)
             {
                 var tmp = new byte[_zlDecodedBytes + data.Length];
@@ -152,8 +74,8 @@ namespace jp.ootr.ImageDeviceController
 
             _zlDecodedBytes += data.Length;
             _zlProcessIndex++;
-            ZlOnLoadProgress(_zlSourceUrl, (float)_zlProcessIndex / _zlSource.Length / 2);
-            if (_zlProcessIndex < _zlSource.Length)
+            ZlOnLoadProgress(_zlSourceUrl, (float)_zlProcessIndex / _zlContent.Length / 2);
+            if (_zlProcessIndex < _zlContent.Length)
             {
                 SendCustomEventDelayedFrames(nameof(ZlDecodePart), zlDelayFrames);
             }
@@ -182,7 +104,6 @@ namespace jp.ootr.ImageDeviceController
             {
                 ZlOnLoadError(_zlSourceUrl, LoadError.InvalidManifest);
                 ConsoleError($"invalid manifest. {_zlSourceUrl}", _zipLoaderPrefixes);
-                SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
                 return;
             }
 
@@ -190,7 +111,6 @@ namespace jp.ootr.ImageDeviceController
             {
                 ZlOnLoadError(_zlSourceUrl, LoadError.UnsupportedManifestVersion);
                 ConsoleError($"unsupported manifest version. {_zlSourceUrl}", _zipLoaderPrefixes);
-                SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
                 return;
             }
 
@@ -199,7 +119,6 @@ namespace jp.ootr.ImageDeviceController
                 if (SupportedFeatures.Has(feature)) continue;
                 ZlOnLoadError(_zlSourceUrl, LoadError.UnsupportedFeature);
                 ConsoleError($"unsupported feature: {feature}. {_zlSourceUrl}", _zipLoaderPrefixes);
-                SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
                 return;
             }
 
@@ -222,7 +141,6 @@ namespace jp.ootr.ImageDeviceController
             {
                 ZlOnLoadError(_zlSourceUrl, LoadError.InvalidMetadata);
                 ConsoleError($"invalid metadata. {_zlSourceUrl} - {_zlProcessIndex}", _zipLoaderPrefixes);
-                SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
                 return;
             }
 
@@ -242,7 +160,6 @@ namespace jp.ootr.ImageDeviceController
             }
 
             ZlOnLoadSuccess(_zlSourceUrl, _zlFilenames);
-            SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
         }
 
         [CanBeNull]
@@ -257,7 +174,6 @@ namespace jp.ootr.ImageDeviceController
                 {
                     ZlOnLoadError(_zlSourceUrl, LoadError.InvalidMetadata);
                     ConsoleError($"missing base image: {basePath}", _zipLoaderPrefixes);
-                    SendCustomEventDelayedFrames(nameof(ZlLoadNext), zlDelayFrames);
                     return null;
                 }
 
@@ -281,17 +197,17 @@ namespace jp.ootr.ImageDeviceController
             return zlUdonZip.GetFileData(imageFile);
         }
 
-        protected virtual void ZlOnLoadProgress([CanBeNull] string source, float progress)
+        protected virtual void ZlOnLoadProgress([CanBeNull] string sourceUrl, float progress)
         {
             ConsoleError("ZipOnLoadProgress should not be called from base class", _zipLoaderPrefixes);
         }
 
-        protected virtual void ZlOnLoadSuccess([CanBeNull] string source, [CanBeNull] string[] fileNames)
+        protected virtual void ZlOnLoadSuccess([CanBeNull] string sourceUrl, [CanBeNull] string[] fileUrls)
         {
             ConsoleError("ZipOnLoadSuccess should not be called from base class", _zipLoaderPrefixes);
         }
 
-        protected virtual void ZlOnLoadError([CanBeNull] string source, LoadError error)
+        protected virtual void ZlOnLoadError([CanBeNull] string sourceUrl, LoadError error)
         {
             ConsoleError("ZipOnLoadError should not be called from base class", _zipLoaderPrefixes);
         }
