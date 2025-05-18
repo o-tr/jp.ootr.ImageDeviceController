@@ -3,7 +3,7 @@ using static jp.ootr.common.ArrayUtils;
 
 namespace jp.ootr.ImageDeviceController
 {
-    public class SourceController : ETIFileLoader
+    public class SourceController : EIAFileLoader
     {
         private readonly string[] _fileControllerPrefixes = { "FileController" };
         private string[][] _cachedData = new string[0][];

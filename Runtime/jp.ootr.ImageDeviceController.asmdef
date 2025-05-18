@@ -7,7 +7,7 @@
     "Unity.TextMeshPro",
     "jp.ootr.common",
     "jp.ootr.UdonZip",
-    "jp.ootr.UdonBase64CSVRLE"
+    "jp.ootr.UdonLZ4"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

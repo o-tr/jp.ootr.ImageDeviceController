@@ -44,9 +44,9 @@ namespace jp.ootr.ImageDeviceController
         RateLimited,
         InvalidOptions,
         
-        //ETILoader
+        //EIALoader
         MissingBase64RLE,
-        InvalidETIFile,
+        InvalidEIAFile,
         
         // FileLoadError
         InvalidFileURL,

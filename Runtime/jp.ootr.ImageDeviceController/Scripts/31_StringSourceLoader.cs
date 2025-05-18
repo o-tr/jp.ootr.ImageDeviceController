@@ -83,9 +83,9 @@ namespace jp.ootr.ImageDeviceController
                 return;
             }
 
-            if (result.IsValidETI())
+            if (result.IsValidEIA())
             {
-                OnETILoadSuccess(result);
+                OnEIALoadSuccess(result);
                 return;
             }
             
@@ -109,18 +109,18 @@ namespace jp.ootr.ImageDeviceController
             SendCustomEvent(nameof(SlLoadNext));
         }
         
-        protected sealed override void ETIOnLoadProgress(string sourceUrl, float progress)
+        protected sealed override void EIAOnLoadProgress(string sourceUrl, float progress)
         {
             OnSourceLoadProgress(sourceUrl, progress);
         }
         
-        protected sealed override void ETIOnLoadSuccess(string sourceUrl, string[] fileUrls)
+        protected sealed override void EIAOnLoadSuccess(string sourceUrl, string[] fileUrls)
         {
             OnSourceLoadSuccess(sourceUrl, fileUrls);
             SendCustomEvent(nameof(SlLoadNext));
         }
         
-        protected sealed override void ETIOnLoadError(string sourceUrl, LoadError error)
+        protected sealed override void EIAOnLoadError(string sourceUrl, LoadError error)
         {
             OnSourceLoadError(sourceUrl, error);
             SendCustomEvent(nameof(SlLoadNext));
