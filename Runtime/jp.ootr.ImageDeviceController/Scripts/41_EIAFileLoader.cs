@@ -114,12 +114,19 @@ namespace jp.ootr.ImageDeviceController
         private int EIAGetHeightPriorityIndex()
         {
             if (_eiaQueuedFilePriorities.Length == 0) return -1;
-            do
+            var maxPriority = Int32.MinValue;
+            var maxPriorityIndex = -1;
+            
+            for (var i = 0; i < _eiaQueuedFilePriorities.Length; i++)
             {
-                var maxPriorityIndex = Array.IndexOf(_eiaQueuedFilePriorities, _eiaCurrentMaxPriority);
-                if (maxPriorityIndex > -1) return maxPriorityIndex;
-            } while (_eiaCurrentMaxPriority-- > 0);
-            return -1;
+                if (_eiaQueuedFilePriorities[i] > maxPriority)
+                {
+                    maxPriority = _eiaQueuedFilePriorities[i];
+                    maxPriorityIndex = i;
+                }
+            }
+
+            return maxPriorityIndex;
         }
 
         public void EIALoadFIleNext()
@@ -143,6 +150,7 @@ namespace jp.ootr.ImageDeviceController
 
             _eiaQueuedFileUrls = _eiaQueuedFileUrls.Remove(index, out _eiaCurrentFileUrl);
             _eiaQueuedSourceUrls = _eiaQueuedSourceUrls.Remove(index, out _eiaCurrentSourceUrl);
+            _eiaQueuedFilePriorities = _eiaQueuedFilePriorities.Remove(index, out var priority);
 
             if (string.IsNullOrEmpty(_eiaCurrentFileUrl) || string.IsNullOrEmpty(_eiaCurrentSourceUrl))
             {
@@ -159,7 +167,7 @@ namespace jp.ootr.ImageDeviceController
                 return;
             }
             
-            ConsoleInfo($"Loading file: {_eiaCurrentFileUrl} from source: {_eiaCurrentSourceUrl} priority: {_eiaQueuedFilePriorities[index]}", _eiaFileLoaderPrefixes);
+            ConsoleInfo($"Loading file: {_eiaCurrentFileUrl} from source: {_eiaCurrentSourceUrl} priority: {priority}", _eiaFileLoaderPrefixes);
             
             var file = EiaParsedFileManifests[_eiaCurrentFileIndex];
             if (!file.TryGetValue("u", out var uncompressedToken) || (uncompressedToken.TokenType != TokenType.Double && uncompressedToken.TokenType != TokenType.Int))
