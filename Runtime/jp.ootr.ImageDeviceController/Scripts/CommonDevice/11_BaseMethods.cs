@@ -54,10 +54,9 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
         {
         }
 
-        public virtual void OnFileLoadSuccess([CanBeNull] string sourceUrl, [CanBeNull] string fileUrl)
-        {
-            
-        }
+        public virtual void OnFileLoadSuccess([CanBeNull] string source, [CanBeNull] string fileUrl, string channel) {}
+        
+        public virtual void OnFileLoadError([CanBeNull] string source, [CanBeNull] string fileUrl, string channel, LoadError error) {}
 
         protected override void ConsoleDebug(string message, string[] prefix = null)
         {

@@ -5,7 +5,7 @@ namespace jp.ootr.ImageDeviceController
 {
     public class SourceController : EIAFileLoader
     {
-        private readonly string[] _fileControllerPrefixes = { "FileController" };
+        private readonly string[] _SourceControllerPrefixes = { "SourceController" };
         private string[][] _cachedData = new string[0][];
 
         private string[] _loadedSourceUrls = new string[0];
@@ -17,20 +17,20 @@ namespace jp.ootr.ImageDeviceController
         {
             if (self == null || sourceUrl == null)
             {
-                ConsoleError("self or source is null.", _fileControllerPrefixes);
+                ConsoleError("self or source is null.", _SourceControllerPrefixes);
                 return false;
             }
 
             if (!UsHasUrl(sourceUrl))
             {
-                ConsoleError($"source url not found in store: {sourceUrl}", _fileControllerPrefixes);
+                ConsoleError($"source url not found in store: {sourceUrl}", _SourceControllerPrefixes);
                 return false;
             }
 
             // ロード中でも部分的なキャッシュが見える場合があるため、ロード中かの判定を先に行う
             if (_loadingSourceUrls.Has(sourceUrl, out var loadingIndex))
             {
-                ConsoleDebug($"already loading. {sourceUrl}", _fileControllerPrefixes);
+                ConsoleDebug($"already loading. {sourceUrl}", _SourceControllerPrefixes);
                 _loadingDevices[loadingIndex] = _loadingDevices[loadingIndex].Append(self);
                 return true;
             }
@@ -39,12 +39,12 @@ namespace jp.ootr.ImageDeviceController
             {
                 var files = CcGetCache(sourceUrl);
                 var fileNames = files.GetFileUrls();
-                ConsoleDebug($"already loaded. {sourceUrl}", _fileControllerPrefixes);
+                ConsoleDebug($"already loaded. {sourceUrl}", _SourceControllerPrefixes);
                 self.OnSourceLoadSuccess(sourceUrl, fileNames);
                 return true;
             }
 
-            ConsoleDebug($"loading {sourceUrl}.", _fileControllerPrefixes);
+            ConsoleDebug($"loading {sourceUrl}.", _SourceControllerPrefixes);
             _loadingSourceUrls = _loadingSourceUrls.Append(sourceUrl);
             _loadingDevices = _loadingDevices.Append(new[] { self });
             switch (type)
@@ -70,7 +70,7 @@ namespace jp.ootr.ImageDeviceController
         {
             if (self == null || sourceUrl == null)
             {
-                ConsoleError("self or source is null.", _fileControllerPrefixes);
+                ConsoleError("self or source is null.", _SourceControllerPrefixes);
                 return;
             }
 
@@ -111,7 +111,7 @@ namespace jp.ootr.ImageDeviceController
             if (sourceUrl == null || fileUrls == null || !_loadingSourceUrls.Has(sourceUrl, out var loadingIndex)) return;
             ConsoleDebug(
                 $"source loaded successfully. {fileUrls.Length} files. device count: {_loadingDevices[loadingIndex].Length}, {sourceUrl}",
-                _fileControllerPrefixes);
+                _SourceControllerPrefixes);
             _loadedSourceUrls = _loadedSourceUrls.Append(sourceUrl);
             _cachedData = _cachedData.Append(fileUrls);
             _loadingSourceUrls = _loadingSourceUrls.Remove(loadingIndex);
@@ -123,7 +123,7 @@ namespace jp.ootr.ImageDeviceController
         protected override void OnSourceLoadError(string sourceUrl, LoadError error)
         {
             if (sourceUrl == null) return;
-            ConsoleDebug($"StringKindArchive load failed: {error}, {sourceUrl} ", _fileControllerPrefixes);
+            ConsoleDebug($"StringKindArchive load failed: {error}, {sourceUrl} ", _SourceControllerPrefixes);
             if (!_loadingSourceUrls.Has(sourceUrl, out var loadingIndex)) return;
             _loadingSourceUrls = _loadingSourceUrls.Remove(loadingIndex);
             _loadingDevices = _loadingDevices.Remove(loadingIndex, out var loadingDevices);
