@@ -54,6 +54,11 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
         {
         }
 
+        public virtual void OnFileLoadSuccess([CanBeNull] string sourceUrl, [CanBeNull] string fileUrl)
+        {
+            
+        }
+
         protected override void ConsoleDebug(string message, string[] prefix = null)
         {
             base.ConsoleDebug(message, LogBuilder.CombinePrefix(new[] { deviceName }, prefix));

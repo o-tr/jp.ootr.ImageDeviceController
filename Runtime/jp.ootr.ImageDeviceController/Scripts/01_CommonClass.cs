@@ -22,6 +22,11 @@ namespace jp.ootr.ImageDeviceController
             "Format:RG32", "Format:RGB48", "Format:RGBA64"
         };
 
+        public readonly string PROTOCOL_ZIP = "zip";
+        public readonly string PROTOCOL_EIA = "dynamic-eia";
+        public readonly string PROTOCOL_VIDEO = "video";
+        public readonly string PROTOCOL_IMAGE = "image";
+
         public readonly int SupportedManifestVersion = 1;
 
         protected virtual LoadError ParseStringDownloadError([CanBeNull] string message, int code)
@@ -77,7 +82,7 @@ namespace jp.ootr.ImageDeviceController
             ConsoleError("OnFileLoadProgress should not be called from base class");
         }
         
-        protected virtual void OnFileLoadSuccess([CanBeNull] string fileUrl, [CanBeNull] byte[] data)
+        protected virtual void OnFileLoadSuccess([CanBeNull] string fileUrl)
         {
             ConsoleError("OnFileLoadSuccess should not be called from base class");
         }

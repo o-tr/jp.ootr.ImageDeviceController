@@ -89,9 +89,10 @@ namespace jp.ootr.ImageDeviceController
             }
 
             options = "";
-            if (fileName.StartsWith("zip://"))
+            // ref: 01_CommonClass.cs
+            if (fileName.StartsWith("zip://") || fileName.StartsWith("dynamic-eia://"))
             {
-                type = SourceType.TextZip;
+                type = SourceType.StringKind;
                 return;
             }
 

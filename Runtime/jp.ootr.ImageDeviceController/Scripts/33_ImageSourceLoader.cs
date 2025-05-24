@@ -87,8 +87,9 @@ namespace jp.ootr.ImageDeviceController
         public override void OnImageLoadSuccess(IVRCImageDownload result)
         {
             var texture = result.Result;
-            CcSetTexture(_ilSourceUrl, _ilSourceUrl, texture);
-            OnSourceLoadSuccess(_ilSourceUrl, new[] { _ilSourceUrl });
+            var fileName = $"{PROTOCOL_IMAGE}://{_ilSourceUrl.Substring(8)}";
+            CcSetTexture(_ilSourceUrl, fileName, texture);
+            OnSourceLoadSuccess(_ilSourceUrl, new[] { fileName });
             _ilQueuedSourceUrls = _ilQueuedSourceUrls.Remove(0);
             SendCustomEventDelayedFrames(nameof(IlLoadNext), IlDelayFrames);
         }

@@ -168,7 +168,7 @@ namespace jp.ootr.ImageDeviceController
 
             if (extensions.TryGetCroppedMetadata(out var basePath, out var rects) == ParseResult.Success)
             {
-                var fileName = $"zip://{_zlSourceUrl.Substring(8)}/{basePath}";
+                var fileName = $"{PROTOCOL_ZIP}://{_zlSourceUrl.Substring(8)}/{basePath}";
                 var baseImage = CcGetBinary(_zlSourceUrl, fileName);
                 if (baseImage == null)
                 {

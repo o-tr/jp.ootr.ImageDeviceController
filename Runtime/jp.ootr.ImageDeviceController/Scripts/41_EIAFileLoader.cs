@@ -16,7 +16,7 @@ namespace jp.ootr.ImageDeviceController
         private string _eiaCurrentFileUrl = string.Empty;
         private int _eiaCurrentFileIndex = -1;
         
-        private byte[] _eiaDecodedData = null;
+        private byte[] _eiaCurrentDecodedData = null;
         private DataDictionary _eiaCurrentFile = null;
         private int _eiaCurrentFileBytesPerPixel = 0;
         private int _eiaCurrentFileWidth = 0;
@@ -30,6 +30,23 @@ namespace jp.ootr.ImageDeviceController
         private float _eiaProcessStartTime = 0;
         
         private const int _eiaProcessIntervalFrame = 1;
+        
+        private void EIAClear()
+        {
+            _eiaCurrentSourceUrl = string.Empty;
+            _eiaCurrentFileUrl = string.Empty;
+            _eiaCurrentFileIndex = -1;
+            _eiaCurrentDecodedData = null;
+            _eiaCurrentFile = null;
+            _eiaCurrentFileBytesPerPixel = 0;
+            _eiaCurrentFileWidth = 0;
+            _eiaCurrentFileHeight = 0;
+            _eiaCurrentFileRects = null;
+            _eiaCurrentFileRectsIndex = 0;
+            _eiaCurrentFileBinary = null;
+            _eiaCurrentFileBaseUrl = string.Empty;
+            _eiaCurrentFileFormat = TextureFormat.RGB24;
+        }
         
         protected void EIALoadFile([CanBeNull] string fileUrl) {
             if (string.IsNullOrEmpty(fileUrl)) {
@@ -82,6 +99,7 @@ namespace jp.ootr.ImageDeviceController
             {
                 ConsoleDebug("No more URLs to load", _eiaFileLoaderPrefixes);
                 _eiaFileIsLoading = false;
+                EIAClear();
                 return;
             }
 
@@ -89,6 +107,7 @@ namespace jp.ootr.ImageDeviceController
             if (!success)
             {
                 _eiaFileIsLoading = false;
+                EIAClear();
                 ConsoleDebug("no more URLs to load", _eiaFileLoaderPrefixes);
                 return;
             }
@@ -149,7 +168,7 @@ namespace jp.ootr.ImageDeviceController
                 return;
             }
             
-            _eiaDecodedData = udonLZ4.GetDecompressedData();
+            _eiaCurrentDecodedData = udonLZ4.GetDecompressedData();
             _eiaCurrentFile = file;
 
             ConsoleDebug($"OnLZ4Decompress: {Time.realtimeSinceStartup - _eiaProcessStartTime}", _eiaFileLoaderPrefixes);
@@ -176,7 +195,7 @@ namespace jp.ootr.ImageDeviceController
             
             if (type.String == "m")
             {
-                _eiaCurrentFileBinary = _eiaDecodedData;
+                _eiaCurrentFileBinary = _eiaCurrentDecodedData;
                 EIAGenerateImageBytesAsyncMaster();
                 return;
             }
@@ -280,7 +299,7 @@ namespace jp.ootr.ImageDeviceController
             for (var y = 0; y < rectHeight; y++)
             {
                 Array.Copy(
-                    _eiaDecodedData,
+                    _eiaCurrentDecodedData,
                     start + y * rectLineByteLength,
                     _eiaCurrentFileBinary,
                     (baseY + y) * imageLineByteLength + baseX * _eiaCurrentFileBytesPerPixel,
@@ -304,7 +323,8 @@ namespace jp.ootr.ImageDeviceController
         {
             ConsoleDebug($"Failed to decode file: {_eiaCurrentFileUrl}", _eiaFileLoaderPrefixes);
             OnFileLoadError(_eiaCurrentFileUrl, LoadError.InvalidFileURL);
-            
+
+            EIAClear();
             SendCustomEventDelayedSeconds(nameof(EIALoadFIleNext), 1f);
         }
 
@@ -320,7 +340,8 @@ namespace jp.ootr.ImageDeviceController
             _eiaCurrentSourceUrl = string.Empty;
             udonLZ4.ClearDecompressedData();
             
-            OnFileLoadSuccess(_eiaCurrentFileUrl, _eiaCurrentFileBinary);
+            OnFileLoadSuccess(_eiaCurrentFileUrl);
+            EIAClear();
             ConsoleDebug($"EIAOnGenerateImageBytesSuccess: {Time.realtimeSinceStartup - _eiaProcessStartTime}", _eiaFileLoaderPrefixes);
             
             SendCustomEventDelayedFrames(nameof(EIALoadFIleNext), 1);

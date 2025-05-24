@@ -213,7 +213,7 @@ namespace jp.ootr.ImageDeviceController
 
         private string EIABuildFileName(string sourceUrl, string fileName)
         {
-            return $"dynamic-eia{sourceUrl.Substring(5)}/{fileName}";
+            return $"{PROTOCOL_EIA}://{sourceUrl.Substring(8)}/{fileName}";
         }
         
         protected virtual void EIAOnLoadProgress([CanBeNull] string sourceUrl, float progress)
