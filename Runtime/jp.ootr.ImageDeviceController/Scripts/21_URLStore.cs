@@ -78,7 +78,7 @@ namespace jp.ootr.ImageDeviceController
 
         public override void OnPlayerJoined([NotNull] VRCPlayerApi player)
         {
-            if (!Networking.IsOwner(gameObject)) return;
+            if (!Networking.IsOwner(gameObject) || player.isLocal) return;
             _usSyncAction = URLStoreSyncAction.SyncAll;
             _usSyncUrl = usUrls;
             Sync();

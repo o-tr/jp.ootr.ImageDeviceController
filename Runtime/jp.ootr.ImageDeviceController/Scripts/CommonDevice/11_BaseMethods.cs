@@ -18,7 +18,7 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
 
         public string deviceUuid;
 
-        private void Start()
+        protected virtual void Start()
         {
             if (splashImage == null) return;
             splashImage.texture = splashImageTexture;
