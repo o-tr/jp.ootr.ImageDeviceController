@@ -84,7 +84,7 @@ namespace jp.ootr.ImageDeviceController
             {
                 _eiaQueuedSourceUrls = _eiaQueuedSourceUrls.Append(sourceUrl);
                 _eiaQueuedFileUrls = _eiaQueuedFileUrls.Append(toLoadUrls[i]);
-                var itemPriority = priority + i;
+                var itemPriority = priority + ( toLoadUrls.Length - i);
                 _eiaQueuedFilePriorities = _eiaQueuedFilePriorities.Append(itemPriority);
                 if (_eiaCurrentMaxPriority < itemPriority)
                 {
