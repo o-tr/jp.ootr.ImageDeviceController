@@ -45,8 +45,11 @@ namespace jp.ootr.ImageDeviceController
         InvalidOptions,
         
         //EIALoader
-        MissingBase64RLE,
+        MissingUdonLZ4,
         InvalidEIAFile,
+        
+        //StringLoader
+        UnknownFileFormat,
         
         // FileLoadError
         InvalidFileURL,
@@ -144,15 +147,38 @@ namespace jp.ootr.ImageDeviceController
                     return "ootr:MissingUdonZip";
                 case LoadError.InvalidZipFile:
                     return "ootr:InvalidZipFile";
-                case LoadError.MissingVRCAVProVideoPlayer:
-                    return "ootr:MissingVRCAVProVideoPlayer";
-                case LoadError.LiveVideoNotSupported:
-                    return "ootr:LiveVideoNotSupported";
 
                 case LoadError.PlayerError:
                     return "VRC:PlayerError";
                 case LoadError.RateLimited:
                     return "VRC:RateLimited";
+                
+                case LoadError.InvalidManifest:
+                    return "ootr:UdonZip:InvalidManifest";
+                case LoadError.InvalidMetadata:
+                    return "ootr:UdonZip:InvalidMetadata";
+                case LoadError.UnsupportedManifestVersion:
+                    return "ootr:UdonZip:UnsupportedManifestVersion";
+                case LoadError.UnsupportedFeature:
+                    return "ootr:UdonZip:UnsupportedFeature";
+                
+                case LoadError.MissingVRCAVProVideoPlayer:
+                    return "ootr:Video:MissingVRCAVProVideoPlayer";
+                case LoadError.LiveVideoNotSupported:
+                    return "ootr:Video:LiveVideoNotSupported";
+                case LoadError.InvalidOptions:
+                    return "ootr:Video:InvalidOptions";
+
+                case LoadError.MissingUdonLZ4:
+                    return "ootr:EIA:MissingUdonLZ4";
+                case LoadError.InvalidEIAFile:
+                    return "ootr:EIA:InvalidEIAFile";
+                
+                case LoadError.UnknownFileFormat:
+                    return "ootr:String:UnknownFileFormat";
+                
+                case LoadError.InvalidFileURL:
+                    return "ootr:Local:InvalidFileURL";
 
                 case LoadError.HttpBadRequest:
                     return "HTTP/1.1 400 Bad Request";
@@ -305,6 +331,60 @@ namespace jp.ootr.ImageDeviceController
                     title = "ファイルサイズが大きすぎます";
                     content = "ファイルサイズが100MB以下に収まっているか確認してください";
                     break;
+                case LoadError.MissingUdonZip:
+                    title = "UdonZipコンポーネントが見つかりません";
+                    content = "ワールド制作者に問い合わせてください";
+                    break;
+                case LoadError.InvalidZipFile:
+                case LoadError.InvalidManifest:
+                case LoadError.InvalidMetadata:
+                    title = "無効なTextZipファイル形式です";
+                    content = "再度試すか、アップロードし直してみてください";
+                    break;
+                case LoadError.UnsupportedManifestVersion:
+                    title = "TextZipのバージョンがサポートされていません";
+                    content = "ワールド制作者にギミックの更新を依頼するか、ターゲットバージョンを変更してアップロードし直してください";
+                    break;
+                case LoadError.UnsupportedFeature:
+                    title = "TextZipの機能がサポートされていません";
+                    content = "ワールド制作者にギミックの更新を依頼するか、ターゲットバージョンを変更してアップロードし直してください";
+                    break;
+                case LoadError.MissingVRCAVProVideoPlayer:
+                    title = "VRCAVProVideoPlayerコンポーネントが見つかりません";
+                    content = "ワールド制作者に問い合わせてください";
+                    break;
+                case LoadError.LiveVideoNotSupported:
+                    title = "ライブ動画はサポートされていません";
+                    content = "ワールド制作者に問い合わせてください";
+                    break;
+                case LoadError.PlayerError:
+                    title = "動画プレイヤーでエラーが発生しました";
+                    content = "動画のURLが正しいか、動画がサポートされている形式であるか確認してください";
+                    break;
+                case LoadError.RateLimited:
+                    title = "リクエストが多すぎます";
+                    content = "時間をおいて再度試してみてください";
+                    break;
+                case LoadError.InvalidOptions:
+                    title = "無効なオプションです";
+                    content = "動画のオプションが正しいか確認してください";
+                    break;
+                case LoadError.MissingUdonLZ4:
+                    title = "UdonLZ4コンポーネントが見つかりません";
+                    content = "ワールド制作者に問い合わせてください";
+                    break;
+                case LoadError.InvalidEIAFile:
+                    title = "無効なEIAファイル形式です";
+                    content = "再度試すか、アップロードし直してみてください";
+                    break;
+                case LoadError.UnknownFileFormat:
+                    title = "無効なファイル形式です";
+                    content = "ファイルがサポートされているフォーマットか確認してください";
+                    break;
+                case LoadError.InvalidFileURL:
+                    title = "無効なファイルURLです";
+                    content = "ファイルのURLが正しいか確認してください";
+                    break;
                 default:
                     if ((int)error > 300)
                     {
@@ -371,6 +451,60 @@ namespace jp.ootr.ImageDeviceController
                 case LoadError.TooLarge:
                     title = "File size too large";
                     content = "Check if the file size is within 100MB";
+                    break;
+                case LoadError.MissingUdonZip:
+                    title = "UdonZip component not found";
+                    content = "Please contact the world creator";
+                    break;
+                case LoadError.InvalidZipFile:
+                case LoadError.InvalidManifest:
+                case LoadError.InvalidMetadata:
+                    title = "Invalid TextZip file format";
+                    content = "Please try again or re-upload";
+                    break;
+                case LoadError.UnsupportedManifestVersion:
+                    title = "TextZip version not supported";
+                    content = "Please ask the world creator to update the gimmick or change the target version and re-upload";
+                    break;
+                case LoadError.UnsupportedFeature:
+                    title = "TextZip feature not supported";
+                    content = "Please ask the world creator to update the gimmick or change the target version and re-upload";
+                    break;
+                case LoadError.MissingVRCAVProVideoPlayer:
+                    title = "VRCAVProVideoPlayer component not found";
+                    content = "Please contact the world creator";
+                    break;
+                case LoadError.LiveVideoNotSupported:
+                    title = "Live video not supported";
+                    content = "Please contact the world creator";
+                    break;
+                case LoadError.PlayerError:
+                    title = "An error occurred in the video player";
+                    content = "Please verify that the video URL is correct and that the video is in a supported format";
+                    break;
+                case LoadError.RateLimited:
+                    title = "Too many requests";
+                    content = "Please try again later";
+                    break;
+                case LoadError.InvalidOptions:
+                    title = "Invalid options";
+                    content = "Please verify that the video options are correct";
+                    break;
+                case LoadError.MissingUdonLZ4:
+                    title = "UdonLZ4 component not found";
+                    content = "Please contact the world creator";
+                    break;
+                case LoadError.InvalidEIAFile:
+                    title = "Invalid EIA file format";
+                    content = "Please try again or re-upload";
+                    break;
+                case LoadError.UnknownFileFormat:
+                    title = "Invalid file format";
+                    content = "Please check if the file is in a supported format";
+                    break;
+                case LoadError.InvalidFileURL:
+                    title = "Invalid file URL";
+                    content = "Please check if the file URL is correct";
                     break;
                 default:
                     if ((int)error > 300)

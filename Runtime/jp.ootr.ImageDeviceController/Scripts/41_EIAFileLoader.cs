@@ -73,7 +73,6 @@ namespace jp.ootr.ImageDeviceController
                 && type.String == "c"
                 && EiaParsedFileManifests[index].TryGetValue("b", TokenType.String, out var baseUrl)
                 && EiaParsedFileUrls.Has(baseUrl.String, out index)
-                && !_eiaQueuedFileUrls.Has(baseUrl.String)
             )
             {
                 toLoadUrls = toLoadUrls.Append(baseUrl.String);
@@ -82,23 +81,28 @@ namespace jp.ootr.ImageDeviceController
 
             for (int i = toLoadUrls.Length - 1; i >= 0; i--)
             {
-                _eiaQueuedSourceUrls = _eiaQueuedSourceUrls.Append(sourceUrl);
-                _eiaQueuedFileUrls = _eiaQueuedFileUrls.Append(toLoadUrls[i]);
-                var itemPriority = priority + ( toLoadUrls.Length - i);
-                _eiaQueuedFilePriorities = _eiaQueuedFilePriorities.Append(itemPriority);
-                if (_eiaCurrentMaxPriority < itemPriority)
+                var itemPriority = priority + i + 1;
+                if (_eiaQueuedFileUrls.Has(toLoadUrls[i], out var toLoadIndex))
                 {
-                    _eiaCurrentMaxPriority = itemPriority;
+                    _eiaQueuedFilePriorities[toLoadIndex] += i;
+                }
+                else
+                {
+                    _eiaQueuedSourceUrls = _eiaQueuedSourceUrls.Append(sourceUrl);
+                    _eiaQueuedFileUrls = _eiaQueuedFileUrls.Append(toLoadUrls[i]);
+                    _eiaQueuedFilePriorities = _eiaQueuedFilePriorities.Append(itemPriority);
                 }
             }
 
+            if (_eiaQueuedFileUrls.Has(fileUrl, out var fileIndex))
+            {
+                _eiaQueuedFilePriorities[fileIndex] += priority;
+                return;
+            }
+            
             _eiaQueuedSourceUrls = _eiaQueuedSourceUrls.Append(sourceUrl);
             _eiaQueuedFileUrls = _eiaQueuedFileUrls.Append(fileUrl);
             _eiaQueuedFilePriorities = _eiaQueuedFilePriorities.Append(priority);
-            if (_eiaCurrentMaxPriority < priority)
-            {
-                _eiaCurrentMaxPriority = priority;
-            }
             
             if (_eiaFileIsLoading)
             {
@@ -111,6 +115,48 @@ namespace jp.ootr.ImageDeviceController
             EIALoadFIleNext();
         }
         
+        protected void EIAIncreaseFilePriority([CanBeNull] string sourceUrl, [CanBeNull] string fileUrl, int priority)
+        {
+            if (string.IsNullOrEmpty(fileUrl)) return;
+            if (!EiaParsedFileUrls.Has(fileUrl, out var index))
+            {
+                ConsoleDebug($"File not found in cache: {fileUrl}", _eiaFileLoaderPrefixes);
+                return;
+            }
+
+            if (!_eiaQueuedFileUrls.Has(fileUrl, out var queueIndex))
+            {
+                ConsoleDebug($"File not found in queue: {fileUrl}", _eiaFileLoaderPrefixes);
+                return;
+            }
+            
+            
+            var toLoadUrls = new string[0];
+
+            while (
+                EiaParsedFileManifests[index].TryGetValue("t", TokenType.String, out var type)
+                && type.String == "c"
+                && EiaParsedFileManifests[index].TryGetValue("b", TokenType.String, out var baseUrl)
+                && EiaParsedFileUrls.Has(baseUrl.String, out index)
+            )
+            {
+                toLoadUrls = toLoadUrls.Append(baseUrl.String);
+            }
+            
+            for (int i = toLoadUrls.Length - 1; i >= 0; i--)
+            {
+                if (_eiaQueuedFileUrls.Has(toLoadUrls[i], out var toLoadIndex))
+                {
+                    _eiaQueuedFilePriorities[toLoadIndex] += priority + i + 1;
+                }
+                else
+                {
+                    ConsoleError($"Base URL not found in queue: {toLoadUrls[i]}", _eiaFileLoaderPrefixes);
+                }
+            }
+            _eiaQueuedFilePriorities[queueIndex] += priority;
+        }
+        
         private int EIAGetHeightPriorityIndex()
         {
             if (_eiaQueuedFilePriorities.Length == 0) return -1;
@@ -119,12 +165,11 @@ namespace jp.ootr.ImageDeviceController
             
             for (var i = 0; i < _eiaQueuedFilePriorities.Length; i++)
             {
-                if (_eiaQueuedFilePriorities[i] > maxPriority)
-                {
-                    maxPriority = _eiaQueuedFilePriorities[i];
-                    maxPriorityIndex = i;
-                }
+                if (_eiaQueuedFilePriorities[i] <= maxPriority) continue;
+                maxPriority = _eiaQueuedFilePriorities[i];
+                maxPriorityIndex = i;
             }
+            ConsoleDebug($"Selected URL: {_eiaQueuedFileUrls[maxPriorityIndex]}, Priority: {maxPriority}");
 
             return maxPriorityIndex;
         }

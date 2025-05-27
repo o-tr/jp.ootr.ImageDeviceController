@@ -39,6 +39,7 @@ namespace jp.ootr.ImageDeviceController
                 ConsoleDebug($"File already loading: {fileUrl}, devices: {_loadingFileDevices[loadingIndex].Length}", _fileControllerPrefixes);
                 _loadingFileDevices[loadingIndex] = _loadingFileDevices[loadingIndex].Append(self);
                 _loadingFileDeviceChannels[loadingIndex] = _loadingFileDeviceChannels[loadingIndex].Append(channel);
+                EIAIncreaseFilePriority(sourceUrl, fileUrl, priority);
                 return true;
             }
             

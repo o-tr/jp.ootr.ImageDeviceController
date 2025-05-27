@@ -6,9 +6,9 @@ namespace jp.ootr.ImageDeviceController
     public class SourceController : EIAFileLoader
     {
         private readonly string[] _SourceControllerPrefixes = { "SourceController" };
-        private string[][] _cachedData = new string[0][];
 
         private string[] _loadedSourceUrls = new string[0];
+        private string[][] _loadedSourceFileNames = new string[0][];
         private CommonDevice.CommonDevice[][] _loadingDevices = new CommonDevice.CommonDevice[0][];
         private string[] _loadingSourceUrls = new string[0];
 
@@ -35,11 +35,20 @@ namespace jp.ootr.ImageDeviceController
                 return true;
             }
             
+            if (_loadedSourceUrls.Has(sourceUrl, out var loadedIndex))
+            {
+                ConsoleDebug($"already loaded. read from loaded source. {sourceUrl}",
+                    _SourceControllerPrefixes);
+                self.OnSourceLoadSuccess(sourceUrl, _loadedSourceFileNames[loadedIndex]);
+                return true;
+            }
+            
             if (CcHasCache(sourceUrl))
             {
                 var files = CcGetCache(sourceUrl);
                 var fileNames = files.GetFileUrls();
-                ConsoleDebug($"already loaded. {sourceUrl}", _SourceControllerPrefixes);
+                ConsoleDebug($"already loaded. read from cache. {fileNames.Length} files, {sourceUrl}",
+                    _SourceControllerPrefixes);
                 self.OnSourceLoadSuccess(sourceUrl, fileNames);
                 return true;
             }
@@ -90,6 +99,18 @@ namespace jp.ootr.ImageDeviceController
             CcOnRelease(sourceUrl);
         }
 
+        public override string[] CcGetFileNames(string sourceName)
+        {
+            if (_loadedSourceUrls.Has(sourceName, out var loadedIndex))
+            {
+                return _loadedSourceFileNames[loadedIndex];
+            }
+            var data = base.CcGetFileNames(sourceName);
+            if (data != null) return data;
+
+            return null;
+        }
+
         #region EventReceiver
 
         protected override void CcOnRelease(string sourceUrl)
@@ -97,7 +118,7 @@ namespace jp.ootr.ImageDeviceController
             base.CcOnRelease(sourceUrl);
             if (!_loadedSourceUrls.Has(sourceUrl, out var loadedIndex)) return;
             _loadedSourceUrls = _loadedSourceUrls.Remove(loadedIndex);
-            _cachedData = _cachedData.Remove(loadedIndex);
+            _loadedSourceFileNames = _loadedSourceFileNames.Remove(loadedIndex);
         }
 
         protected override void OnSourceLoadProgress(string sourceUrl, float progress)
@@ -113,7 +134,7 @@ namespace jp.ootr.ImageDeviceController
                 $"source loaded successfully. {fileUrls.Length} files. device count: {_loadingDevices[loadingIndex].Length}, {sourceUrl}",
                 _SourceControllerPrefixes);
             _loadedSourceUrls = _loadedSourceUrls.Append(sourceUrl);
-            _cachedData = _cachedData.Append(fileUrls);
+            _loadedSourceFileNames = _loadedSourceFileNames.Append(fileUrls);
             _loadingSourceUrls = _loadingSourceUrls.Remove(loadingIndex);
             _loadingDevices = _loadingDevices.Remove(loadingIndex, out var loadingDevices);
             if (loadingDevices == null) return;

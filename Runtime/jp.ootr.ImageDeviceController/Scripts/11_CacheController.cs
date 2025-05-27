@@ -183,7 +183,7 @@ namespace jp.ootr.ImageDeviceController
         }
         
         [CanBeNull]
-        public string[] CcGetFileNames([CanBeNull] string sourceName)
+        public virtual string[] CcGetFileNames([CanBeNull] string sourceName)
         {
             var source = CacheFiles.GetSource(sourceName);
             if (source == null) return null;
