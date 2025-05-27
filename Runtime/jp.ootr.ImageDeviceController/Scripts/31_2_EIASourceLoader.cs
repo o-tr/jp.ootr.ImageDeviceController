@@ -33,8 +33,8 @@ namespace jp.ootr.ImageDeviceController
         {
             if (udonLZ4 == null)
             {
-                ConsoleError("UdonBase64CSVRLE component is not set.", _eiaSourceLoaderPrefixes);
-                EIAOnLoadError(result.Url.ToString(), LoadError.MissingBase64RLE);
+                ConsoleError("MissingUdonLZ4 component is not set.", _eiaSourceLoaderPrefixes);
+                EIAOnLoadError(result.Url.ToString(), LoadError.MissingUdonLZ4);
                 return;
             }
             ConsoleLog($"download success from {result.Url}", _eiaSourceLoaderPrefixes);
