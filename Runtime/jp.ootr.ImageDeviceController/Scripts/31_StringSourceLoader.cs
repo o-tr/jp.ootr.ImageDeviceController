@@ -90,6 +90,16 @@ namespace jp.ootr.ImageDeviceController
             }
             
             ConsoleError($"Invalid file format from {result.Url}", _stringLoaderPrefixes);
+            OnSourceLoadError(_slCurrentSourceUrl, LoadError.UnknownFileFormat);
+            SendCustomEvent(nameof(SlLoadNext));
+        }
+
+        public override void OnStringLoadError(IVRCStringDownload result)
+        {
+            base.OnStringLoadError(result);
+            ConsoleDebug($"{result.Error}/{result.ErrorCode}");
+            OnSourceLoadError(_slCurrentSourceUrl, (LoadError)result.ErrorCode);
+            SendCustomEvent(nameof(SlLoadNext));
         }
 
         protected sealed override void ZlOnLoadProgress(string sourceUrl, float progress)
