@@ -1,4 +1,5 @@
 ﻿using jp.ootr.common;
+using UnityEngine;
 
 namespace jp.ootr.ImageDeviceController
 {
@@ -13,6 +14,12 @@ namespace jp.ootr.ImageDeviceController
         private CommonDevice.CommonDevice[][] _loadingFileDevices = new CommonDevice.CommonDevice[0][];
         private string[][] _loadingFileDeviceChannels = new string[0][];
         
+        private string[] _loadedFileQueueUrls = new string[0];
+        private string[] _loadedFileQueueFileNames = new string[0];
+        private string[] _loadedFileQueueChannels = new string[0];
+        private CommonDevice.CommonDevice[] _loadedFileQueueDevices = new CommonDevice.CommonDevice[0];
+        private int[] _loadedFileQueueFrameCounts = new int[0];
+        
         public bool LoadFile(CommonDevice.CommonDevice self, string sourceUrl, string fileUrl, int priority = 1, string channel = null)
         {
             if (self == null || fileUrl == null)
@@ -23,14 +30,24 @@ namespace jp.ootr.ImageDeviceController
             
             if (!fileUrl.StartsWith(PROTOCOL_EIA))
             {
-                self.OnFileLoadSuccess(sourceUrl, fileUrl, channel);
+                _loadedFileQueueUrls = _loadedFileQueueUrls.Append(sourceUrl);
+                _loadedFileQueueFileNames = _loadedFileQueueFileNames.Append(fileUrl);
+                _loadedFileQueueChannels = _loadedFileQueueChannels.Append(channel);
+                _loadedFileQueueDevices = _loadedFileQueueDevices.Append(self);
+                _loadedFileQueueFrameCounts = _loadedFileQueueFrameCounts.Append(Time.frameCount);
+                SendCustomEventDelayedFrames(nameof(SendLoadedFileNotification), 1);
                 return true;
             }
             
             if (_loadedFileUrls.Has(fileUrl))
             {
                 ConsoleDebug($"File already loaded: {fileUrl}", _fileControllerPrefixes);
-                self.OnFileLoadSuccess(sourceUrl, fileUrl, channel);
+                _loadedFileQueueUrls = _loadedFileQueueUrls.Append(sourceUrl);
+                _loadedFileQueueFileNames = _loadedFileQueueFileNames.Append(fileUrl);
+                _loadedFileQueueChannels = _loadedFileQueueChannels.Append(channel);
+                _loadedFileQueueDevices = _loadedFileQueueDevices.Append(self);
+                _loadedFileQueueFrameCounts = _loadedFileQueueFrameCounts.Append(Time.frameCount);
+                SendCustomEventDelayedFrames(nameof(SendLoadedFileNotification), 1);
                 return true;
             }
             
@@ -51,6 +68,26 @@ namespace jp.ootr.ImageDeviceController
 
             EIALoadFile(sourceUrl, fileUrl, priority);
             return true;
+        }
+        
+        public void SendLoadedFileNotification()
+        {
+            ConsoleWarn($"[FileController] SendLoadedFileNotification called, frame: {Time.frameCount}, queue length: {_loadedFileQueueUrls.Length}", _fileControllerPrefixes);
+            if (_loadedFileQueueUrls.Length == 0) return;
+            for (var i = 0; i < _loadedFileQueueUrls.Length; i++)
+            {
+                if (_loadedFileQueueFrameCounts[i] == Time.frameCount) continue;
+                _loadedFileQueueUrls = _loadedFileQueueUrls.Remove(i, out var sourceUrl);
+                _loadedFileQueueFileNames = _loadedFileQueueFileNames.Remove(i, out var fileUrl);
+                _loadedFileQueueChannels = _loadedFileQueueChannels.Remove(i, out var channel);
+                _loadedFileQueueDevices = _loadedFileQueueDevices.Remove(i, out var device);
+                _loadedFileQueueFrameCounts = _loadedFileQueueFrameCounts.Remove(i);
+                i--;
+                if (device == null || sourceUrl == null || fileUrl == null) continue;
+                device.OnFileLoadSuccess(sourceUrl, fileUrl, channel);
+            }
+            if (_loadedFileQueueUrls.Length == 0) return;
+            SendCustomEventDelayedFrames(nameof(SendLoadedFileNotification), 1);
         }
 
         protected override void OnFileLoadSuccess(string fileUrl)

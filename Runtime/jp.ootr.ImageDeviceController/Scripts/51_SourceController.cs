@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+using UnityEngine;
 using static jp.ootr.common.ArrayUtils;
 
 namespace jp.ootr.ImageDeviceController
@@ -11,6 +12,11 @@ namespace jp.ootr.ImageDeviceController
         private string[][] _loadedSourceFileNames = new string[0][];
         private CommonDevice.CommonDevice[][] _loadingDevices = new CommonDevice.CommonDevice[0][];
         private string[] _loadingSourceUrls = new string[0];
+        
+        private string[] _loadedSourceQueueUrls = new string[0];
+        private string[][] _loadedSourceQueueFileNames = new string[0][];
+        private CommonDevice.CommonDevice[] _loadedSourceQueueDevices = new CommonDevice.CommonDevice[0];
+        private int[] _loadedSourceQueueFrameCounts = new int[0];
 
         public virtual bool LoadSource([CanBeNull] CommonDevice.CommonDevice self, [CanBeNull] string sourceUrl,
             SourceType type, string options = "")
@@ -39,7 +45,12 @@ namespace jp.ootr.ImageDeviceController
             {
                 ConsoleDebug($"already loaded. read from loaded source. {sourceUrl}",
                     _SourceControllerPrefixes);
-                self.OnSourceLoadSuccess(sourceUrl, _loadedSourceFileNames[loadedIndex]);
+                // self.OnSourceLoadSuccess(sourceUrl, _loadedSourceFileNames[loadedIndex]);
+                _loadedSourceQueueUrls = _loadedSourceQueueUrls.Append(sourceUrl);
+                _loadedSourceQueueFileNames = _loadedSourceQueueFileNames.Append(_loadedSourceFileNames[loadedIndex]);
+                _loadedSourceQueueDevices = _loadedSourceQueueDevices.Append(self);
+                _loadedSourceQueueFrameCounts = _loadedSourceQueueFrameCounts.Append(Time.frameCount);
+                SendCustomEventDelayedFrames(nameof(SendLoadedSourceNotification), 1);
                 return true;
             }
             
@@ -49,7 +60,12 @@ namespace jp.ootr.ImageDeviceController
                 var fileNames = files.GetFileUrls();
                 ConsoleDebug($"already loaded. read from cache. {fileNames.Length} files, {sourceUrl}",
                     _SourceControllerPrefixes);
-                self.OnSourceLoadSuccess(sourceUrl, fileNames);
+                // self.OnSourceLoadSuccess(sourceUrl, fileNames);
+                _loadedSourceQueueUrls = _loadedSourceQueueUrls.Append(sourceUrl);
+                _loadedSourceQueueFileNames = _loadedSourceQueueFileNames.Append(fileNames);
+                _loadedSourceQueueDevices = _loadedSourceQueueDevices.Append(self);
+                _loadedSourceQueueFrameCounts = _loadedSourceQueueFrameCounts.Append(Time.frameCount);
+                SendCustomEventDelayedFrames(nameof(SendLoadedSourceNotification), 1);
                 return true;
             }
 
@@ -73,6 +89,25 @@ namespace jp.ootr.ImageDeviceController
             }
 
             return true;
+        }
+        
+        public virtual void SendLoadedSourceNotification()
+        {
+            if (_loadedSourceQueueUrls.Length == 0) return;
+            for (var i = 0; i < _loadedSourceQueueUrls.Length; i++)
+            {
+                if (_loadedSourceQueueFrameCounts[i] == Time.frameCount) continue;
+                _loadedSourceQueueUrls = _loadedSourceQueueUrls.Remove(i, out var sourceUrl);
+                _loadedSourceQueueFileNames = _loadedSourceQueueFileNames.Remove(i, out var fileNames);
+                _loadedSourceQueueDevices = _loadedSourceQueueDevices.Remove(i, out var device);
+                _loadedSourceQueueFrameCounts = _loadedSourceQueueFrameCounts.Remove(i);
+                i--;
+                if (device == null || sourceUrl == null || fileNames == null || fileNames.Length == 0) continue;
+                device.OnSourceLoadSuccess(sourceUrl, fileNames);
+            }
+            if (_loadedSourceQueueUrls.Length == 0) return;
+            
+            SendCustomEventDelayedFrames(nameof(SendLoadedSourceNotification), 1);
         }
 
         public virtual void UnloadSource([CanBeNull] CommonDevice.CommonDevice self, [CanBeNull] string sourceUrl)
