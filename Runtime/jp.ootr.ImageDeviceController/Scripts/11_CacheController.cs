@@ -1,3 +1,4 @@
+using System;
 using JetBrains.Annotations;
 using jp.ootr.common;
 using UnityEngine;
@@ -27,6 +28,9 @@ namespace jp.ootr.ImageDeviceController
         private byte[][] _cacheBinary = new byte[0][]; //DataDictionaryにbyte[]が入らないので別で取り扱う
         private string[] _cacheBinaryNames = new string[0];
         private Cache CacheFiles => (Cache)_oCacheFiles;
+        
+        private string[] CcGarbageCollectionQueue = new string[0];
+        private int[] CcGarbageCollectionQueueFrameCounts = new int[0];
 
         [CanBeNull]
         public virtual Texture2D CcGetTexture([CanBeNull] string sourceUrl, [CanBeNull] string fileUrl)
@@ -35,6 +39,13 @@ namespace jp.ootr.ImageDeviceController
             {
                 ConsoleError($"texture not found: {sourceUrl}/{fileUrl}", _cacheControllerPrefixes);
                 return null;
+            }
+
+            if (CcGarbageCollectionQueue.Has(sourceUrl, out var gcIndex))
+            {
+                CcGarbageCollectionQueue = CcGarbageCollectionQueue.Remove(gcIndex);
+                CcGarbageCollectionQueueFrameCounts = CcGarbageCollectionQueueFrameCounts.Remove(gcIndex);
+                ConsoleDebug($"removed from garbage collection queue: {sourceUrl}", _cacheControllerPrefixes);
             }
             var source = CacheFiles.GetSource(sourceUrl);
             var file = source.GetFile(fileUrl);
@@ -108,16 +119,11 @@ namespace jp.ootr.ImageDeviceController
             var sourceCount = source.DecreaseUsedCount();
             if (sourceCount < 1)
             {
-                foreach (var tmpFileUrl in source.GetFileUrls()) source.GetFile(tmpFileUrl).DestroyTexture();
-                var keys = CacheFiles.RemoveSource(sourceUrl);
-                foreach (var key in keys)
-                {
-                    if (!_cacheBinaryNames.Has(key, out var index)) continue;
-                    _cacheBinary = _cacheBinary.Remove(index);
-                    _cacheBinaryNames = _cacheBinaryNames.Remove(index);
-                }
-                ConsoleDebug($"destroy source: {sourceUrl}", _cacheControllerPrefixes);
-
+                ConsoleInfo($"[CacheController] source not used: {sourceUrl}, queue for garbage collection", _cacheControllerPrefixes);
+                CcGarbageCollectionQueue = CcGarbageCollectionQueue.Append(sourceUrl);
+                CcGarbageCollectionQueueFrameCounts = CcGarbageCollectionQueueFrameCounts.Append(Time.frameCount);
+                
+                SendCustomEventDelayedFrames(nameof(CcGarbageCollect), 100);
                 return;
             }
             
@@ -136,6 +142,32 @@ namespace jp.ootr.ImageDeviceController
                 }
             }
             ConsoleDebug($"release texture: {sourceUrl}/{fileUrl} ({sourceCount}/{fileCount})", _cacheControllerPrefixes);
+        }
+
+        public virtual void CcGarbageCollect()
+        {
+            for (int i = 0; i < CcGarbageCollectionQueue.Length; i++)
+            {
+                if (Math.Abs(CcGarbageCollectionQueueFrameCounts[i] - Time.frameCount) < 100) continue;
+                CcGarbageCollectionQueue = CcGarbageCollectionQueue.Remove(i, out var sourceUrl);
+                CcGarbageCollectionQueueFrameCounts = CcGarbageCollectionQueueFrameCounts.Remove(i);
+                var source = CacheFiles.GetSource(sourceUrl);
+                if (source == null) continue;
+                foreach (var tmpFileUrl in source.GetFileUrls()) source.GetFile(tmpFileUrl).DestroyTexture();
+                var keys = CacheFiles.RemoveSource(sourceUrl);
+                foreach (var key in keys)
+                {
+                    if (!_cacheBinaryNames.Has(key, out var index)) continue;
+                    _cacheBinary = _cacheBinary.Remove(index);
+                    _cacheBinaryNames = _cacheBinaryNames.Remove(index);
+                }
+                ConsoleDebug($"destroy source: {sourceUrl}", _cacheControllerPrefixes);
+
+            }
+            if (CcGarbageCollectionQueue.Length > 0)
+            {
+                SendCustomEventDelayedFrames(nameof(CcGarbageCollect), 100);
+            }
         }
 
         [CanBeNull]
