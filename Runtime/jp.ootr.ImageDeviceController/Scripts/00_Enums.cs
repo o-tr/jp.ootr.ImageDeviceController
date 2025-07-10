@@ -10,6 +10,16 @@ namespace jp.ootr.ImageDeviceController
         None
     }
 
+    public enum TransitionType
+    {
+        None,
+        SlideUp,
+        SlideDown,
+        SlideLeft,
+        SlideRight,
+        FadeIn,
+    }
+    
     public enum LoadError
     {
         Unknown,

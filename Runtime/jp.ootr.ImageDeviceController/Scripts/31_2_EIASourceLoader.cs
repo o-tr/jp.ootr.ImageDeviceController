@@ -29,6 +29,15 @@ namespace jp.ootr.ImageDeviceController
         protected byte[][] EiaParsedFileBuffers = new byte[0][];
         protected DataDictionary[] EiaParsedFileManifests = new DataDictionary[0];
         
+        private string[] _eiaStoredSourceUrls = new string[0];
+        private DataDictionary[] _eiaStoredManifest = new DataDictionary[0];
+        
+        public DataDictionary EiaGetStoredManifest(string sourceUrl)
+        {
+            if (!_eiaStoredSourceUrls.Has(sourceUrl, out var index)) return null;
+            return _eiaStoredManifest[index];
+        }
+        
         protected void OnEIALoadSuccess(IVRCStringDownload result)
         {
             if (udonLZ4 == null)
@@ -81,6 +90,9 @@ namespace jp.ootr.ImageDeviceController
             _eiaCurrentFiles = eiaCurrentFiles.DataList;
             _eiaCurrentIndex = 0;
             ConsoleLog($"success to load EIA manifest: {_eiaCurrentManifest["i"].DataList.Count} files", _eiaSourceLoaderPrefixes);
+            
+            _eiaStoredSourceUrls = _eiaStoredSourceUrls.Append(_eiaSourceUrl);
+            _eiaStoredManifest = _eiaStoredManifest.Append(_eiaCurrentManifest);
             
             SendCustomEventDelayedFrames(nameof(EIAParseManifest), EiaDelayFrames, EventTiming.LateUpdate);
         }

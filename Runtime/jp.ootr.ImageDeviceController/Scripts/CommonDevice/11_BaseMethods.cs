@@ -45,7 +45,7 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
             return false;
         }
 
-        public virtual void LoadImage([CanBeNull] string sourceUrl, [CanBeNull] string fileUrl,
+        public virtual void LoadImage([CanBeNull] string sourceUrl, [CanBeNull] string fileUrl, TransitionType transition,
             bool shouldPushHistory = false)
         {
         }
