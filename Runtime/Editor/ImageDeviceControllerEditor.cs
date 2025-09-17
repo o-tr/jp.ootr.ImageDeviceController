@@ -3,9 +3,12 @@ using System.Linq;
 using jp.ootr.common;
 using jp.ootr.common.Editor;
 using UnityEditor;
+using UnityEditor.Build;
+using UnityEditor.Build.Reporting;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.SceneManagement;
 using VRC.SDKBase.Editor.BuildPipeline;
 
 namespace jp.ootr.ImageDeviceController.Editor
@@ -104,11 +107,22 @@ namespace jp.ootr.ImageDeviceController.Editor
 
         private static void PlayModeStateChanged(PlayModeStateChange state)
         {
-            if (state == PlayModeStateChange.EnteredEditMode)
+            if (state == PlayModeStateChange.EnteredPlayMode)
             {
                 var scripts = ComponentUtils.GetAllComponents<ImageDeviceController>();
                 foreach (var script in scripts) ImageDeviceControllerUtils.ValidateDeviceList(script);
             }
+        }
+    }
+
+    public class DeviceListValidator__ImageDeviceController : IProcessSceneWithReport
+    {
+        public int callbackOrder => 0;
+
+        public void OnProcessScene(Scene scene, BuildReport report)
+        {
+            var scripts = ComponentUtils.GetAllComponents<ImageDeviceController>();
+            foreach (var script in scripts) ImageDeviceControllerUtils.ValidateDeviceList(script);
         }
     }
 
@@ -118,8 +132,6 @@ namespace jp.ootr.ImageDeviceController.Editor
 
         public bool OnBuildRequested(VRCSDKRequestedBuildType requestedBuildType)
         {
-            var scripts = ComponentUtils.GetAllComponents<ImageDeviceController>();
-            foreach (var script in scripts) ImageDeviceControllerUtils.ValidateDeviceList(script);
             return true;
         }
     }
