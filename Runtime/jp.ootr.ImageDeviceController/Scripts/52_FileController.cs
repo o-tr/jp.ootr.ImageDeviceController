@@ -6,20 +6,20 @@ namespace jp.ootr.ImageDeviceController
     public class FileController : SourceController
     {
         private readonly string[] _fileControllerPrefixes = { "FileController" };
-        
+
         private string[] _loadedFileUrls = new string[0];
-        
+
         private string[] _loadingFileSourceUrls = new string[0];
         private string[] _loadingFileUrls = new string[0];
         private CommonDevice.CommonDevice[][] _loadingFileDevices = new CommonDevice.CommonDevice[0][];
         private string[][] _loadingFileDeviceChannels = new string[0][];
-        
+
         private string[] _loadedFileQueueUrls = new string[0];
         private string[] _loadedFileQueueFileNames = new string[0];
         private string[] _loadedFileQueueChannels = new string[0];
         private CommonDevice.CommonDevice[] _loadedFileQueueDevices = new CommonDevice.CommonDevice[0];
         private int[] _loadedFileQueueFrameCounts = new int[0];
-        
+
         public bool LoadFile(CommonDevice.CommonDevice self, string sourceUrl, string fileUrl, int priority = 1, string channel = null)
         {
             if (self == null || fileUrl == null)
@@ -27,7 +27,7 @@ namespace jp.ootr.ImageDeviceController
                 ConsoleDebug("LoadFile called with null self or fileUrl", _fileControllerPrefixes);
                 return false;
             }
-            
+
             if (!fileUrl.StartsWith(PROTOCOL_EIA))
             {
                 _loadedFileQueueUrls = _loadedFileQueueUrls.Append(sourceUrl);
@@ -38,7 +38,7 @@ namespace jp.ootr.ImageDeviceController
                 SendCustomEventDelayedFrames(nameof(SendLoadedFileNotification), 1);
                 return true;
             }
-            
+
             if (_loadedFileUrls.Has(fileUrl))
             {
                 ConsoleDebug($"File already loaded: {fileUrl}", _fileControllerPrefixes);
@@ -50,7 +50,7 @@ namespace jp.ootr.ImageDeviceController
                 SendCustomEventDelayedFrames(nameof(SendLoadedFileNotification), 1);
                 return true;
             }
-            
+
             if (_loadingFileUrls.Has(fileUrl, out var loadingIndex))
             {
                 ConsoleDebug($"File already loading: {fileUrl}, devices: {_loadingFileDevices[loadingIndex].Length}", _fileControllerPrefixes);
@@ -59,7 +59,7 @@ namespace jp.ootr.ImageDeviceController
                 EIAIncreaseFilePriority(sourceUrl, fileUrl, priority);
                 return true;
             }
-            
+
             ConsoleDebug($"Loading file: {fileUrl}, devices: 1", _fileControllerPrefixes);
             _loadingFileSourceUrls = _loadingFileSourceUrls.Append(sourceUrl);
             _loadingFileUrls = _loadingFileUrls.Append(fileUrl);
@@ -69,7 +69,7 @@ namespace jp.ootr.ImageDeviceController
             EIALoadFile(sourceUrl, fileUrl, priority);
             return true;
         }
-        
+
         public void SendLoadedFileNotification()
         {
             ConsoleWarn($"[FileController] SendLoadedFileNotification called, frame: {Time.frameCount}, queue length: {_loadedFileQueueUrls.Length}", _fileControllerPrefixes);
@@ -117,7 +117,7 @@ namespace jp.ootr.ImageDeviceController
         {
             if (fileUrl == null || !_loadingFileUrls.Has(fileUrl, out var loadingIndex))
             {
-                ConsoleDebug($"OnFileLoadError called with null or unknown fileUrl: {fileUrl}", _fileControllerPrefixes);   
+                ConsoleDebug($"OnFileLoadError called with null or unknown fileUrl: {fileUrl}", _fileControllerPrefixes);
                 return;
             }
             ConsoleDebug($"File load error: {fileUrl}, devices: {_loadingFileDevices[loadingIndex].Length}", _fileControllerPrefixes);

@@ -14,10 +14,11 @@ namespace jp.ootr.ImageDeviceController
     {
         [SerializeField] private UdonZip.UdonZip zlUdonZip;
 
-        [SerializeField] [Range(1024, 1024000)]
+        [SerializeField]
+        [Range(1024, 1024000)]
         protected internal int zlPartLength = 102400;
 
-        [SerializeField] [Range(1, 100)] protected internal int zlDelayFrames = 1;
+        [SerializeField][Range(1, 100)] protected internal int zlDelayFrames = 1;
 
         private readonly string[] _zipLoaderPrefixes = { "ZipLoader" };
         private int _zlDecodedBytes;
@@ -182,15 +183,15 @@ namespace jp.ootr.ImageDeviceController
                 for (int i = 0; i < rects.Count; i++)
                 {
                     if (!rects.TryGetValue(i, TokenType.DataDictionary, out var rect)) continue;
-                    if (rect.DataDictionary.TryGetRectMetadata(out var baseX, out var baseY, out var w, out var h, out var rectPath) != ParseResult.Success)continue;
+                    if (rect.DataDictionary.TryGetRectMetadata(out var baseX, out var baseY, out var w, out var h, out var rectPath) != ParseResult.Success) continue;
                     var rectFile = zlUdonZip.GetFile(_zlObject, rectPath);
                     var rectBytes = zlUdonZip.GetFileData(rectFile);
-                    for(var y = 0; y < h; y++)
+                    for (var y = 0; y < h; y++)
                     {
                         Array.Copy(rectBytes, y * w * bytePerPixel, baseImage, (baseY + y) * width * bytePerPixel + baseX * bytePerPixel, w * bytePerPixel);
-                    }                    
+                    }
                 }
-                
+
                 return baseImage;
             }
             var imageFile = zlUdonZip.GetFile(_zlObject, path);

@@ -10,25 +10,26 @@ using VRC.Udon.Common.Enums;
 
 namespace jp.ootr.ImageDeviceController
 {
-    public class EiaSourceLoader : ZipSourceLoader {
+    public class EiaSourceLoader : ZipSourceLoader
+    {
         private readonly string[] _eiaSourceLoaderPrefixes = { "EIASourceLoader" };
         [SerializeField] protected UdonLZ4.UdonLZ4 udonLZ4;
-        
+
         protected const int EiaDelayFrames = 1;
-        
+
         private string _eiaSourceUrl;
         private DataDictionary _eiaCurrentManifest;
         private DataList _eiaCurrentFiles;
         private byte[] _eiaCurrentContent;
         private int _eiaCurrentContentBufferStart;
         private int _eiaCurrentIndex;
-        
+
         private string[] _eiaCurrentFileUrls = new string[0];
-        
+
         protected string[] EiaParsedFileUrls = new string[0];
         protected byte[][] EiaParsedFileBuffers = new byte[0][];
         protected DataDictionary[] EiaParsedFileManifests = new DataDictionary[0];
-        
+
         protected void OnEIALoadSuccess(IVRCStringDownload result)
         {
             if (udonLZ4 == null)
@@ -44,13 +45,13 @@ namespace jp.ootr.ImageDeviceController
                 ConsoleError("invalid EIA file.", _eiaSourceLoaderPrefixes);
                 return;
             }
-            
+
             _eiaSourceUrl = result.Url.ToString();
             var content = result.ResultBytes;
 
             var eiaManifestStart = Array.IndexOf(content, (byte)'^');
             var eiaManifestEnd = Array.IndexOf(content, (byte)'$');
-            
+
             if (eiaManifestStart < 0 || eiaManifestEnd < 0 || eiaManifestStart > eiaManifestEnd)
             {
                 ConsoleError("Invalid EIA manifest format", _eiaSourceLoaderPrefixes);
@@ -66,7 +67,7 @@ namespace jp.ootr.ImageDeviceController
                 EIAOnLoadError(_eiaSourceUrl, LoadError.InvalidEIAFile);
                 return;
             }
-            
+
             _eiaCurrentManifest = eiaManifest.DataDictionary;
             if (!_eiaCurrentManifest.TryGetValue("i", TokenType.DataList, out var eiaCurrentFiles))
             {
@@ -74,14 +75,14 @@ namespace jp.ootr.ImageDeviceController
                 EIAOnLoadError(_eiaSourceUrl, LoadError.InvalidEIAFile);
                 return;
             }
-            
+
             _eiaCurrentFileUrls = new string[0];
             _eiaCurrentContent = content;
             _eiaCurrentContentBufferStart = eiaManifestEnd + 1;
             _eiaCurrentFiles = eiaCurrentFiles.DataList;
             _eiaCurrentIndex = 0;
             ConsoleLog($"success to load EIA manifest: {_eiaCurrentManifest["i"].DataList.Count} files", _eiaSourceLoaderPrefixes);
-            
+
             SendCustomEventDelayedFrames(nameof(EIAParseManifest), EiaDelayFrames, EventTiming.LateUpdate);
         }
 
@@ -100,7 +101,7 @@ namespace jp.ootr.ImageDeviceController
                 EIAOnLoadError(_eiaSourceUrl, LoadError.InvalidEIAFile);
                 return;
             }
-            
+
             var fileUrl = EIABuildFileName(_eiaSourceUrl, fileName.String);
 
             if (fileType.String == "m")
@@ -108,7 +109,7 @@ namespace jp.ootr.ImageDeviceController
                 EIAParseMasterImage(fileManifest.DataDictionary, fileUrl, fileName.String, (int)fileWidth.Double, (int)fileHeight.Double);
                 return;
             }
-            
+
             EIAParseCroppedImage(fileManifest.DataDictionary, fileUrl, fileName.String, (int)fileWidth.Double, (int)fileHeight.Double);
         }
 
@@ -128,9 +129,9 @@ namespace jp.ootr.ImageDeviceController
 
             _eiaCurrentFileUrls = _eiaCurrentFileUrls.Append(fileUrl);
             EiaParsedFileUrls = EiaParsedFileUrls.Append(fileUrl);
-            EiaParsedFileBuffers = EiaParsedFileBuffers.Append(_eiaCurrentContent.Slice(_eiaCurrentContentBufferStart+fileBufferStart, fileBufferLength));
+            EiaParsedFileBuffers = EiaParsedFileBuffers.Append(_eiaCurrentContent.Slice(_eiaCurrentContentBufferStart + fileBufferStart, fileBufferLength));
             EiaParsedFileManifests = EiaParsedFileManifests.Append(fileManifest);
-                
+
             ConsoleLog($"EIA file manifest: {fileName} ({fileWidth}x{fileHeight})", _eiaSourceLoaderPrefixes);
             _eiaCurrentIndex++;
             if (_eiaCurrentIndex >= _eiaCurrentFiles.Count)
@@ -139,7 +140,7 @@ namespace jp.ootr.ImageDeviceController
                 EIAOnLoadSuccess(_eiaSourceUrl, _eiaCurrentFileUrls);
                 return;
             }
-                
+
             SendCustomEventDelayedFrames(nameof(EIAParseManifest), EiaDelayFrames, EventTiming.LateUpdate);
         }
 
@@ -164,11 +165,11 @@ namespace jp.ootr.ImageDeviceController
                 EIAOnLoadError(_eiaSourceUrl, LoadError.InvalidEIAFile);
                 return;
             }
-            
+
             var fileBufferFirstStart = (int)fileBufferFirstStartToken.Double;
             var fileBufferLastEnd = (int)fileBufferLastStartToken.Double + (int)fileBufferLastLengthToken.Double;
             var fileBufferLength = fileBufferLastEnd - fileBufferFirstStart;
-            
+
             var fileStart = (int)fileStartToken.Double;
             var fileLength = (int)fileLengthToken.Double;
 
@@ -192,14 +193,14 @@ namespace jp.ootr.ImageDeviceController
                 }
                 rect.DataDictionary.SetValue("s", rectStart - fileBufferFirstStart);
             }
-            
+
             fileManifest.SetValue("b", EIABuildFileName(_eiaSourceUrl, basePathToken.String));
-            
+
             _eiaCurrentFileUrls = _eiaCurrentFileUrls.Append(fileUrl);
             EiaParsedFileUrls = EiaParsedFileUrls.Append(fileUrl);
             EiaParsedFileBuffers = EiaParsedFileBuffers.Append(_eiaCurrentContent.Slice(_eiaCurrentContentBufferStart + fileStart, fileLength));
             EiaParsedFileManifests = EiaParsedFileManifests.Append(fileManifest);
-            
+
             ConsoleLog($"EIA file manifest: {fileName} ({fileWidth}x{fileHeight}) with {fileRectToken.DataList.Count} rects", _eiaSourceLoaderPrefixes);
             _eiaCurrentIndex++;
             if (_eiaCurrentIndex >= _eiaCurrentFiles.Count)
@@ -215,7 +216,7 @@ namespace jp.ootr.ImageDeviceController
         {
             return $"{PROTOCOL_EIA}://{sourceUrl.Substring(8)}/{fileName}";
         }
-        
+
         protected virtual void EIAOnLoadProgress([CanBeNull] string sourceUrl, float progress)
         {
             ConsoleError("EIAOnLoadProgress should not be called from base class", _eiaSourceLoaderPrefixes);

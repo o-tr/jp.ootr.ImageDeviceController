@@ -16,7 +16,7 @@ namespace jp.ootr.ImageDeviceController
         private const float VlDelaySeconds = 0.05f;
         [SerializeField] protected VRCAVProVideoPlayer vlVideoPlayer;
         [SerializeField] protected MeshRenderer vlVideoRenderer;
-        [SerializeField] [Range(1, 60)] protected internal float vlLoadTimeout = 5;
+        [SerializeField][Range(1, 60)] protected internal float vlLoadTimeout = 5;
 
         private readonly string[] _videoLoaderPrefixes = { "VideoLoader" };
 
@@ -198,10 +198,10 @@ namespace jp.ootr.ImageDeviceController
 
             _vlTextureHeight = _vlMainTexture.height;
             _vlTextureWidth = _vlMainTexture.width;
-            
+
             //HACK: クエスト以外は縦が反転しているので補正
             var flipVertical = CurrentPlatform != Platform.Android;
-            
+
             CopyToRenderTexture(_vlMainTexture, false, flipVertical);
         }
 
