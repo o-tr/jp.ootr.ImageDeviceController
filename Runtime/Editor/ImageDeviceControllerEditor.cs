@@ -83,17 +83,40 @@ namespace jp.ootr.ImageDeviceController.Editor
                 if (device == null) continue;
                 var so = new SerializedObject(device);
                 so.Update();
-                so.FindProperty(nameof(CommonDevice.CommonDevice.controller)).objectReferenceValue = script;
-                var property = so.FindProperty(nameof(CommonDevice.CommonDevice.devices));
-                property.arraySize = script.devices.Length;
-                for (var i = 0; i < script.devices.Length; i++)
-                    property.GetArrayElementAtIndex(i).objectReferenceValue = script.devices[i];
 
-                so.ApplyModifiedProperties();
-                EditorUtility.SetDirty(device);
+                var controllerProp = so.FindProperty(nameof(CommonDevice.CommonDevice.controller));
+                var devicesProp = so.FindProperty(nameof(CommonDevice.CommonDevice.devices));
+
+                var controllerChanged = controllerProp.objectReferenceValue != script;
+
+                var devicesChanged = devicesProp == null || devicesProp.arraySize != script.devices.Length;
+                if (!devicesChanged && devicesProp != null)
+                {
+                    for (var i = 0; i < script.devices.Length; i++)
+                    {
+                        var current = devicesProp.GetArrayElementAtIndex(i).objectReferenceValue;
+                        if (current != script.devices[i])
+                        {
+                            devicesChanged = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (controllerChanged || devicesChanged)
+                {
+                    controllerProp.objectReferenceValue = script;
+                    if (devicesProp != null)
+                    {
+                        devicesProp.arraySize = script.devices.Length;
+                        for (var i = 0; i < script.devices.Length; i++)
+                            devicesProp.GetArrayElementAtIndex(i).objectReferenceValue = script.devices[i];
+                    }
+
+                    so.ApplyModifiedProperties();
+                    EditorUtility.SetDirty(device);
+                }
             }
-
-            EditorUtility.SetDirty(script);
         }
     }
 
