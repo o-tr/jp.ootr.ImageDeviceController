@@ -6,7 +6,7 @@ namespace jp.ootr.ImageDeviceController
     {
         [CanBeNull]
         public static CommonDevice.CommonDevice FindByUuid(
-            [CanBeNull] [ItemCanBeNull] this CommonDevice.CommonDevice[] devices, string uuid)
+            [CanBeNull][ItemCanBeNull] this CommonDevice.CommonDevice[] devices, string uuid)
         {
             if (devices == null) return null;
             foreach (var device in devices)

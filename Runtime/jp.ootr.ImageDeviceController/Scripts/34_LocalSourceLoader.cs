@@ -8,7 +8,7 @@ namespace jp.ootr.ImageDeviceController
     public class LocalSourceLoader : ImageSourceLoader
     {
         [SerializeField] protected Texture2D[] localTextures;
-        [FormerlySerializedAs("localTextureUrls")] [SerializeField] protected string[] localTextureSourceUrls;
+        [FormerlySerializedAs("localTextureUrls")][SerializeField] protected string[] localTextureSourceUrls;
 
         private readonly string[] _localLoaderPrefixes = { "LocalLoader" };
 

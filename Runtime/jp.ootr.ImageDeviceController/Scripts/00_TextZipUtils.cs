@@ -166,12 +166,12 @@ namespace jp.ootr.ImageDeviceController
                 rects = null;
                 return ParseResult.InvalidValueType;
             }
-            
+
             basePath = basePathToken.String;
             rects = rectsToken.DataList;
             return ParseResult.Success;
         }
-        
+
         public static ParseResult TryGetRectMetadata([CanBeNull] this DataDictionary rect, out int x, out int y,
             out int width, out int height, out string path)
         {

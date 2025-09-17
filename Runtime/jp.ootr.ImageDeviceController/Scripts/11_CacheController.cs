@@ -28,7 +28,7 @@ namespace jp.ootr.ImageDeviceController
         private byte[][] _cacheBinary = new byte[0][]; //DataDictionaryにbyte[]が入らないので別で取り扱う
         private string[] _cacheBinaryNames = new string[0];
         private Cache CacheFiles => (Cache)_oCacheFiles;
-        
+
         private string[] CcGarbageCollectionQueue = new string[0];
         private int[] CcGarbageCollectionQueueFrameCounts = new int[0];
 
@@ -56,7 +56,7 @@ namespace jp.ootr.ImageDeviceController
             if (texture == null) return TryRegenerateTexture(file);
             return texture;
         }
-        
+
         [CanBeNull]
         public virtual byte[] CcGetBinary([CanBeNull] string sourceUrl, [CanBeNull] string fileUrl)
         {
@@ -122,11 +122,11 @@ namespace jp.ootr.ImageDeviceController
                 ConsoleInfo($"[CacheController] source not used: {sourceUrl}, queue for garbage collection", _cacheControllerPrefixes);
                 CcGarbageCollectionQueue = CcGarbageCollectionQueue.Append(sourceUrl);
                 CcGarbageCollectionQueueFrameCounts = CcGarbageCollectionQueueFrameCounts.Append(Time.frameCount);
-                
+
                 SendCustomEventDelayedFrames(nameof(CcGarbageCollect), 100);
                 return;
             }
-            
+
             var fileCount = file.DecreaseUsedCount();
             if (fileCount < 1)
             {
@@ -213,7 +213,7 @@ namespace jp.ootr.ImageDeviceController
         protected virtual void CcOnRelease([CanBeNull] string source)
         {
         }
-        
+
         [CanBeNull]
         public virtual string[] CcGetFileNames([CanBeNull] string sourceName)
         {
