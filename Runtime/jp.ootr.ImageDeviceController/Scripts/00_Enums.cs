@@ -19,7 +19,7 @@ namespace jp.ootr.ImageDeviceController
         SlideRight,
         FadeIn,
     }
-    
+
     public enum LoadError
     {
         Unknown,

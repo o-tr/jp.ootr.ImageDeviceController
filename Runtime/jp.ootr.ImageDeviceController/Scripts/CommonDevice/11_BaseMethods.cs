@@ -49,7 +49,7 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
         {
             LoadImage(sourceUrl, fileUrl, TransitionType.None, shouldPushHistory);
         }
-        
+
         public virtual void LoadImage([CanBeNull] string sourceUrl, [CanBeNull] string fileUrl, TransitionType transitionType, bool shouldPushHistory = false)
         {
         }

@@ -32,7 +32,7 @@ namespace jp.ootr.ImageDeviceController
 
         private string[] _eiaStoredSourceUrls = new string[0];
         private DataDictionary[] _eiaStoredManifest = new DataDictionary[0];
-        
+
         public DataDictionary EiaGetStoredManifest(string sourceUrl)
         {
             if (!_eiaStoredSourceUrls.Has(sourceUrl, out var index)) return null;
@@ -91,7 +91,7 @@ namespace jp.ootr.ImageDeviceController
             _eiaCurrentFiles = eiaCurrentFiles.DataList;
             _eiaCurrentIndex = 0;
             ConsoleLog($"success to load EIA manifest: {_eiaCurrentManifest["i"].DataList.Count} files", _eiaSourceLoaderPrefixes);
-            
+
             _eiaStoredSourceUrls = _eiaStoredSourceUrls.Append(_eiaSourceUrl);
             _eiaStoredManifest = _eiaStoredManifest.Append(_eiaCurrentManifest);
 
