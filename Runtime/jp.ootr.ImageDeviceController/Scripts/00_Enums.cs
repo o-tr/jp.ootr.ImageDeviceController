@@ -43,14 +43,14 @@ namespace jp.ootr.ImageDeviceController
         PlayerError,
         RateLimited,
         InvalidOptions,
-        
+
         //EIALoader
         MissingUdonLZ4,
         InvalidEIAFile,
-        
+
         //StringLoader
         UnknownFileFormat,
-        
+
         // FileLoadError
         InvalidFileURL,
 
@@ -106,7 +106,7 @@ namespace jp.ootr.ImageDeviceController
         Video,
         Local,
         Unknown,
-        
+
         [Obsolete("Use StringKind instead", false)]
         TextZip = 1,
     }
@@ -152,7 +152,7 @@ namespace jp.ootr.ImageDeviceController
                     return "VRC:PlayerError";
                 case LoadError.RateLimited:
                     return "VRC:RateLimited";
-                
+
                 case LoadError.InvalidManifest:
                     return "ootr:UdonZip:InvalidManifest";
                 case LoadError.InvalidMetadata:
@@ -161,7 +161,7 @@ namespace jp.ootr.ImageDeviceController
                     return "ootr:UdonZip:UnsupportedManifestVersion";
                 case LoadError.UnsupportedFeature:
                     return "ootr:UdonZip:UnsupportedFeature";
-                
+
                 case LoadError.MissingVRCAVProVideoPlayer:
                     return "ootr:Video:MissingVRCAVProVideoPlayer";
                 case LoadError.LiveVideoNotSupported:
@@ -173,10 +173,10 @@ namespace jp.ootr.ImageDeviceController
                     return "ootr:EIA:MissingUdonLZ4";
                 case LoadError.InvalidEIAFile:
                     return "ootr:EIA:InvalidEIAFile";
-                
+
                 case LoadError.UnknownFileFormat:
                     return "ootr:String:UnknownFileFormat";
-                
+
                 case LoadError.InvalidFileURL:
                     return "ootr:Local:InvalidFileURL";
 

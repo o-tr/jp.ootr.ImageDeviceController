@@ -12,26 +12,27 @@ namespace jp.ootr.ImageDeviceController
         private bool _slIsLoading;
         private string[] _slQueuedSourceUrls = new string[0];
         private string _slCurrentSourceUrl = string.Empty;
-        
+
         protected void SlLoadString([CanBeNull] string sourceUrl)
         {
-            if (string.IsNullOrEmpty(sourceUrl)) {
+            if (string.IsNullOrEmpty(sourceUrl))
+            {
                 return;
             }
 
             _slQueuedSourceUrls = _slQueuedSourceUrls.Append(sourceUrl);
-            
+
             if (_slIsLoading)
             {
                 ConsoleDebug($"Loading already in progress, queuing {sourceUrl}", _stringLoaderPrefixes);
                 return;
             }
-            
+
             ConsoleDebug($"Loading {sourceUrl}", _stringLoaderPrefixes);
             _slIsLoading = true;
             SlLoadNext();
         }
-        
+
         public void SlLoadNext()
         {
             if (_slQueuedSourceUrls.Length == 0)
@@ -48,7 +49,7 @@ namespace jp.ootr.ImageDeviceController
                 ConsoleDebug("no more URLs to load", _stringLoaderPrefixes);
                 return;
             }
-            
+
             if (string.IsNullOrEmpty(sourceUrl))
             {
                 ConsoleDebug("Empty URL, skipping", _stringLoaderPrefixes);
@@ -64,7 +65,7 @@ namespace jp.ootr.ImageDeviceController
                 SendCustomEvent(nameof(SlLoadNext));
                 return;
             }
-            
+
             _slCurrentSourceUrl = sourceUrl;
             VRCStringDownloader.LoadUrl(source, (IUdonEventReceiver)this);
         }
@@ -88,7 +89,7 @@ namespace jp.ootr.ImageDeviceController
                 OnEIALoadSuccess(result);
                 return;
             }
-            
+
             ConsoleError($"Invalid file format from {result.Url}", _stringLoaderPrefixes);
             OnSourceLoadError(_slCurrentSourceUrl, LoadError.UnknownFileFormat);
             SendCustomEvent(nameof(SlLoadNext));
@@ -106,30 +107,30 @@ namespace jp.ootr.ImageDeviceController
         {
             OnSourceLoadProgress(sourceUrl, progress);
         }
-        
+
         protected sealed override void ZlOnLoadSuccess(string sourceUrl, string[] fileUrls)
         {
             OnSourceLoadSuccess(sourceUrl, fileUrls);
             SendCustomEvent(nameof(SlLoadNext));
         }
-        
+
         protected sealed override void ZlOnLoadError(string sourceUrl, LoadError error)
         {
             OnSourceLoadError(sourceUrl, error);
             SendCustomEvent(nameof(SlLoadNext));
         }
-        
+
         protected sealed override void EIAOnLoadProgress(string sourceUrl, float progress)
         {
             OnSourceLoadProgress(sourceUrl, progress);
         }
-        
+
         protected sealed override void EIAOnLoadSuccess(string sourceUrl, string[] fileUrls)
         {
             OnSourceLoadSuccess(sourceUrl, fileUrls);
             SendCustomEvent(nameof(SlLoadNext));
         }
-        
+
         protected sealed override void EIAOnLoadError(string sourceUrl, LoadError error)
         {
             OnSourceLoadError(sourceUrl, error);

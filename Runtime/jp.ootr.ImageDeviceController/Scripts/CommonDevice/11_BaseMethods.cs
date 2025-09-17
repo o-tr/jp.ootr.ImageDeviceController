@@ -12,9 +12,9 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
         [SerializeField] protected Animator animator;
         [SerializeField] public CommonDevice[] devices;
         [SerializeField] protected internal DeviceController controller;
-        [SerializeField] [CanBeNull] internal RawImage splashImage;
-        [SerializeField] [CanBeNull] internal AspectRatioFitter splashImageFitter;
-        [SerializeField] [CanBeNull] internal Texture2D splashImageTexture;
+        [SerializeField][CanBeNull] internal RawImage splashImage;
+        [SerializeField][CanBeNull] internal AspectRatioFitter splashImageFitter;
+        [SerializeField][CanBeNull] internal Texture2D splashImageTexture;
 
         public string deviceUuid;
 
@@ -54,9 +54,9 @@ namespace jp.ootr.ImageDeviceController.CommonDevice
         {
         }
 
-        public virtual void OnFileLoadSuccess([CanBeNull] string source, [CanBeNull] string fileUrl, string channel) {}
-        
-        public virtual void OnFileLoadError([CanBeNull] string source, [CanBeNull] string fileUrl, string channel, LoadError error) {}
+        public virtual void OnFileLoadSuccess([CanBeNull] string source, [CanBeNull] string fileUrl, string channel) { }
+
+        public virtual void OnFileLoadError([CanBeNull] string source, [CanBeNull] string fileUrl, string channel, LoadError error) { }
 
         protected override void ConsoleDebug(string message, string[] prefix = null)
         {

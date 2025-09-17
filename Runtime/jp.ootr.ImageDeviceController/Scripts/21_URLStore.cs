@@ -9,12 +9,12 @@ namespace jp.ootr.ImageDeviceController
 {
     public class URLStore : CacheController
     {
-        [ItemCanBeNull] [SerializeField] protected VRCUrl[] usUrls = new VRCUrl[0];
-        [ItemCanBeNull] [SerializeField] protected string[] usUrlStrings = new string[0];
+        [ItemCanBeNull][SerializeField] protected VRCUrl[] usUrls = new VRCUrl[0];
+        [ItemCanBeNull][SerializeField] protected string[] usUrlStrings = new string[0];
 
         private readonly string[] _urlStorePrefixes = { "URLStore" };
         [UdonSynced] private URLStoreSyncAction _usSyncAction = URLStoreSyncAction.None;
-        [ItemCanBeNull] [UdonSynced] private VRCUrl[] _usSyncUrl = new VRCUrl[0];
+        [ItemCanBeNull][UdonSynced] private VRCUrl[] _usSyncUrl = new VRCUrl[0];
 
         [CanBeNull]
         public VRCUrl UsGetUrl([CanBeNull] string url)

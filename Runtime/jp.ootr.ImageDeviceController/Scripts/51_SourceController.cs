@@ -12,7 +12,7 @@ namespace jp.ootr.ImageDeviceController
         private string[][] _loadedSourceFileNames = new string[0][];
         private CommonDevice.CommonDevice[][] _loadingDevices = new CommonDevice.CommonDevice[0][];
         private string[] _loadingSourceUrls = new string[0];
-        
+
         private string[] _loadedSourceQueueUrls = new string[0];
         private string[][] _loadedSourceQueueFileNames = new string[0][];
         private CommonDevice.CommonDevice[] _loadedSourceQueueDevices = new CommonDevice.CommonDevice[0];
@@ -40,7 +40,7 @@ namespace jp.ootr.ImageDeviceController
                 _loadingDevices[loadingIndex] = _loadingDevices[loadingIndex].Append(self);
                 return true;
             }
-            
+
             if (_loadedSourceUrls.Has(sourceUrl, out var loadedIndex))
             {
                 ConsoleDebug($"already loaded. read from loaded source. {sourceUrl}",
@@ -53,7 +53,7 @@ namespace jp.ootr.ImageDeviceController
                 SendCustomEventDelayedFrames(nameof(SendLoadedSourceNotification), 1);
                 return true;
             }
-            
+
             if (CcHasCache(sourceUrl))
             {
                 var files = CcGetCache(sourceUrl);
@@ -90,7 +90,7 @@ namespace jp.ootr.ImageDeviceController
 
             return true;
         }
-        
+
         public virtual void SendLoadedSourceNotification()
         {
             if (_loadedSourceQueueUrls.Length == 0) return;
@@ -106,7 +106,7 @@ namespace jp.ootr.ImageDeviceController
                 device.OnSourceLoadSuccess(sourceUrl, fileNames);
             }
             if (_loadedSourceQueueUrls.Length == 0) return;
-            
+
             SendCustomEventDelayedFrames(nameof(SendLoadedSourceNotification), 1);
         }
 

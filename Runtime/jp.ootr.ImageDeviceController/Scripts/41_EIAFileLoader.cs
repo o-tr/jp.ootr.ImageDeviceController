@@ -6,21 +6,22 @@ using VRC.SDK3.Data;
 
 namespace jp.ootr.ImageDeviceController
 {
-    public class EIAFileLoader : LocalSourceLoader {
+    public class EIAFileLoader : LocalSourceLoader
+    {
         private readonly string[] _eiaFileLoaderPrefixes = { "EIAFileLoader" };
-        
+
         private string[] _eiaQueuedSourceUrls = new string[0];
         private string[] _eiaQueuedFileUrls = new string[0];
         private int[] _eiaQueuedFilePriorities = new int[0];
-        
+
         private int _eiaCurrentMaxPriority = 0;
-        
+
         private bool _eiaFileIsLoading = false;
-        
+
         private string _eiaCurrentSourceUrl = string.Empty;
         private string _eiaCurrentFileUrl = string.Empty;
         private int _eiaCurrentFileIndex = -1;
-        
+
         private byte[] _eiaCurrentDecodedData = null;
         private DataDictionary _eiaCurrentFile = null;
         private int _eiaCurrentFileBytesPerPixel = 0;
@@ -31,11 +32,11 @@ namespace jp.ootr.ImageDeviceController
         private byte[] _eiaCurrentFileBinary = null;
         private string _eiaCurrentFileBaseUrl = string.Empty;
         private TextureFormat _eiaCurrentFileFormat = TextureFormat.RGB24;
-        
+
         private float _eiaProcessStartTime = 0;
-        
+
         private const int _eiaProcessIntervalFrame = 1;
-        
+
         private void EIAClear()
         {
             _eiaCurrentSourceUrl = string.Empty;
@@ -52,9 +53,11 @@ namespace jp.ootr.ImageDeviceController
             _eiaCurrentFileBaseUrl = string.Empty;
             _eiaCurrentFileFormat = TextureFormat.RGB24;
         }
-        
-        protected void EIALoadFile([CanBeNull] string sourceUrl, [CanBeNull] string fileUrl, int priority) {
-            if (string.IsNullOrEmpty(fileUrl) || string.IsNullOrEmpty(sourceUrl)) {
+
+        protected void EIALoadFile([CanBeNull] string sourceUrl, [CanBeNull] string fileUrl, int priority)
+        {
+            if (string.IsNullOrEmpty(fileUrl) || string.IsNullOrEmpty(sourceUrl))
+            {
                 return;
             }
 
@@ -99,22 +102,22 @@ namespace jp.ootr.ImageDeviceController
                 _eiaQueuedFilePriorities[fileIndex] += priority;
                 return;
             }
-            
+
             _eiaQueuedSourceUrls = _eiaQueuedSourceUrls.Append(sourceUrl);
             _eiaQueuedFileUrls = _eiaQueuedFileUrls.Append(fileUrl);
             _eiaQueuedFilePriorities = _eiaQueuedFilePriorities.Append(priority);
-            
+
             if (_eiaFileIsLoading)
             {
                 ConsoleDebug($"Loading already in progress, queuing {fileUrl}", _eiaFileLoaderPrefixes);
                 return;
             }
-            
+
             ConsoleDebug($"Loading {fileUrl}", _eiaFileLoaderPrefixes);
             _eiaFileIsLoading = true;
             EIALoadFIleNext();
         }
-        
+
         protected void EIAIncreaseFilePriority([CanBeNull] string sourceUrl, [CanBeNull] string fileUrl, int priority)
         {
             if (string.IsNullOrEmpty(fileUrl)) return;
@@ -129,8 +132,8 @@ namespace jp.ootr.ImageDeviceController
                 ConsoleDebug($"File not found in queue: {fileUrl}", _eiaFileLoaderPrefixes);
                 return;
             }
-            
-            
+
+
             var toLoadUrls = new string[0];
 
             while (
@@ -142,7 +145,7 @@ namespace jp.ootr.ImageDeviceController
             {
                 toLoadUrls = toLoadUrls.Append(baseUrl.String);
             }
-            
+
             for (int i = toLoadUrls.Length - 1; i >= 0; i--)
             {
                 if (_eiaQueuedFileUrls.Has(toLoadUrls[i], out var toLoadIndex))
@@ -156,13 +159,13 @@ namespace jp.ootr.ImageDeviceController
             }
             _eiaQueuedFilePriorities[queueIndex] += priority;
         }
-        
+
         private int EIAGetHeightPriorityIndex()
         {
             if (_eiaQueuedFilePriorities.Length == 0) return -1;
             var maxPriority = Int32.MinValue;
             var maxPriorityIndex = -1;
-            
+
             for (var i = 0; i < _eiaQueuedFilePriorities.Length; i++)
             {
                 if (_eiaQueuedFilePriorities[i] <= maxPriority) continue;
@@ -211,9 +214,9 @@ namespace jp.ootr.ImageDeviceController
                 SendCustomEvent(nameof(EIALoadFIleNext));
                 return;
             }
-            
+
             ConsoleInfo($"Loading file: {_eiaCurrentFileUrl} from source: {_eiaCurrentSourceUrl} priority: {priority}", _eiaFileLoaderPrefixes);
-            
+
             var file = EiaParsedFileManifests[_eiaCurrentFileIndex];
             if (!file.TryGetValue("u", out var uncompressedToken) || (uncompressedToken.TokenType != TokenType.Double && uncompressedToken.TokenType != TokenType.Int))
             {
@@ -222,11 +225,11 @@ namespace jp.ootr.ImageDeviceController
                 SendCustomEvent(nameof(EIALoadFIleNext));
                 return;
             }
-            
+
             var uncompressedSize = uncompressedToken.TokenType == TokenType.Double ? (int)uncompressedToken.Double : uncompressedToken.Int;
-            
+
             ConsoleDebug($"Decompressing {_eiaCurrentFileUrl} compressed size: {EiaParsedFileBuffers[_eiaCurrentFileIndex].Length} uncompressed size: {uncompressedSize}", _eiaFileLoaderPrefixes);
-            
+
             udonLZ4.DecompressAsync(this, EiaParsedFileBuffers[_eiaCurrentFileIndex], uncompressedSize);
         }
 
@@ -250,7 +253,7 @@ namespace jp.ootr.ImageDeviceController
                 SendCustomEvent(nameof(EIALoadFIleNext));
                 return;
             }
-            
+
             _eiaCurrentDecodedData = udonLZ4.GetDecompressedData();
             _eiaCurrentFile = file;
 
@@ -262,7 +265,7 @@ namespace jp.ootr.ImageDeviceController
         {
             ConsoleDebug($"Failed to decode file: {_eiaCurrentFileUrl}", _eiaFileLoaderPrefixes);
             OnFileLoadError(_eiaCurrentFileUrl, LoadError.InvalidFileURL);
-            
+
             SendCustomEventDelayedSeconds(nameof(EIALoadFIleNext), 1f);
         }
 
@@ -275,7 +278,7 @@ namespace jp.ootr.ImageDeviceController
                 EIAOnGenerateImageBytesError();
                 return;
             }
-            
+
             if (type.String == "m")
             {
                 _eiaCurrentFileBinary = _eiaCurrentDecodedData;
@@ -296,7 +299,7 @@ namespace jp.ootr.ImageDeviceController
                 EIAOnGenerateImageBytesError();
                 return;
             }
-            
+
             _eiaCurrentFileWidth = (int)width.Double;
             _eiaCurrentFileHeight = (int)height.Double;
             _eiaCurrentFileRects = rects.DataList;
@@ -304,9 +307,9 @@ namespace jp.ootr.ImageDeviceController
             _eiaCurrentFileBaseUrl = baseUrl.String;
             _eiaCurrentFileBytesPerPixel = TextureFormat.RGB24.GetBytePerPixel();
 
-            
+
             ConsoleDebug($"EIAGenerateImageBytesAsyncInit: {Time.realtimeSinceStartup - _eiaProcessStartTime}", _eiaFileLoaderPrefixes);
-            SendCustomEventDelayedFrames(nameof(EIAGenerateImageBytesAsyncInitCopy),_eiaProcessIntervalFrame);
+            SendCustomEventDelayedFrames(nameof(EIAGenerateImageBytesAsyncInitCopy), _eiaProcessIntervalFrame);
         }
 
         public void EIAGenerateImageBytesAsyncMaster()
@@ -324,7 +327,7 @@ namespace jp.ootr.ImageDeviceController
             _eiaCurrentFileWidth = (int)width.Double;
             _eiaCurrentFileHeight = (int)height.Double;
             _eiaCurrentFileBytesPerPixel = TextureFormat.RGB24.GetBytePerPixel();
-            
+
             ConsoleDebug($"EIAGenerateImageBytesAsyncInit,EIAGenerateImageBytesAsyncMaster: {Time.realtimeSinceStartup - _eiaProcessStartTime}", _eiaFileLoaderPrefixes);
             EIAOnGenerateImageBytesSuccess();
         }
@@ -341,7 +344,7 @@ namespace jp.ootr.ImageDeviceController
             }
             _eiaCurrentFileBinary = new byte[_eiaCurrentFileWidth * _eiaCurrentFileHeight * _eiaCurrentFileBytesPerPixel];
             Array.Copy(sourceBinary, _eiaCurrentFileBinary, sourceBinary.Length);
-            
+
             ConsoleDebug($"EIAGenerateImageBytesAsyncInitCopy: {Time.realtimeSinceStartup - _eiaProcessStartTime}", _eiaFileLoaderPrefixes);
             SendCustomEventDelayedFrames(nameof(EIAGenerateImageBytesAsync), _eiaProcessIntervalFrame);
         }
@@ -370,12 +373,12 @@ namespace jp.ootr.ImageDeviceController
                 EIAOnGenerateImageBytesError();
                 return;
             }
-            
-            var baseX = baseXToken.TokenType == TokenType.Double ? (int) baseXToken.Double : baseXToken.Int;
-            var baseY = baseYToken.TokenType == TokenType.Double ? (int) baseYToken.Double : baseYToken.Int;
-            var rectWidth = rectWidthToken.TokenType == TokenType.Double ? (int) rectWidthToken.Double : rectWidthToken.Int;
-            var rectHeight = rectHeightToken.TokenType == TokenType.Double ? (int) rectHeightToken.Double : rectHeightToken.Int;
-            var start = startToken.TokenType == TokenType.Double ? (int) startToken.Double : startToken.Int;
+
+            var baseX = baseXToken.TokenType == TokenType.Double ? (int)baseXToken.Double : baseXToken.Int;
+            var baseY = baseYToken.TokenType == TokenType.Double ? (int)baseYToken.Double : baseYToken.Int;
+            var rectWidth = rectWidthToken.TokenType == TokenType.Double ? (int)rectWidthToken.Double : rectWidthToken.Int;
+            var rectHeight = rectHeightToken.TokenType == TokenType.Double ? (int)rectHeightToken.Double : rectHeightToken.Int;
+            var start = startToken.TokenType == TokenType.Double ? (int)startToken.Double : startToken.Int;
 
             var rectLineByteLength = rectWidth * _eiaCurrentFileBytesPerPixel;
             var imageLineByteLength = _eiaCurrentFileWidth * _eiaCurrentFileBytesPerPixel;
@@ -389,19 +392,19 @@ namespace jp.ootr.ImageDeviceController
                     rectLineByteLength
                 );
             }
-            
+
             _eiaCurrentFileRectsIndex++;
-            
+
             ConsoleDebug($"EIAGenerateImageBytesAsync: {Time.realtimeSinceStartup - _eiaProcessStartTime}", _eiaFileLoaderPrefixes);
             if (_eiaCurrentFileRectsIndex < _eiaCurrentFileRects.Count)
             {
                 SendCustomEventDelayedFrames(nameof(EIAGenerateImageBytesAsync), _eiaProcessIntervalFrame);
                 return;
             }
-            
+
             EIAOnGenerateImageBytesSuccess();
         }
-        
+
         private void EIAOnGenerateImageBytesError()
         {
             ConsoleDebug($"Failed to decode file: {_eiaCurrentFileUrl}", _eiaFileLoaderPrefixes);
@@ -417,17 +420,17 @@ namespace jp.ootr.ImageDeviceController
             var texture = new Texture2D(_eiaCurrentFileWidth, _eiaCurrentFileHeight, _eiaCurrentFileFormat, false);
             texture.LoadRawTextureData(_eiaCurrentFileBinary);
             texture.Apply();
-            
+
             CcSetTexture(_eiaCurrentSourceUrl, _eiaCurrentFileUrl, texture, _eiaCurrentFile, _eiaCurrentFileBinary, _eiaCurrentFileFormat);
             OnFileLoadSuccess(_eiaCurrentFileUrl);
-            
+
             _eiaCurrentFileUrl = string.Empty;
             _eiaCurrentSourceUrl = string.Empty;
             udonLZ4.ClearDecompressedData();
-            
+
             EIAClear();
             ConsoleDebug($"EIAOnGenerateImageBytesSuccess: {Time.realtimeSinceStartup - _eiaProcessStartTime}", _eiaFileLoaderPrefixes);
-            
+
             SendCustomEventDelayedFrames(nameof(EIALoadFIleNext), 1);
         }
     }
