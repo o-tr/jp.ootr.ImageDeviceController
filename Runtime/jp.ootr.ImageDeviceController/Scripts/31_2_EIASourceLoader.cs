@@ -39,6 +39,16 @@ namespace jp.ootr.ImageDeviceController
             return _eiaStoredManifest[index];
         }
 
+        public void EiaRemoveStoredManifest([CanBeNull] string sourceUrl)
+        {
+            if (sourceUrl == null) return;
+            while (_eiaStoredSourceUrls.Has(sourceUrl, out var index))
+            {
+                _eiaStoredSourceUrls = _eiaStoredSourceUrls.Remove(index);
+                _eiaStoredManifest = _eiaStoredManifest.Remove(index);
+            }
+        }
+
         protected void OnEIALoadSuccess(IVRCStringDownload result)
         {
             if (udonLZ4 == null)
@@ -227,6 +237,12 @@ namespace jp.ootr.ImageDeviceController
         private string EIABuildFileName(string sourceUrl, string fileName)
         {
             return $"{PROTOCOL_EIA}://{sourceUrl.Substring(8)}/{fileName}";
+        }
+
+        protected override void CcOnRelease([CanBeNull] string sourceUrl)
+        {
+            base.CcOnRelease(sourceUrl);
+            EiaRemoveStoredManifest(sourceUrl);
         }
 
         protected virtual void EIAOnLoadProgress([CanBeNull] string sourceUrl, float progress)
