@@ -3,9 +3,12 @@ using System.Linq;
 using jp.ootr.common;
 using jp.ootr.common.Editor;
 using UnityEditor;
+using UnityEditor.Build;
+using UnityEditor.Build.Reporting;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.SceneManagement;
 using VRC.SDKBase.Editor.BuildPipeline;
 
 namespace jp.ootr.ImageDeviceController.Editor
@@ -80,17 +83,40 @@ namespace jp.ootr.ImageDeviceController.Editor
                 if (device == null) continue;
                 var so = new SerializedObject(device);
                 so.Update();
-                so.FindProperty(nameof(CommonDevice.CommonDevice.controller)).objectReferenceValue = script;
-                var property = so.FindProperty(nameof(CommonDevice.CommonDevice.devices));
-                property.arraySize = script.devices.Length;
-                for (var i = 0; i < script.devices.Length; i++)
-                    property.GetArrayElementAtIndex(i).objectReferenceValue = script.devices[i];
 
-                so.ApplyModifiedProperties();
-                EditorUtility.SetDirty(device);
+                var controllerProp = so.FindProperty(nameof(CommonDevice.CommonDevice.controller));
+                var devicesProp = so.FindProperty(nameof(CommonDevice.CommonDevice.devices));
+
+                var controllerChanged = controllerProp.objectReferenceValue != script;
+
+                var devicesChanged = devicesProp == null || devicesProp.arraySize != script.devices.Length;
+                if (!devicesChanged && devicesProp != null)
+                {
+                    for (var i = 0; i < script.devices.Length; i++)
+                    {
+                        var current = devicesProp.GetArrayElementAtIndex(i).objectReferenceValue;
+                        if (current != script.devices[i])
+                        {
+                            devicesChanged = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (controllerChanged || devicesChanged)
+                {
+                    controllerProp.objectReferenceValue = script;
+                    if (devicesProp != null)
+                    {
+                        devicesProp.arraySize = script.devices.Length;
+                        for (var i = 0; i < script.devices.Length; i++)
+                            devicesProp.GetArrayElementAtIndex(i).objectReferenceValue = script.devices[i];
+                    }
+
+                    so.ApplyModifiedProperties();
+                    EditorUtility.SetDirty(device);
+                }
             }
-
-            EditorUtility.SetDirty(script);
         }
     }
 
@@ -104,11 +130,22 @@ namespace jp.ootr.ImageDeviceController.Editor
 
         private static void PlayModeStateChanged(PlayModeStateChange state)
         {
-            if (state == PlayModeStateChange.EnteredEditMode)
+            if (state == PlayModeStateChange.EnteredPlayMode)
             {
                 var scripts = ComponentUtils.GetAllComponents<ImageDeviceController>();
                 foreach (var script in scripts) ImageDeviceControllerUtils.ValidateDeviceList(script);
             }
+        }
+    }
+
+    public class DeviceListValidator__ImageDeviceController : IProcessSceneWithReport
+    {
+        public int callbackOrder => 0;
+
+        public void OnProcessScene(Scene scene, BuildReport report)
+        {
+            var scripts = ComponentUtils.GetAllComponents<ImageDeviceController>();
+            foreach (var script in scripts) ImageDeviceControllerUtils.ValidateDeviceList(script);
         }
     }
 
@@ -118,8 +155,6 @@ namespace jp.ootr.ImageDeviceController.Editor
 
         public bool OnBuildRequested(VRCSDKRequestedBuildType requestedBuildType)
         {
-            var scripts = ComponentUtils.GetAllComponents<ImageDeviceController>();
-            foreach (var script in scripts) ImageDeviceControllerUtils.ValidateDeviceList(script);
             return true;
         }
     }
