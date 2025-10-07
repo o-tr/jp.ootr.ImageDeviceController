@@ -212,7 +212,7 @@ namespace jp.ootr.ImageDeviceController
         public static DataDictionary GetExtensions([CanBeNull] this Metadata metadata)
         {
             if (metadata == null) return new DataDictionary();
-            if (metadata.TryGetValue("extensions", TokenType.DataDictionary,out var extensions))
+            if (metadata.TryGetValue("extensions", TokenType.DataDictionary, out var extensions))
             {
                 return extensions.DataDictionary;
             }
