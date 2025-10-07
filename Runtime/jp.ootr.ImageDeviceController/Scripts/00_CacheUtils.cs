@@ -208,12 +208,20 @@ namespace jp.ootr.ImageDeviceController
             return file["usedCount"].Int;
         }
 
-        [CanBeNull]
+        [NotNull]
         public static DataDictionary GetExtensions([CanBeNull] this Metadata metadata)
         {
-            if (metadata == null || !metadata.TryGetValue("extensions", TokenType.DataDictionary, out var ext))
-                return new DataDictionary();
-            return ext.DataDictionary;
+            if (metadata == null) return new DataDictionary();
+            if (metadata.TryGetValue("extensions", out var extensions))
+            {
+                return extensions.DataDictionary;
+            }
+            if (metadata.TryGetValue("e", out var e))
+            {
+                return e.DataDictionary;
+            }
+
+            return new DataDictionary();
         }
     }
 }
