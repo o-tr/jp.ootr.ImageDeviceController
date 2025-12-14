@@ -47,6 +47,7 @@ namespace jp.ootr.ImageDeviceController
                 CcGarbageCollectionQueueFrameCounts = CcGarbageCollectionQueueFrameCounts.Remove(gcIndex);
                 ConsoleDebug($"removed from garbage collection queue: {sourceUrl}", _cacheControllerPrefixes);
             }
+
             var source = CacheFiles.GetSource(sourceUrl);
             var file = source.GetFile(fileUrl);
             var sourceCount = source.IncreaseUsedCount();
@@ -66,6 +67,7 @@ namespace jp.ootr.ImageDeviceController
                 ConsoleError($"texture not found: {sourceUrl}/{fileUrl}", _cacheControllerPrefixes);
                 return null;
             }
+
             var source = CacheFiles.GetSource(sourceUrl);
             var file = source.GetFile(fileUrl);
             var key = file.GetCacheKey();
@@ -74,6 +76,7 @@ namespace jp.ootr.ImageDeviceController
                 ConsoleError($"binary not found: {sourceUrl}/{fileUrl}", _cacheControllerPrefixes);
                 return null;
             }
+
             ConsoleDebug($"get binary: {sourceUrl}/{fileUrl}", _cacheControllerPrefixes);
             return _cacheBinary[index];
         }
@@ -117,17 +120,21 @@ namespace jp.ootr.ImageDeviceController
             var source = CacheFiles.GetSource(sourceUrl);
             var file = source.GetFile(fileUrl);
             var sourceCount = source.DecreaseUsedCount();
+            var fileCount = file.DecreaseUsedCount();
             if (sourceCount < 1)
             {
-                ConsoleInfo($"[CacheController] source not used: {sourceUrl}, queue for garbage collection", _cacheControllerPrefixes);
-                CcGarbageCollectionQueue = CcGarbageCollectionQueue.Append(sourceUrl);
-                CcGarbageCollectionQueueFrameCounts = CcGarbageCollectionQueueFrameCounts.Append(Time.frameCount);
+                ConsoleInfo($"[CacheController] source not used: {sourceUrl}, queue for garbage collection",
+                    _cacheControllerPrefixes);
+                if (!CcGarbageCollectionQueue.Has(sourceUrl))
+                {
+                    CcGarbageCollectionQueue = CcGarbageCollectionQueue.Append(sourceUrl);
+                    CcGarbageCollectionQueueFrameCounts = CcGarbageCollectionQueueFrameCounts.Append(Time.frameCount);
+                }
 
                 SendCustomEventDelayedFrames(nameof(CcGarbageCollect), 100);
                 return;
             }
 
-            var fileCount = file.DecreaseUsedCount();
             if (fileCount < 1)
             {
                 var key = file.GetCacheKey();
@@ -138,36 +145,51 @@ namespace jp.ootr.ImageDeviceController
                 }
                 else
                 {
-                    ConsoleWarn($"cannot release texture because it is not has binary cache: {sourceUrl}/{fileUrl}", _cacheControllerPrefixes);
+                    ConsoleWarn($"cannot release texture because it is not has binary cache: {sourceUrl}/{fileUrl}",
+                        _cacheControllerPrefixes);
                 }
             }
-            ConsoleDebug($"release texture: {sourceUrl}/{fileUrl} ({sourceCount}/{fileCount})", _cacheControllerPrefixes);
+
+            ConsoleDebug($"release texture: {sourceUrl}/{fileUrl} ({sourceCount}/{fileCount})",
+                _cacheControllerPrefixes);
         }
 
         public virtual void CcGarbageCollect()
         {
-            for (int i = 0; i < CcGarbageCollectionQueue.Length; i++)
+            for (int i = CcGarbageCollectionQueue.Length - 1; i >= 0; i--)
             {
                 if (Math.Abs(CcGarbageCollectionQueueFrameCounts[i] - Time.frameCount) < 100) continue;
                 CcGarbageCollectionQueue = CcGarbageCollectionQueue.Remove(i, out var sourceUrl);
                 CcGarbageCollectionQueueFrameCounts = CcGarbageCollectionQueueFrameCounts.Remove(i);
-                var source = CacheFiles.GetSource(sourceUrl);
-                if (source == null) continue;
-                foreach (var tmpFileUrl in source.GetFileUrls()) source.GetFile(tmpFileUrl).DestroyTexture();
-                var keys = CacheFiles.RemoveSource(sourceUrl);
-                foreach (var key in keys)
-                {
-                    if (!_cacheBinaryNames.Has(key, out var index)) continue;
-                    _cacheBinary = _cacheBinary.Remove(index);
-                    _cacheBinaryNames = _cacheBinaryNames.Remove(index);
-                }
-                ConsoleDebug($"destroy source: {sourceUrl}", _cacheControllerPrefixes);
-
+                CcRemoveCache(sourceUrl);
             }
+
             if (CcGarbageCollectionQueue.Length > 0)
             {
                 SendCustomEventDelayedFrames(nameof(CcGarbageCollect), 100);
             }
+        }
+
+        protected virtual void CcRemoveCache([CanBeNull] string sourceUrl)
+        {
+            var source = CacheFiles.GetSource(sourceUrl);
+            if (source == null) return;
+            foreach (var tmpFileUrl in source.GetFileUrls())
+            {
+                if (tmpFileUrl.IsNullOrEmpty()) continue;
+                source.GetFile(tmpFileUrl).DestroyTexture();
+            }
+
+            var keys = CacheFiles.RemoveSource(sourceUrl);
+            foreach (var key in keys)
+            {
+                if (key.IsNullOrEmpty()) continue;
+                if (!_cacheBinaryNames.Has(key, out var index)) continue;
+                _cacheBinary = _cacheBinary.Remove(index);
+                _cacheBinaryNames = _cacheBinaryNames.Remove(index);
+            }
+
+            ConsoleDebug($"destroy source: {sourceUrl}", _cacheControllerPrefixes);
         }
 
         [CanBeNull]
@@ -205,6 +227,7 @@ namespace jp.ootr.ImageDeviceController
                 _cacheBinary = _cacheBinary.Append(bytes);
                 _cacheBinaryNames = _cacheBinaryNames.Append(cacheKey);
             }
+
             ConsoleDebug($"add texture: {source}/{fileName}, {cacheKey}", _cacheControllerPrefixes);
 
             files.AddFile(fileName, texture, metadata, cacheKey, format);
