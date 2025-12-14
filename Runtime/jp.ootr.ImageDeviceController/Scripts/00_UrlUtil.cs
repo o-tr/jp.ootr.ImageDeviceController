@@ -55,7 +55,15 @@ namespace jp.ootr.ImageDeviceController
             }
 
             var split = options.Split(',');
-            type = (SourceType)int.Parse(split[0]);
+            if (!int.TryParse(split[0], out var typeInt))
+            {
+                type = SourceType.Image;
+                offset = 0;
+                interval = 0;
+                return false;
+            }
+
+            type = (SourceType)typeInt;
             if (split.Length < 3)
             {
                 offset = 0;
@@ -63,8 +71,13 @@ namespace jp.ootr.ImageDeviceController
                 return false;
             }
 
-            offset = float.Parse(split[1]);
-            interval = float.Parse(split[2]);
+            if (!float.TryParse(split[1], out offset) || !float.TryParse(split[2], out interval))
+            {
+                offset = 0;
+                interval = 0;
+                return false;
+            }
+
             return true;
         }
 
