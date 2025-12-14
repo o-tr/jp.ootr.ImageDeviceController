@@ -65,8 +65,7 @@ namespace jp.ootr.ImageDeviceController
                 return false;
             }
 
-            if (!int.TryParse(split[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var typeInt) ||
-                !Enum.IsDefined(typeof(SourceType), typeInt))
+            if (!int.TryParse(split[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var typeInt))
             {
                 type = SourceType.Image;
                 offset = 0;
