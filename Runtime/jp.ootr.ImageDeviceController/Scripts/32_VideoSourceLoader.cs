@@ -280,7 +280,7 @@ namespace jp.ootr.ImageDeviceController
             }
         }
 
-        protected override void CcOnRelease(string sourceUrl)
+        protected override void CcOnRelease([CanBeNull] string sourceUrl)
         {
             base.CcOnRelease(sourceUrl);
             CcRemoveCache(sourceUrl);

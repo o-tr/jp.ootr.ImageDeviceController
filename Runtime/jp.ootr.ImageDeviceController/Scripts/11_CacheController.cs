@@ -120,18 +120,21 @@ namespace jp.ootr.ImageDeviceController
             var source = CacheFiles.GetSource(sourceUrl);
             var file = source.GetFile(fileUrl);
             var sourceCount = source.DecreaseUsedCount();
+            var fileCount = file.DecreaseUsedCount();
             if (sourceCount < 1)
             {
                 ConsoleInfo($"[CacheController] source not used: {sourceUrl}, queue for garbage collection",
                     _cacheControllerPrefixes);
-                CcGarbageCollectionQueue = CcGarbageCollectionQueue.Append(sourceUrl);
-                CcGarbageCollectionQueueFrameCounts = CcGarbageCollectionQueueFrameCounts.Append(Time.frameCount);
+                if (!CcGarbageCollectionQueue.Has(sourceUrl))
+                {
+                    CcGarbageCollectionQueue = CcGarbageCollectionQueue.Append(sourceUrl);
+                    CcGarbageCollectionQueueFrameCounts = CcGarbageCollectionQueueFrameCounts.Append(Time.frameCount);
+                }
 
                 SendCustomEventDelayedFrames(nameof(CcGarbageCollect), 100);
                 return;
             }
 
-            var fileCount = file.DecreaseUsedCount();
             if (fileCount < 1)
             {
                 var key = file.GetCacheKey();
@@ -153,7 +156,7 @@ namespace jp.ootr.ImageDeviceController
 
         public virtual void CcGarbageCollect()
         {
-            for (int i = 0; i < CcGarbageCollectionQueue.Length; i++)
+            for (int i = CcGarbageCollectionQueue.Length - 1; i >= 0; i--)
             {
                 if (Math.Abs(CcGarbageCollectionQueueFrameCounts[i] - Time.frameCount) < 100) continue;
                 CcGarbageCollectionQueue = CcGarbageCollectionQueue.Remove(i, out var sourceUrl);
@@ -171,10 +174,16 @@ namespace jp.ootr.ImageDeviceController
         {
             var source = CacheFiles.GetSource(sourceUrl);
             if (source == null) return;
-            foreach (var tmpFileUrl in source.GetFileUrls()) source.GetFile(tmpFileUrl).DestroyTexture();
+            foreach (var tmpFileUrl in source.GetFileUrls())
+            {
+                if (tmpFileUrl.IsNullOrEmpty()) continue;
+                source.GetFile(tmpFileUrl).DestroyTexture();
+            }
+
             var keys = CacheFiles.RemoveSource(sourceUrl);
             foreach (var key in keys)
             {
+                if (key.IsNullOrEmpty()) continue;
                 if (!_cacheBinaryNames.Has(key, out var index)) continue;
                 _cacheBinary = _cacheBinary.Remove(index);
                 _cacheBinaryNames = _cacheBinaryNames.Remove(index);
