@@ -1,4 +1,6 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using System.Globalization;
+using JetBrains.Annotations;
 using jp.ootr.common;
 
 namespace jp.ootr.ImageDeviceController
@@ -55,7 +57,16 @@ namespace jp.ootr.ImageDeviceController
             }
 
             var split = options.Split(',');
-            if (!int.TryParse(split[0], out var typeInt))
+            if (split.Length < 3)
+            {
+                type = SourceType.Image;
+                offset = 0;
+                interval = 0;
+                return false;
+            }
+
+            if (!int.TryParse(split[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var typeInt) ||
+                !Enum.IsDefined(typeof(SourceType), typeInt))
             {
                 type = SourceType.Image;
                 offset = 0;
@@ -64,14 +75,9 @@ namespace jp.ootr.ImageDeviceController
             }
 
             type = (SourceType)typeInt;
-            if (split.Length < 3)
-            {
-                offset = 0;
-                interval = 0;
-                return false;
-            }
 
-            if (!float.TryParse(split[1], out offset) || !float.TryParse(split[2], out interval))
+            if (!float.TryParse(split[1], NumberStyles.Float, CultureInfo.InvariantCulture, out offset) ||
+                !float.TryParse(split[2], NumberStyles.Float, CultureInfo.InvariantCulture, out interval))
             {
                 offset = 0;
                 interval = 0;
@@ -121,7 +127,7 @@ namespace jp.ootr.ImageDeviceController
 
         public static string BuildSourceOptions(SourceType type, float offset, float interval)
         {
-            return $"{(int)type},{offset},{interval}";
+            return string.Format(CultureInfo.InvariantCulture, "{0},{1},{2}", (int)type, offset, interval);
         }
     }
 }
