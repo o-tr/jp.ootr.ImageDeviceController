@@ -16,7 +16,7 @@ namespace jp.ootr.ImageDeviceController
         private const float VlDelaySeconds = 0.05f;
         [SerializeField] protected VRCAVProVideoPlayer vlVideoPlayer;
         [SerializeField] protected MeshRenderer vlVideoRenderer;
-        [SerializeField][Range(1, 60)] protected internal float vlLoadTimeout = 5;
+        [SerializeField] [Range(1, 60)] protected internal float vlLoadTimeout = 5;
 
         private readonly string[] _videoLoaderPrefixes = { "VideoLoader" };
 
@@ -278,6 +278,12 @@ namespace jp.ootr.ImageDeviceController
                 default:
                     return LoadError.Unknown;
             }
+        }
+
+        protected override void CcOnRelease(string sourceUrl)
+        {
+            base.CcOnRelease(sourceUrl);
+            CcRemoveCache(sourceUrl);
         }
     }
 }
