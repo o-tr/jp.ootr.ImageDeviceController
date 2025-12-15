@@ -78,18 +78,30 @@ namespace jp.ootr.ImageDeviceController
             }
 
             // パース済み配列から該当ソースの要素を除外
-            var newUrls = new string[0];
-            var newBuffers = new byte[0][];
-            var newManifests = new DataDictionary[0];
-
+            var keepCount = 0;
             for (var i = 0; i < EiaParsedFileUrls.Length; i++)
             {
                 var url = EiaParsedFileUrls[i];
-                if (url.IsNullOrEmpty() || url.StartsWith(sourceUrl) == false)
+                if (url.IsNullOrEmpty() || !url.StartsWith(sourceUrl))
                 {
-                    newUrls = newUrls.Append(url);
-                    newBuffers = newBuffers.Append(EiaParsedFileBuffers[i]);
-                    newManifests = newManifests.Append(EiaParsedFileManifests[i]);
+                    keepCount++;
+                }
+            }
+
+            var newUrls = new string[keepCount];
+            var newBuffers = new byte[keepCount][];
+            var newManifests = new DataDictionary[keepCount];
+
+            var newIndex = 0;
+            for (var i = 0; i < EiaParsedFileUrls.Length; i++)
+            {
+                var url = EiaParsedFileUrls[i];
+                if (url.IsNullOrEmpty() || !url.StartsWith(sourceUrl))
+                {
+                    newUrls[newIndex] = url;
+                    newBuffers[newIndex] = EiaParsedFileBuffers[i];
+                    newManifests[newIndex] = EiaParsedFileManifests[i];
+                    newIndex++;
                 }
             }
 
