@@ -37,7 +37,7 @@ namespace jp.ootr.ImageDeviceController
 
         private const int _eiaProcessIntervalFrame = 1;
 
-        private void EIAClear()
+        protected virtual void EIAClear()
         {
             _eiaCurrentSourceUrl = string.Empty;
             _eiaCurrentFileUrl = string.Empty;
@@ -52,6 +52,50 @@ namespace jp.ootr.ImageDeviceController
             _eiaCurrentFileBinary = null;
             _eiaCurrentFileBaseUrl = string.Empty;
             _eiaCurrentFileFormat = TextureFormat.RGB24;
+        }
+
+        /// <summary>
+        /// 指定ソースに紐づくEIAキューやパース済みデータを強制的にクリアする
+        /// </summary>
+        protected void EIAForceClearSource([CanBeNull] string sourceUrl)
+        {
+            if (sourceUrl.IsNullOrEmpty()) return;
+
+            // キュー内の該当ソースを削除
+            for (var i = _eiaQueuedSourceUrls.Length - 1; i >= 0; i--)
+            {
+                if (_eiaQueuedSourceUrls[i] != sourceUrl) continue;
+                _eiaQueuedSourceUrls = _eiaQueuedSourceUrls.Remove(i);
+                _eiaQueuedFileUrls = _eiaQueuedFileUrls.Remove(i);
+                _eiaQueuedFilePriorities = _eiaQueuedFilePriorities.Remove(i);
+            }
+
+            // 現在処理中のソースなら中断
+            if (_eiaCurrentSourceUrl == sourceUrl)
+            {
+                _eiaFileIsLoading = false;
+                EIAClear();
+            }
+
+            // パース済み配列から該当ソースの要素を除外
+            var newUrls = new string[0];
+            var newBuffers = new byte[0][];
+            var newManifests = new DataDictionary[0];
+
+            for (var i = 0; i < EiaParsedFileUrls.Length; i++)
+            {
+                var url = EiaParsedFileUrls[i];
+                if (url.IsNullOrEmpty() || url.StartsWith(sourceUrl) == false)
+                {
+                    newUrls = newUrls.Append(url);
+                    newBuffers = newBuffers.Append(EiaParsedFileBuffers[i]);
+                    newManifests = newManifests.Append(EiaParsedFileManifests[i]);
+                }
+            }
+
+            EiaParsedFileUrls = newUrls;
+            EiaParsedFileBuffers = newBuffers;
+            EiaParsedFileManifests = newManifests;
         }
 
         protected void EIALoadFile([CanBeNull] string sourceUrl, [CanBeNull] string fileUrl, int priority)
