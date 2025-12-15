@@ -46,6 +46,7 @@ namespace jp.ootr.ImageDeviceController
                 if (!CcHasCache(sourceUrl))
                 {
                     ConsoleDebug($"cached source lost, force reload: {sourceUrl}", _SourceControllerPrefixes);
+                    EIAForceClearSource(sourceUrl);
                     _loadedSourceUrls = _loadedSourceUrls.Remove(loadedIndex);
                     _loadedSourceFileNames = _loadedSourceFileNames.Remove(loadedIndex);
                 }
@@ -80,6 +81,7 @@ namespace jp.ootr.ImageDeviceController
                     return true;
                 }
                 ConsoleDebug($"cache entry missing files, fallback to reload: {sourceUrl}", _SourceControllerPrefixes);
+                EIAForceClearSource(sourceUrl);
             }
 
             ConsoleDebug($"loading {sourceUrl}.", _SourceControllerPrefixes);
