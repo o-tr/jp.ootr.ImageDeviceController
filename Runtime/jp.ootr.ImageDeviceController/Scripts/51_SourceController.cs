@@ -164,8 +164,6 @@ namespace jp.ootr.ImageDeviceController
         protected override void CcOnRelease(string sourceUrl)
         {
             base.CcOnRelease(sourceUrl);
-            // EIA 側のパース済みデータやキューをソース単位でクリア
-            EIAForceClearSource(sourceUrl);
             if (!_loadedSourceUrls.Has(sourceUrl, out var loadedIndex)) return;
             _loadedSourceUrls = _loadedSourceUrls.Remove(loadedIndex);
             _loadedSourceFileNames = _loadedSourceFileNames.Remove(loadedIndex);
