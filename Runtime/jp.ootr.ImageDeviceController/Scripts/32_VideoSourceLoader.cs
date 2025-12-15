@@ -279,11 +279,5 @@ namespace jp.ootr.ImageDeviceController
                     return LoadError.Unknown;
             }
         }
-
-        protected override void CcOnRelease([CanBeNull] string sourceUrl)
-        {
-            base.CcOnRelease(sourceUrl);
-            CcRemoveCache(sourceUrl);
-        }
     }
 }

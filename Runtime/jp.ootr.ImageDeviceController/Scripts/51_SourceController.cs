@@ -43,30 +43,45 @@ namespace jp.ootr.ImageDeviceController
 
             if (_loadedSourceUrls.Has(sourceUrl, out var loadedIndex))
             {
-                ConsoleDebug($"already loaded. read from loaded source. {sourceUrl}",
-                    _SourceControllerPrefixes);
-                // self.OnSourceLoadSuccess(sourceUrl, _loadedSourceFileNames[loadedIndex]);
-                _loadedSourceQueueUrls = _loadedSourceQueueUrls.Append(sourceUrl);
-                _loadedSourceQueueFileNames = _loadedSourceQueueFileNames.Append(_loadedSourceFileNames[loadedIndex]);
-                _loadedSourceQueueDevices = _loadedSourceQueueDevices.Append(self);
-                _loadedSourceQueueFrameCounts = _loadedSourceQueueFrameCounts.Append(Time.frameCount);
-                SendCustomEventDelayedFrames(nameof(SendLoadedSourceNotification), 1);
-                return true;
+                if (!CcHasCache(sourceUrl))
+                {
+                    ConsoleDebug($"cached source lost, force reload: {sourceUrl}", _SourceControllerPrefixes);
+                    EIAForceClearSource(sourceUrl);
+                    _loadedSourceUrls = _loadedSourceUrls.Remove(loadedIndex);
+                    _loadedSourceFileNames = _loadedSourceFileNames.Remove(loadedIndex);
+                }
+                else
+                {
+                    ConsoleDebug($"already loaded. read from loaded source. {sourceUrl}",
+                        _SourceControllerPrefixes);
+                    // self.OnSourceLoadSuccess(sourceUrl, _loadedSourceFileNames[loadedIndex]);
+                    _loadedSourceQueueUrls = _loadedSourceQueueUrls.Append(sourceUrl);
+                    _loadedSourceQueueFileNames = _loadedSourceQueueFileNames.Append(_loadedSourceFileNames[loadedIndex]);
+                    _loadedSourceQueueDevices = _loadedSourceQueueDevices.Append(self);
+                    _loadedSourceQueueFrameCounts = _loadedSourceQueueFrameCounts.Append(Time.frameCount);
+                    SendCustomEventDelayedFrames(nameof(SendLoadedSourceNotification), 1);
+                    return true;
+                }
             }
 
             if (CcHasCache(sourceUrl))
             {
                 var files = CcGetCache(sourceUrl);
                 var fileNames = files.GetFileUrls();
-                ConsoleDebug($"already loaded. read from cache. {fileNames.Length} files, {sourceUrl}",
-                    _SourceControllerPrefixes);
-                // self.OnSourceLoadSuccess(sourceUrl, fileNames);
-                _loadedSourceQueueUrls = _loadedSourceQueueUrls.Append(sourceUrl);
-                _loadedSourceQueueFileNames = _loadedSourceQueueFileNames.Append(fileNames);
-                _loadedSourceQueueDevices = _loadedSourceQueueDevices.Append(self);
-                _loadedSourceQueueFrameCounts = _loadedSourceQueueFrameCounts.Append(Time.frameCount);
-                SendCustomEventDelayedFrames(nameof(SendLoadedSourceNotification), 1);
-                return true;
+                if (fileNames.Length > 0)
+                {
+                    ConsoleDebug($"already loaded. read from cache. {fileNames.Length} files, {sourceUrl}",
+                        _SourceControllerPrefixes);
+                    // self.OnSourceLoadSuccess(sourceUrl, fileNames);
+                    _loadedSourceQueueUrls = _loadedSourceQueueUrls.Append(sourceUrl);
+                    _loadedSourceQueueFileNames = _loadedSourceQueueFileNames.Append(fileNames);
+                    _loadedSourceQueueDevices = _loadedSourceQueueDevices.Append(self);
+                    _loadedSourceQueueFrameCounts = _loadedSourceQueueFrameCounts.Append(Time.frameCount);
+                    SendCustomEventDelayedFrames(nameof(SendLoadedSourceNotification), 1);
+                    return true;
+                }
+                ConsoleDebug($"cache entry missing files, fallback to reload: {sourceUrl}", _SourceControllerPrefixes);
+                EIAForceClearSource(sourceUrl);
             }
 
             ConsoleDebug($"loading {sourceUrl}.", _SourceControllerPrefixes);

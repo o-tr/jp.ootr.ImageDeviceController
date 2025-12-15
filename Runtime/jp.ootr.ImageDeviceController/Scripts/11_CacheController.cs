@@ -161,6 +161,8 @@ namespace jp.ootr.ImageDeviceController
                 if (Math.Abs(CcGarbageCollectionQueueFrameCounts[i] - Time.frameCount) < 100) continue;
                 CcGarbageCollectionQueue = CcGarbageCollectionQueue.Remove(i, out var sourceUrl);
                 CcGarbageCollectionQueueFrameCounts = CcGarbageCollectionQueueFrameCounts.Remove(i);
+                // Ensure per-source cleanup hooks run even when GC drives the removal path.
+                CcOnRelease(sourceUrl);
                 CcRemoveCache(sourceUrl);
             }
 
