@@ -376,16 +376,16 @@ namespace jp.ootr.ImageDeviceController
             }
 
             if (
-                (!rect.DataDictionary.TryGetValue("x", out var baseXToken) &&
-                 baseXToken.TokenType != TokenType.Double && baseXToken.TokenType != TokenType.Int)
-                || (!rect.DataDictionary.TryGetValue("y", out var baseYToken) &&
-                    baseYToken.TokenType != TokenType.Double && baseYToken.TokenType != TokenType.Int)
-                || (!rect.DataDictionary.TryGetValue("w", out var rectWidthToken) &&
-                    rectWidthToken.TokenType != TokenType.Double && rectWidthToken.TokenType != TokenType.Int)
-                || (!rect.DataDictionary.TryGetValue("h", out var rectHeightToken) &&
-                    rectHeightToken.TokenType != TokenType.Double && rectHeightToken.TokenType != TokenType.Int)
-                || (!rect.DataDictionary.TryGetValue("s", out var startToken) &&
-                    startToken.TokenType != TokenType.Double && startToken.TokenType != TokenType.Int)
+                !rect.DataDictionary.TryGetValue("x", out var baseXToken) ||
+                (baseXToken.TokenType != TokenType.Double && baseXToken.TokenType != TokenType.Int)
+                || !rect.DataDictionary.TryGetValue("y", out var baseYToken) ||
+                (baseYToken.TokenType != TokenType.Double && baseYToken.TokenType != TokenType.Int)
+                || !rect.DataDictionary.TryGetValue("w", out var rectWidthToken) ||
+                (rectWidthToken.TokenType != TokenType.Double && rectWidthToken.TokenType != TokenType.Int)
+                || !rect.DataDictionary.TryGetValue("h", out var rectHeightToken) ||
+                (rectHeightToken.TokenType != TokenType.Double && rectHeightToken.TokenType != TokenType.Int)
+                || !rect.DataDictionary.TryGetValue("s", out var startToken) ||
+                (startToken.TokenType != TokenType.Double && startToken.TokenType != TokenType.Int)
             )
             {
                 VRCJson.TrySerializeToJson(rect, JsonExportType.Beautify, out var json);
