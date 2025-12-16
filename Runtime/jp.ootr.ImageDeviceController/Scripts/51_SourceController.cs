@@ -46,7 +46,6 @@ namespace jp.ootr.ImageDeviceController
                 if (!CcHasCache(sourceUrl))
                 {
                     ConsoleDebug($"cached source lost, force reload: {sourceUrl}", _SourceControllerPrefixes);
-                    EIAForceClearSource(sourceUrl);
                     _loadedSourceUrls = _loadedSourceUrls.Remove(loadedIndex);
                     _loadedSourceFileNames = _loadedSourceFileNames.Remove(loadedIndex);
                 }
@@ -56,7 +55,8 @@ namespace jp.ootr.ImageDeviceController
                         _SourceControllerPrefixes);
                     // self.OnSourceLoadSuccess(sourceUrl, _loadedSourceFileNames[loadedIndex]);
                     _loadedSourceQueueUrls = _loadedSourceQueueUrls.Append(sourceUrl);
-                    _loadedSourceQueueFileNames = _loadedSourceQueueFileNames.Append(_loadedSourceFileNames[loadedIndex]);
+                    _loadedSourceQueueFileNames =
+                        _loadedSourceQueueFileNames.Append(_loadedSourceFileNames[loadedIndex]);
                     _loadedSourceQueueDevices = _loadedSourceQueueDevices.Append(self);
                     _loadedSourceQueueFrameCounts = _loadedSourceQueueFrameCounts.Append(Time.frameCount);
                     SendCustomEventDelayedFrames(nameof(SendLoadedSourceNotification), 1);
@@ -80,8 +80,8 @@ namespace jp.ootr.ImageDeviceController
                     SendCustomEventDelayedFrames(nameof(SendLoadedSourceNotification), 1);
                     return true;
                 }
+
                 ConsoleDebug($"cache entry missing files, fallback to reload: {sourceUrl}", _SourceControllerPrefixes);
-                EIAForceClearSource(sourceUrl);
             }
 
             ConsoleDebug($"loading {sourceUrl}.", _SourceControllerPrefixes);
@@ -120,6 +120,7 @@ namespace jp.ootr.ImageDeviceController
                 if (device == null || sourceUrl == null || fileNames == null || fileNames.Length == 0) continue;
                 device.OnSourceLoadSuccess(sourceUrl, fileNames);
             }
+
             if (_loadedSourceQueueUrls.Length == 0) return;
 
             SendCustomEventDelayedFrames(nameof(SendLoadedSourceNotification), 1);
@@ -155,6 +156,7 @@ namespace jp.ootr.ImageDeviceController
             {
                 return _loadedSourceFileNames[loadedIndex];
             }
+
             var data = base.CcGetFileNames(sourceName);
             if (data != null) return data;
 
@@ -179,7 +181,8 @@ namespace jp.ootr.ImageDeviceController
 
         protected override void OnSourceLoadSuccess(string sourceUrl, string[] fileUrls)
         {
-            if (sourceUrl == null || fileUrls == null || !_loadingSourceUrls.Has(sourceUrl, out var loadingIndex)) return;
+            if (sourceUrl == null || fileUrls == null ||
+                !_loadingSourceUrls.Has(sourceUrl, out var loadingIndex)) return;
             ConsoleDebug(
                 $"source loaded successfully. {fileUrls.Length} files. device count: {_loadingDevices[loadingIndex].Length}, {sourceUrl}",
                 _SourceControllerPrefixes);
