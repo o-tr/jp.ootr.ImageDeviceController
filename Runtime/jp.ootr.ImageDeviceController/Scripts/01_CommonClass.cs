@@ -52,7 +52,7 @@ namespace jp.ootr.ImageDeviceController
         {
             if (error == LoadError.DownloadError && message == "Redirect limit exceeded")
                 return LoadError.RedirectNotAllowed;
-            
+
             if (error == LoadError.InvalidImage && message == "Failed to load file: MaximumDimensionExceeded")
                 return LoadError.MaximumDimensionExceeded;
 
