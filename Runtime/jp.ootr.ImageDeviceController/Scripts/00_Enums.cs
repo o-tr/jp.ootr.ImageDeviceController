@@ -442,7 +442,7 @@ namespace jp.ootr.ImageDeviceController
                     break;
                 case LoadError.MaximumDimensionExceeded:
                     title = "Image exceeds maximum dimensions";
-                    content = "Maximum dimensions exceeded (2048x2048)";
+                    content = "Ensure the image's dimensions do not exceed 2048x2048 (resize the image or choose a smaller image).";
                     break;
                 case LoadError.TooManyRequests:
                     title = "Too many requests";
