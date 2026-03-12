@@ -314,7 +314,7 @@ namespace jp.ootr.ImageDeviceController
                     break;
                 case LoadError.InvalidImage:
                     title = "非対応形式の画像です";
-                    content = "リンク先が画像であっているか、画像が2048x2048以下に収まっているか確認してみてください";
+                    content = "リンク先が画像であっているか確認してみてください";
                     break;
                 case LoadError.MaximumDimensionExceeded:
                     title = "画像の最大寸法を超えています";
@@ -438,7 +438,7 @@ namespace jp.ootr.ImageDeviceController
                     break;
                 case LoadError.InvalidImage:
                     title = "Invalid image";
-                    content = "Check if the link is an image or if the image is within 2048x2048";
+                    content = "Check if the link is an image";
                     break;
                 case LoadError.MaximumDimensionExceeded:
                     title = "Image exceeds maximum dimensions";
