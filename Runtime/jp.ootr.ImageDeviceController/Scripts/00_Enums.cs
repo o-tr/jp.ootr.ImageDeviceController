@@ -33,6 +33,7 @@ namespace jp.ootr.ImageDeviceController
         InsecureURL,
         DuplicateURL,
         URLNotSynced,
+        MaximumDimensionExceeded,
 
         //UNITY ERROR
         HostNotFound,
@@ -157,6 +158,8 @@ namespace jp.ootr.ImageDeviceController
                     return "ootr:MissingUdonZip";
                 case LoadError.InvalidZipFile:
                     return "ootr:InvalidZipFile";
+                case LoadError.MaximumDimensionExceeded:
+                    return "ootr:MaximumDimensionExceeded";
 
                 case LoadError.PlayerError:
                     return "VRC:PlayerError";
@@ -311,7 +314,11 @@ namespace jp.ootr.ImageDeviceController
                     break;
                 case LoadError.InvalidImage:
                     title = "非対応形式の画像です";
-                    content = "リンク先が画像であっているか、画像が2048x2048以下に収まっているか確認してみてください";
+                    content = "リンク先が画像であっているか確認してみてください";
+                    break;
+                case LoadError.MaximumDimensionExceeded:
+                    title = "画像の最大寸法を超えています";
+                    content = "画像が2048x2048以下に収まっているか確認してみてください";
                     break;
                 case LoadError.TooManyRequests:
                     title = "リクエストが多すぎます";
@@ -431,7 +438,11 @@ namespace jp.ootr.ImageDeviceController
                     break;
                 case LoadError.InvalidImage:
                     title = "Invalid image";
-                    content = "Check if the link is an image or if the image is within 2048x2048";
+                    content = "Check if the link is an image";
+                    break;
+                case LoadError.MaximumDimensionExceeded:
+                    title = "Image exceeds maximum dimensions";
+                    content = "Ensure the image's dimensions do not exceed 2048x2048 (resize the image or choose a smaller image).";
                     break;
                 case LoadError.TooManyRequests:
                     title = "Too many requests";
