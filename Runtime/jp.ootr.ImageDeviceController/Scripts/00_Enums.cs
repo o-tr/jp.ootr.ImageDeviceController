@@ -318,7 +318,7 @@ namespace jp.ootr.ImageDeviceController
                     break;
                 case LoadError.MaximumDimensionExceeded:
                     title = "画像の最大寸法を超えています";
-                    content = "画像が2048x2048以下に収まっているか確認してみてください";
+                    content = "2048x2048 以下に画像を縮小するか、以下のプロキシ URL を使用してください。\nなお、プロキシサービスを使用する場合は利用規約とプライバシーポリシーに同意する必要があります";
                     break;
                 case LoadError.TooManyRequests:
                     title = "リクエストが多すぎます";
@@ -442,7 +442,7 @@ namespace jp.ootr.ImageDeviceController
                     break;
                 case LoadError.MaximumDimensionExceeded:
                     title = "Image exceeds maximum dimensions";
-                    content = "Ensure the image's dimensions do not exceed 2048x2048 (resize the image or choose a smaller image).";
+                    content = "Please resize the image to 2048x2048 or smaller, or use the proxy below";
                     break;
                 case LoadError.TooManyRequests:
                     title = "Too many requests";
