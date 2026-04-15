@@ -210,14 +210,16 @@ namespace jp.ootr.ImageDeviceController
                     var rectFile = zlUdonZip.GetFile(_zlObject, rectPath);
                     if (rectFile == null)
                     {
+                        ZlOnLoadError(_zlSourceUrl, LoadError.InvalidMetadata);
                         ConsoleError($"missing rect file: {rectPath}", _zipLoaderPrefixes);
-                        continue;
+                        return null;
                     }
                     var rectBytes = zlUdonZip.GetFileData(rectFile);
                     if (rectBytes == null)
                     {
+                        ZlOnLoadError(_zlSourceUrl, LoadError.InvalidMetadata);
                         ConsoleError($"failed to decompress rect file: {rectPath}", _zipLoaderPrefixes);
-                        continue;
+                        return null;
                     }
                     for (var y = 0; y < h; y++)
                     {

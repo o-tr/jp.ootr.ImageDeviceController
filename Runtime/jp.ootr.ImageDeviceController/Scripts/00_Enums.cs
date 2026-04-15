@@ -442,7 +442,7 @@ namespace jp.ootr.ImageDeviceController
                     break;
                 case LoadError.MaximumDimensionExceeded:
                     title = "Image exceeds maximum dimensions";
-                    content = "Please resize the image to 2048x2048 or smaller, or use the proxy below";
+                    content = "Please resize the image to 2048x2048 or smaller, or use the proxy below.\nNote that using the proxy service requires agreeing to its Terms of Service and Privacy Policy";
                     break;
                 case LoadError.TooManyRequests:
                     title = "Too many requests";
