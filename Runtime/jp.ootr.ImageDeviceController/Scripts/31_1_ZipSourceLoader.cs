@@ -96,8 +96,26 @@ namespace jp.ootr.ImageDeviceController
         {
             ConsoleDebug("extracting data.", _zipLoaderPrefixes);
             _zlObject = zlUdonZip.Extract(_zlDecodedData);
+            if (_zlObject == null)
+            {
+                ZlOnLoadError(_zlSourceUrl, LoadError.InvalidZipFile);
+                ConsoleError($"failed to extract zip. {_zlSourceUrl}", _zipLoaderPrefixes);
+                return;
+            }
             var file = zlUdonZip.GetFile(_zlObject, "metadata.json");
+            if (file == null)
+            {
+                ZlOnLoadError(_zlSourceUrl, LoadError.InvalidZipFile);
+                ConsoleError($"metadata.json not found in zip. {_zlSourceUrl}", _zipLoaderPrefixes);
+                return;
+            }
             var metadata = zlUdonZip.GetFileData(file);
+            if (metadata == null)
+            {
+                ZlOnLoadError(_zlSourceUrl, LoadError.InvalidZipFile);
+                ConsoleError($"failed to read metadata.json from zip. {_zlSourceUrl}", _zipLoaderPrefixes);
+                return;
+            }
             VRCJson.TryDeserializeFromJson(Encoding.UTF8.GetString(metadata), out var metadataToken);
             if (TextZipUtils.ValidateManifest(metadataToken, out _zlMetadata, out var manifestVersion,
                     out var requiredFeatures, out var void1) != ParseResult.Success || requiredFeatures == null ||
@@ -146,6 +164,11 @@ namespace jp.ootr.ImageDeviceController
             }
 
             var imageBytes = GenerateImageBytes(extensions, width, format, path);
+            if (imageBytes == null)
+            {
+                // GenerateImageBytes already called ZlOnLoadError / ConsoleError
+                return;
+            }
             var texture = new Texture2D(width, height, format, false);
             texture.LoadRawTextureData(imageBytes);
             texture.Apply();
@@ -185,7 +208,17 @@ namespace jp.ootr.ImageDeviceController
                     if (!rects.TryGetValue(i, TokenType.DataDictionary, out var rect)) continue;
                     if (rect.DataDictionary.TryGetRectMetadata(out var baseX, out var baseY, out var w, out var h, out var rectPath) != ParseResult.Success) continue;
                     var rectFile = zlUdonZip.GetFile(_zlObject, rectPath);
+                    if (rectFile == null)
+                    {
+                        ConsoleError($"missing rect file: {rectPath}", _zipLoaderPrefixes);
+                        continue;
+                    }
                     var rectBytes = zlUdonZip.GetFileData(rectFile);
+                    if (rectBytes == null)
+                    {
+                        ConsoleError($"failed to decompress rect file: {rectPath}", _zipLoaderPrefixes);
+                        continue;
+                    }
                     for (var y = 0; y < h; y++)
                     {
                         Array.Copy(rectBytes, y * w * bytePerPixel, baseImage, (baseY + y) * width * bytePerPixel + baseX * bytePerPixel, w * bytePerPixel);
@@ -195,7 +228,20 @@ namespace jp.ootr.ImageDeviceController
                 return baseImage;
             }
             var imageFile = zlUdonZip.GetFile(_zlObject, path);
-            return zlUdonZip.GetFileData(imageFile);
+            if (imageFile == null)
+            {
+                ZlOnLoadError(_zlSourceUrl, LoadError.InvalidMetadata);
+                ConsoleError($"image file not found in zip: {path}", _zipLoaderPrefixes);
+                return null;
+            }
+            var imageBytes = zlUdonZip.GetFileData(imageFile);
+            if (imageBytes == null)
+            {
+                ZlOnLoadError(_zlSourceUrl, LoadError.InvalidMetadata);
+                ConsoleError($"failed to decompress image file: {path}", _zipLoaderPrefixes);
+                return null;
+            }
+            return imageBytes;
         }
 
         protected virtual void ZlOnLoadProgress([CanBeNull] string sourceUrl, float progress)
