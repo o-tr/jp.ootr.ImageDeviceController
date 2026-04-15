@@ -43,7 +43,8 @@ namespace jp.ootr.ImageDeviceController
 
             // _loadedSourceUrls は「ローダから OnSourceLoadSuccess 済み」のシグナルで、キャッシュ上のテクスチャ状態とは独立。
             // eia のような非同期ローダは Texture2D 投入前にこのリストへエントリを追加するため、キャッシュ有無で判定してはいけない。
-            // キャッシュが GC / 退避されていても、CacheController.TryRegenerateTexture が _cacheBinary から復元する。
+            // なおソース単位の GC (CcRemoveCache) では CcOnRelease がこのリストも同時に整理するので、ここに残っていれば
+            // _cacheBinary も生きており、個別 Texture2D が破棄されていても CacheController.TryRegenerateTexture で復元可能。
             if (_loadedSourceUrls.Has(sourceUrl, out var loadedIndex))
             {
                 var loadedFileNames = _loadedSourceFileNames[loadedIndex];
