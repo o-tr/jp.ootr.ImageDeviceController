@@ -41,47 +41,33 @@ namespace jp.ootr.ImageDeviceController
                 return true;
             }
 
+            // _loadedSourceUrls は「ローダから OnSourceLoadSuccess 済み」のシグナルで、キャッシュ上のテクスチャ状態とは独立。
+            // eia のような非同期ローダは Texture2D 投入前にこのリストへエントリを追加するため、キャッシュ有無で判定してはいけない。
+            // なおソース単位の GC (CcRemoveCache) では CcOnRelease がこのリストも同時に整理するので、ここに残っていれば
+            // _cacheBinary も生きており、個別 Texture2D が破棄されていても CacheController.TryRegenerateTexture で復元可能。
             if (_loadedSourceUrls.Has(sourceUrl, out var loadedIndex))
             {
-                if (!CcHasCache(sourceUrl))
-                {
-                    ConsoleDebug($"cached source lost, force reload: {sourceUrl}", _SourceControllerPrefixes);
-                    _loadedSourceUrls = _loadedSourceUrls.Remove(loadedIndex);
-                    _loadedSourceFileNames = _loadedSourceFileNames.Remove(loadedIndex);
-                }
-                else
+                var loadedFileNames = _loadedSourceFileNames[loadedIndex];
+                if (loadedFileNames != null && loadedFileNames.Length > 0)
                 {
                     ConsoleDebug($"already loaded. read from loaded source. {sourceUrl}",
                         _SourceControllerPrefixes);
-                    // self.OnSourceLoadSuccess(sourceUrl, _loadedSourceFileNames[loadedIndex]);
                     _loadedSourceQueueUrls = _loadedSourceQueueUrls.Append(sourceUrl);
-                    _loadedSourceQueueFileNames =
-                        _loadedSourceQueueFileNames.Append(_loadedSourceFileNames[loadedIndex]);
-                    _loadedSourceQueueDevices = _loadedSourceQueueDevices.Append(self);
-                    _loadedSourceQueueFrameCounts = _loadedSourceQueueFrameCounts.Append(Time.frameCount);
-                    SendCustomEventDelayedFrames(nameof(SendLoadedSourceNotification), 1);
-                    return true;
-                }
-            }
-
-            if (CcHasCache(sourceUrl))
-            {
-                var files = CcGetCache(sourceUrl);
-                var fileNames = files.GetFileUrls();
-                if (fileNames.Length > 0)
-                {
-                    ConsoleDebug($"already loaded. read from cache. {fileNames.Length} files, {sourceUrl}",
-                        _SourceControllerPrefixes);
-                    // self.OnSourceLoadSuccess(sourceUrl, fileNames);
-                    _loadedSourceQueueUrls = _loadedSourceQueueUrls.Append(sourceUrl);
-                    _loadedSourceQueueFileNames = _loadedSourceQueueFileNames.Append(fileNames);
+                    _loadedSourceQueueFileNames = _loadedSourceQueueFileNames.Append(loadedFileNames);
                     _loadedSourceQueueDevices = _loadedSourceQueueDevices.Append(self);
                     _loadedSourceQueueFrameCounts = _loadedSourceQueueFrameCounts.Append(Time.frameCount);
                     SendCustomEventDelayedFrames(nameof(SendLoadedSourceNotification), 1);
                     return true;
                 }
 
-                ConsoleDebug($"cache entry missing files, fallback to reload: {sourceUrl}", _SourceControllerPrefixes);
+                // OnSourceLoadSuccess は空配列を弾くので通常はここに到達しない。
+                // もし到達したら _loadedSourceUrls と _loadedSourceFileNames が index ずれしているなどの状態破壊を意味するバグ。
+                ConsoleError(
+                    $"loaded source entry is null/empty, fallback to reload: {sourceUrl} " +
+                    $"(loadedIndex={loadedIndex}, urls={_loadedSourceUrls.Length}, fileNames={_loadedSourceFileNames.Length})",
+                    _SourceControllerPrefixes);
+                _loadedSourceUrls = _loadedSourceUrls.Remove(loadedIndex);
+                _loadedSourceFileNames = _loadedSourceFileNames.Remove(loadedIndex);
             }
 
             ConsoleDebug($"loading {sourceUrl}.", _SourceControllerPrefixes);
