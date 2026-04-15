@@ -41,7 +41,9 @@ namespace jp.ootr.ImageDeviceController
                 return true;
             }
 
-            // eia のマニフェスト取得直後は Texture2D 未投入のため CcHasCache でガードしない (GC は _loadedSourceUrls 側も整理するので不要)
+            // _loadedSourceUrls は「ローダから OnSourceLoadSuccess 済み」のシグナルで、キャッシュ上のテクスチャ状態とは独立。
+            // eia のような非同期ローダは Texture2D 投入前にこのリストへエントリを追加するため、キャッシュ有無で判定してはいけない。
+            // キャッシュが GC / 退避されていても、CacheController.TryRegenerateTexture が _cacheBinary から復元する。
             if (_loadedSourceUrls.Has(sourceUrl, out var loadedIndex))
             {
                 var loadedFileNames = _loadedSourceFileNames[loadedIndex];
@@ -57,9 +59,11 @@ namespace jp.ootr.ImageDeviceController
                     return true;
                 }
 
-                // 壊れたエントリ (null/空) は SendLoadedSourceNotification で drop されるため、
-                // ここで除去して通常ロード経路にフォールバックする
-                ConsoleWarn($"loaded source entry is empty, fallback to reload: {sourceUrl}",
+                // OnSourceLoadSuccess は空配列を弾くので通常はここに到達しない。
+                // もし到達したら _loadedSourceUrls と _loadedSourceFileNames が index ずれしているなどの状態破壊を意味するバグ。
+                ConsoleError(
+                    $"loaded source entry is null/empty, fallback to reload: {sourceUrl} " +
+                    $"(loadedIndex={loadedIndex}, urls={_loadedSourceUrls.Length}, fileNames={_loadedSourceFileNames.Length})",
                     _SourceControllerPrefixes);
                 _loadedSourceUrls = _loadedSourceUrls.Remove(loadedIndex);
                 _loadedSourceFileNames = _loadedSourceFileNames.Remove(loadedIndex);
