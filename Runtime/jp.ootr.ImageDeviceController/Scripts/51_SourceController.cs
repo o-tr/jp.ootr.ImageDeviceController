@@ -44,15 +44,25 @@ namespace jp.ootr.ImageDeviceController
             // eia のマニフェスト取得直後は Texture2D 未投入のため CcHasCache でガードしない (GC は _loadedSourceUrls 側も整理するので不要)
             if (_loadedSourceUrls.Has(sourceUrl, out var loadedIndex))
             {
-                ConsoleDebug($"already loaded. read from loaded source. {sourceUrl}",
+                var loadedFileNames = _loadedSourceFileNames[loadedIndex];
+                if (loadedFileNames != null && loadedFileNames.Length > 0)
+                {
+                    ConsoleDebug($"already loaded. read from loaded source. {sourceUrl}",
+                        _SourceControllerPrefixes);
+                    _loadedSourceQueueUrls = _loadedSourceQueueUrls.Append(sourceUrl);
+                    _loadedSourceQueueFileNames = _loadedSourceQueueFileNames.Append(loadedFileNames);
+                    _loadedSourceQueueDevices = _loadedSourceQueueDevices.Append(self);
+                    _loadedSourceQueueFrameCounts = _loadedSourceQueueFrameCounts.Append(Time.frameCount);
+                    SendCustomEventDelayedFrames(nameof(SendLoadedSourceNotification), 1);
+                    return true;
+                }
+
+                // 壊れたエントリ (null/空) は SendLoadedSourceNotification で drop されるため、
+                // ここで除去して通常ロード経路にフォールバックする
+                ConsoleWarn($"loaded source entry is empty, fallback to reload: {sourceUrl}",
                     _SourceControllerPrefixes);
-                _loadedSourceQueueUrls = _loadedSourceQueueUrls.Append(sourceUrl);
-                _loadedSourceQueueFileNames =
-                    _loadedSourceQueueFileNames.Append(_loadedSourceFileNames[loadedIndex]);
-                _loadedSourceQueueDevices = _loadedSourceQueueDevices.Append(self);
-                _loadedSourceQueueFrameCounts = _loadedSourceQueueFrameCounts.Append(Time.frameCount);
-                SendCustomEventDelayedFrames(nameof(SendLoadedSourceNotification), 1);
-                return true;
+                _loadedSourceUrls = _loadedSourceUrls.Remove(loadedIndex);
+                _loadedSourceFileNames = _loadedSourceFileNames.Remove(loadedIndex);
             }
 
             ConsoleDebug($"loading {sourceUrl}.", _SourceControllerPrefixes);
