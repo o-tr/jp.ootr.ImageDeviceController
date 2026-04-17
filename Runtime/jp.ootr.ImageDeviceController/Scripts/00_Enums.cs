@@ -58,6 +58,9 @@ namespace jp.ootr.ImageDeviceController
         //EIALoader
         MissingUdonLZ4,
         InvalidEIAFile,
+        MalformedManifest,
+        CircularReference,
+        SizeLimitExceeded,
 
         //StringLoader
         UnknownFileFormat,
@@ -186,6 +189,12 @@ namespace jp.ootr.ImageDeviceController
                     return "ootr:EIA:MissingUdonLZ4";
                 case LoadError.InvalidEIAFile:
                     return "ootr:EIA:InvalidEIAFile";
+                case LoadError.MalformedManifest:
+                    return "ootr:MalformedManifest";
+                case LoadError.CircularReference:
+                    return "ootr:CircularReference";
+                case LoadError.SizeLimitExceeded:
+                    return "ootr:SizeLimitExceeded";
 
                 case LoadError.UnknownFileFormat:
                     return "ootr:String:UnknownFileFormat";
@@ -394,6 +403,18 @@ namespace jp.ootr.ImageDeviceController
                     title = "無効なEIAファイル形式です";
                     content = "再度試すか、アップロードし直してみてください";
                     break;
+                case LoadError.MalformedManifest:
+                    title = "マニフェストが不正です";
+                    content = "ファイルが破損している可能性があります。アップロードし直してみてください";
+                    break;
+                case LoadError.CircularReference:
+                    title = "画像の参照が循環しています";
+                    content = "ファイルが破損している可能性があります。アップロードし直してみてください";
+                    break;
+                case LoadError.SizeLimitExceeded:
+                    title = "許容サイズを超過しています";
+                    content = "4096x4096 以下に画像を縮小してから再度アップロードしてください";
+                    break;
                 case LoadError.UnknownFileFormat:
                     title = "無効なファイル形式です";
                     content = "ファイルがサポートされているフォーマットか確認してください";
@@ -518,6 +539,18 @@ namespace jp.ootr.ImageDeviceController
                 case LoadError.InvalidEIAFile:
                     title = "Invalid EIA file format";
                     content = "Please try again or re-upload";
+                    break;
+                case LoadError.MalformedManifest:
+                    title = "Manifest is malformed";
+                    content = "The file may be corrupted. Please try re-uploading";
+                    break;
+                case LoadError.CircularReference:
+                    title = "Circular reference in image chain";
+                    content = "The file may be corrupted. Please try re-uploading";
+                    break;
+                case LoadError.SizeLimitExceeded:
+                    title = "Exceeded maximum allowed size";
+                    content = "Please resize the image to 4096x4096 or smaller and re-upload";
                     break;
                 case LoadError.UnknownFileFormat:
                     title = "Invalid file format";

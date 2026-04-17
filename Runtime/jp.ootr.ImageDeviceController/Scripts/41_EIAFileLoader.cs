@@ -75,9 +75,17 @@ namespace jp.ootr.ImageDeviceController
                 EiaParsedFileManifests[index].TryGetValue("t", TokenType.String, out var type)
                 && type.String == "c"
                 && EiaParsedFileManifests[index].TryGetValue("b", TokenType.String, out var baseUrl)
-                && EiaParsedFileUrls.Has(baseUrl.String, out index)
             )
             {
+                // 循環参照・過深チェイン検知: 悪意あるマニフェストで無限ループ/メモリ枯渇を回避
+                if (toLoadUrls.Has(baseUrl.String) || toLoadUrls.Length >= MAX_BASE_CHAIN_HOPS)
+                {
+                    ConsoleError($"Circular or too-deep base URL chain detected: {baseUrl.String}", _eiaFileLoaderPrefixes);
+                    OnFileLoadError(fileUrl, LoadError.CircularReference);
+                    SendCustomEvent(nameof(EIALoadFIleNext));
+                    return;
+                }
+                if (!EiaParsedFileUrls.Has(baseUrl.String, out index)) break;
                 toLoadUrls = toLoadUrls.Append(baseUrl.String);
                 ConsoleDebug($"Loading base URL: {baseUrl.String} {type.String}", _eiaFileLoaderPrefixes);
             }
@@ -140,9 +148,15 @@ namespace jp.ootr.ImageDeviceController
                 EiaParsedFileManifests[index].TryGetValue("t", TokenType.String, out var type)
                 && type.String == "c"
                 && EiaParsedFileManifests[index].TryGetValue("b", TokenType.String, out var baseUrl)
-                && EiaParsedFileUrls.Has(baseUrl.String, out index)
             )
             {
+                // 循環参照・過深チェイン検知: 優先度更新経路でも無限ループしない
+                if (toLoadUrls.Has(baseUrl.String) || toLoadUrls.Length >= MAX_BASE_CHAIN_HOPS)
+                {
+                    ConsoleError($"Circular or too-deep base URL chain detected: {baseUrl.String}", _eiaFileLoaderPrefixes);
+                    break;
+                }
+                if (!EiaParsedFileUrls.Has(baseUrl.String, out index)) break;
                 toLoadUrls = toLoadUrls.Append(baseUrl.String);
             }
 
@@ -234,6 +248,17 @@ namespace jp.ootr.ImageDeviceController
                 ? (int)uncompressedToken.Double
                 : uncompressedToken.Int;
 
+            // LZ4 展開爆弾対策: 悪意のある uncompressedSize で大量アロケーションを誘発されないように上限
+            if (uncompressedSize <= 0 || uncompressedSize > MAX_UNCOMPRESSED_BYTES)
+            {
+                ConsoleError(
+                    $"Uncompressed size out of range: {_eiaCurrentFileUrl} ({uncompressedSize} bytes)",
+                    _eiaFileLoaderPrefixes);
+                OnFileLoadError(_eiaCurrentFileUrl, LoadError.SizeLimitExceeded);
+                SendCustomEvent(nameof(EIALoadFIleNext));
+                return;
+            }
+
             ConsoleDebug(
                 $"Decompressing {_eiaCurrentFileUrl} compressed size: {EiaParsedFileBuffers[_eiaCurrentFileIndex].Length} uncompressed size: {uncompressedSize}",
                 _eiaFileLoaderPrefixes);
@@ -316,6 +341,15 @@ namespace jp.ootr.ImageDeviceController
             _eiaCurrentFileBaseUrl = baseUrl.String;
             _eiaCurrentFileBytesPerPixel = TextureFormat.RGB24.GetBytePerPixel();
 
+            // 多重防御: パース時に検証済みだが、アロケーション直前でも寸法上限を再確認
+            if (!TryValidateImageDimensions(_eiaCurrentFileWidth, _eiaCurrentFileHeight, _eiaCurrentFileBytesPerPixel, out var dimErr))
+            {
+                ConsoleError(
+                    $"EIA cropped dimensions exceed limits: {_eiaCurrentFileUrl} ({_eiaCurrentFileWidth}x{_eiaCurrentFileHeight}) - {dimErr}",
+                    _eiaFileLoaderPrefixes);
+                EIAOnGenerateImageBytesError(dimErr);
+                return;
+            }
 
             ConsoleDebug($"EIAGenerateImageBytesAsyncInit: {Time.realtimeSinceStartup - _eiaProcessStartTime}",
                 _eiaFileLoaderPrefixes);
@@ -339,6 +373,16 @@ namespace jp.ootr.ImageDeviceController
             _eiaCurrentFileHeight = (int)height.Double;
             _eiaCurrentFileBytesPerPixel = TextureFormat.RGB24.GetBytePerPixel();
 
+            // 多重防御: master 画像の寸法上限を再確認
+            if (!TryValidateImageDimensions(_eiaCurrentFileWidth, _eiaCurrentFileHeight, _eiaCurrentFileBytesPerPixel, out var dimErr))
+            {
+                ConsoleError(
+                    $"EIA master dimensions exceed limits: {_eiaCurrentFileUrl} ({_eiaCurrentFileWidth}x{_eiaCurrentFileHeight}) - {dimErr}",
+                    _eiaFileLoaderPrefixes);
+                EIAOnGenerateImageBytesError(dimErr);
+                return;
+            }
+
             ConsoleDebug(
                 $"EIAGenerateImageBytesAsyncInit,EIAGenerateImageBytesAsyncMaster: {Time.realtimeSinceStartup - _eiaProcessStartTime}",
                 _eiaFileLoaderPrefixes);
@@ -358,6 +402,15 @@ namespace jp.ootr.ImageDeviceController
 
             _eiaCurrentFileBinary =
                 new byte[_eiaCurrentFileWidth * _eiaCurrentFileHeight * _eiaCurrentFileBytesPerPixel];
+            if (sourceBinary.Length != _eiaCurrentFileBinary.Length)
+            {
+                // 派生ファイルと base 画像の寸法が噛み合わない = マニフェスト不正
+                ConsoleError(
+                    $"base/child size mismatch: src={sourceBinary.Length} dst={_eiaCurrentFileBinary.Length}",
+                    _eiaFileLoaderPrefixes);
+                EIAOnGenerateImageBytesError(LoadError.MalformedManifest);
+                return;
+            }
             Array.Copy(sourceBinary, _eiaCurrentFileBinary, sourceBinary.Length);
 
             ConsoleDebug($"EIAGenerateImageBytesAsyncInitCopy: {Time.realtimeSinceStartup - _eiaProcessStartTime}",
@@ -405,8 +458,42 @@ namespace jp.ootr.ImageDeviceController
                 : rectHeightToken.Int;
             var start = startToken.TokenType == TokenType.Double ? (int)startToken.Double : startToken.Int;
 
+            // rect 境界検証: 負値・巨大値・オーバーフローによる ArgumentOutOfRangeException や
+            // base 画像への範囲外書き込み・整数オーバーフロー OOB を防ぐ
+            if (
+                baseX < 0 || baseY < 0 || rectWidth <= 0 || rectHeight <= 0 || start < 0
+                || (long)baseX + rectWidth > _eiaCurrentFileWidth
+                || (long)baseY + rectHeight > _eiaCurrentFileHeight
+            )
+            {
+                ConsoleError(
+                    $"Rect out of range: baseX={baseX} baseY={baseY} w={rectWidth} h={rectHeight} start={start}",
+                    _eiaFileLoaderPrefixes);
+                EIAOnGenerateImageBytesError(LoadError.MalformedManifest);
+                return;
+            }
+
             var rectLineByteLength = rectWidth * _eiaCurrentFileBytesPerPixel;
             var imageLineByteLength = _eiaCurrentFileWidth * _eiaCurrentFileBytesPerPixel;
+
+            // 最終行の src/dst オフセットが配列境界内に収まるかを long で確認
+            var lastSrcOffset = (long)start + (long)(rectHeight - 1) * rectLineByteLength;
+            var lastDstOffset = (long)(baseY + rectHeight - 1) * imageLineByteLength
+                              + (long)baseX * _eiaCurrentFileBytesPerPixel;
+            if (
+                _eiaCurrentDecodedData == null
+                || lastSrcOffset + rectLineByteLength > _eiaCurrentDecodedData.Length
+                || _eiaCurrentFileBinary == null
+                || lastDstOffset + rectLineByteLength > _eiaCurrentFileBinary.Length
+            )
+            {
+                ConsoleError(
+                    $"Rect copy would overrun buffer: src={lastSrcOffset + rectLineByteLength} dst={lastDstOffset + rectLineByteLength}",
+                    _eiaFileLoaderPrefixes);
+                EIAOnGenerateImageBytesError(LoadError.MalformedManifest);
+                return;
+            }
+
             for (var y = 0; y < rectHeight; y++)
             {
                 Array.Copy(
@@ -433,8 +520,13 @@ namespace jp.ootr.ImageDeviceController
 
         private void EIAOnGenerateImageBytesError()
         {
+            EIAOnGenerateImageBytesError(LoadError.InvalidFileURL);
+        }
+
+        private void EIAOnGenerateImageBytesError(LoadError error)
+        {
             ConsoleDebug($"Failed to decode file: {_eiaCurrentFileUrl}", _eiaFileLoaderPrefixes);
-            OnFileLoadError(_eiaCurrentFileUrl, LoadError.InvalidFileURL);
+            OnFileLoadError(_eiaCurrentFileUrl, error);
 
             EIAClear();
             SendCustomEventDelayedSeconds(nameof(EIALoadFIleNext), 1f);
@@ -443,6 +535,19 @@ namespace jp.ootr.ImageDeviceController
         private void EIAOnGenerateImageBytesSuccess()
         {
             _eiaProcessStartTime = Time.realtimeSinceStartup;
+
+            // LoadRawTextureData は w*h*bpp と data.Length が一致しない場合に UnityException を投げる
+            // 悪意のある manifest で長さ不一致 → Udon スクリプト停止となるのを防ぐ
+            var expected = (long)_eiaCurrentFileWidth * _eiaCurrentFileHeight * _eiaCurrentFileFormat.GetBytePerPixel();
+            if (_eiaCurrentFileBinary == null || _eiaCurrentFileBinary.Length != expected)
+            {
+                ConsoleError(
+                    $"Raw texture size mismatch: expected={expected} actual={(_eiaCurrentFileBinary == null ? -1 : _eiaCurrentFileBinary.Length)}",
+                    _eiaFileLoaderPrefixes);
+                EIAOnGenerateImageBytesError(LoadError.MalformedManifest);
+                return;
+            }
+
             var texture = new Texture2D(_eiaCurrentFileWidth, _eiaCurrentFileHeight, _eiaCurrentFileFormat, false);
             texture.LoadRawTextureData(_eiaCurrentFileBinary);
             texture.Apply();

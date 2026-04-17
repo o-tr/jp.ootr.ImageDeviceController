@@ -126,13 +126,24 @@ namespace jp.ootr.ImageDeviceController
 
             var fileUrl = EIABuildFileName(_eiaSourceUrl, fileName.String);
 
-            if (fileType.String == "m")
+            var w = (int)fileWidth.Double;
+            var h = (int)fileHeight.Double;
+            // 最悪ケース (RGBA32 = 4 bytes/pixel) で上限チェック
+            // master と cropped で実 bpp は format により変わるが、ここでは 4 を使って保守的に判定する
+            if (!TryValidateImageDimensions(w, h, 4, out var dimErr))
             {
-                EIAParseMasterImage(fileManifest.DataDictionary, fileUrl, fileName.String, (int)fileWidth.Double, (int)fileHeight.Double);
+                ConsoleError($"EIA manifest exceeds size limits: {fileName.String} ({w}x{h}) - {dimErr}", _eiaSourceLoaderPrefixes);
+                EIAOnLoadError(_eiaSourceUrl, dimErr);
                 return;
             }
 
-            EIAParseCroppedImage(fileManifest.DataDictionary, fileUrl, fileName.String, (int)fileWidth.Double, (int)fileHeight.Double);
+            if (fileType.String == "m")
+            {
+                EIAParseMasterImage(fileManifest.DataDictionary, fileUrl, fileName.String, w, h);
+                return;
+            }
+
+            EIAParseCroppedImage(fileManifest.DataDictionary, fileUrl, fileName.String, w, h);
         }
 
         private void EIAParseMasterImage(DataDictionary fileManifest, string fileUrl, string fileName, int fileWidth, int fileHeight)
