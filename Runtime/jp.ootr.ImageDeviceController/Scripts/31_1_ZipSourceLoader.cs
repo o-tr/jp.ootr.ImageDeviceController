@@ -163,6 +163,17 @@ namespace jp.ootr.ImageDeviceController
                 return;
             }
 
+            // 悪意ある ZIP による OOM / Texture2D クラッシュ回避: 寸法上限を検証
+            var zipBytePerPixel = format.GetBytePerPixel();
+            if (!TryValidateImageDimensions(width, height, zipBytePerPixel, out var zipDimErr))
+            {
+                ConsoleError(
+                    $"TextZip dimensions exceed limits: {path} ({width}x{height}) - {zipDimErr}",
+                    _zipLoaderPrefixes);
+                ZlOnLoadError(_zlSourceUrl, zipDimErr);
+                return;
+            }
+
             var imageBytes = GenerateImageBytes(extensions, width, format, path);
             if (imageBytes == null)
             {
@@ -207,6 +218,19 @@ namespace jp.ootr.ImageDeviceController
                 {
                     if (!rects.TryGetValue(i, TokenType.DataDictionary, out var rect)) continue;
                     if (rect.DataDictionary.TryGetRectMetadata(out var baseX, out var baseY, out var w, out var h, out var rectPath) != ParseResult.Success) continue;
+
+                    // rect 境界検証: 悪意ある metadata による ArgumentOutOfRangeException や base 画像への OOB 書き込みを防ぐ
+                    if (
+                        baseX < 0 || baseY < 0 || w <= 0 || h <= 0
+                        || (long)baseX + w > width
+                        || (long)baseY + h > height
+                    )
+                    {
+                        ZlOnLoadError(_zlSourceUrl, LoadError.MalformedManifest);
+                        ConsoleError($"rect out of range: {rectPath} baseX={baseX} baseY={baseY} w={w} h={h}", _zipLoaderPrefixes);
+                        return null;
+                    }
+
                     var rectFile = zlUdonZip.GetFile(_zlObject, rectPath);
                     if (rectFile == null)
                     {
@@ -221,6 +245,22 @@ namespace jp.ootr.ImageDeviceController
                         ConsoleError($"failed to decompress rect file: {rectPath}", _zipLoaderPrefixes);
                         return null;
                     }
+
+                    // 最終行の src/dst オフセットが配列境界内に収まるかを long で確認
+                    var rectLineByteLength = (long)w * bytePerPixel;
+                    var imageLineByteLength = (long)width * bytePerPixel;
+                    var lastSrcOffset = (long)(h - 1) * rectLineByteLength;
+                    var lastDstOffset = (long)(baseY + h - 1) * imageLineByteLength + (long)baseX * bytePerPixel;
+                    if (
+                        lastSrcOffset + rectLineByteLength > rectBytes.Length
+                        || lastDstOffset + rectLineByteLength > baseImage.Length
+                    )
+                    {
+                        ZlOnLoadError(_zlSourceUrl, LoadError.MalformedManifest);
+                        ConsoleError($"rect copy would overrun buffer: {rectPath}", _zipLoaderPrefixes);
+                        return null;
+                    }
+
                     for (var y = 0; y < h; y++)
                     {
                         Array.Copy(rectBytes, y * w * bytePerPixel, baseImage, (baseY + y) * width * bytePerPixel + baseX * bytePerPixel, w * bytePerPixel);

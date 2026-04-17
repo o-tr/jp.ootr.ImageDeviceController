@@ -29,6 +29,36 @@ namespace jp.ootr.ImageDeviceController
 
         public readonly int SupportedManifestVersion = 1;
 
+        // 悪意あるマニフェストからの自己防衛上限値
+        // 実運用上、4096x4096 RGBA (64MiB) を超える画像は画像看板の用途として想定外
+        public const int MAX_IMAGE_DIMENSION = 4096;
+        public const int MAX_UNCOMPRESSED_BYTES = 64 * 1024 * 1024; // 64 MiB
+        public const int MAX_BASE_CHAIN_HOPS = 32;
+
+        // w/h/bpp が MAX_* 制約を満たすかを判定する
+        // 不正なら err に LoadError を設定して false を返す (bpp>0 前提)
+        protected static bool TryValidateImageDimensions(int w, int h, int bpp, out LoadError err)
+        {
+            if (w <= 0 || h <= 0 || bpp <= 0)
+            {
+                err = LoadError.MalformedManifest;
+                return false;
+            }
+            if (w > MAX_IMAGE_DIMENSION || h > MAX_IMAGE_DIMENSION)
+            {
+                err = LoadError.MaximumDimensionExceeded;
+                return false;
+            }
+            // (long) で明示してオーバーフロー回避
+            if ((long)w * h * bpp > MAX_UNCOMPRESSED_BYTES)
+            {
+                err = LoadError.SizeLimitExceeded;
+                return false;
+            }
+            err = LoadError.Unknown;
+            return true;
+        }
+
         protected virtual LoadError ParseStringDownloadError([CanBeNull] string message, int code)
         {
             if (message == "Client has too many requests (limit is 1000)." && code == 429)
