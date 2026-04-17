@@ -174,7 +174,7 @@ namespace jp.ootr.ImageDeviceController
                 return;
             }
 
-            var imageBytes = GenerateImageBytes(extensions, width, format, path);
+            var imageBytes = GenerateImageBytes(extensions, width, height, format, path);
             if (imageBytes == null)
             {
                 // GenerateImageBytes already called ZlOnLoadError / ConsoleError
@@ -198,7 +198,7 @@ namespace jp.ootr.ImageDeviceController
         }
 
         [CanBeNull]
-        private byte[] GenerateImageBytes(DataDictionary extensions, int width, TextureFormat format, string path)
+        private byte[] GenerateImageBytes(DataDictionary extensions, int width, int height, TextureFormat format, string path)
         {
 
             if (extensions.TryGetCroppedMetadata(out var basePath, out var rects) == ParseResult.Success)
@@ -213,6 +213,20 @@ namespace jp.ootr.ImageDeviceController
                 }
 
                 var bytePerPixel = format.GetBytePerPixel();
+
+                // キャッシュ汚染対策: baseImage はキャッシュ共有バッファなので、
+                // 新規バッファに複製してから加工する (EIAFileLoader の EIAGenerateImageBytesAsyncInitCopy と同等の扱い)
+                var expectedBaseLength = (long)width * height * bytePerPixel;
+                if (baseImage.Length != expectedBaseLength)
+                {
+                    ZlOnLoadError(_zlSourceUrl, LoadError.MalformedManifest);
+                    ConsoleError(
+                        $"base image size mismatch: expected={expectedBaseLength} actual={baseImage.Length} ({basePath})",
+                        _zipLoaderPrefixes);
+                    return null;
+                }
+                var workBuffer = new byte[baseImage.Length];
+                Array.Copy(baseImage, workBuffer, baseImage.Length);
 
                 for (int i = 0; i < rects.Count; i++)
                 {
@@ -253,7 +267,7 @@ namespace jp.ootr.ImageDeviceController
                     var lastDstOffset = (long)(baseY + h - 1) * imageLineByteLength + (long)baseX * bytePerPixel;
                     if (
                         lastSrcOffset + rectLineByteLength > rectBytes.Length
-                        || lastDstOffset + rectLineByteLength > baseImage.Length
+                        || lastDstOffset + rectLineByteLength > workBuffer.Length
                     )
                     {
                         ZlOnLoadError(_zlSourceUrl, LoadError.MalformedManifest);
@@ -263,11 +277,11 @@ namespace jp.ootr.ImageDeviceController
 
                     for (var y = 0; y < h; y++)
                     {
-                        Array.Copy(rectBytes, y * w * bytePerPixel, baseImage, (baseY + y) * width * bytePerPixel + baseX * bytePerPixel, w * bytePerPixel);
+                        Array.Copy(rectBytes, y * w * bytePerPixel, workBuffer, (baseY + y) * width * bytePerPixel + baseX * bytePerPixel, w * bytePerPixel);
                     }
                 }
 
-                return baseImage;
+                return workBuffer;
             }
             var imageFile = zlUdonZip.GetFile(_zlObject, path);
             if (imageFile == null)
