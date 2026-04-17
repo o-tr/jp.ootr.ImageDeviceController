@@ -33,7 +33,7 @@ namespace jp.ootr.ImageDeviceController
         // 実運用上、4096x4096 RGBA (64MiB) を超える画像は画像看板の用途として想定外
         public const int MAX_IMAGE_DIMENSION = 4096;
         public const int MAX_UNCOMPRESSED_BYTES = 64 * 1024 * 1024; // 64 MiB
-        public const int MAX_BASE_CHAIN_HOPS = 32;
+        public const int MAX_BASE_CHAIN_HOPS = 16;
 
         // w/h/bpp が MAX_* 制約を満たすかを判定する
         // 不正なら err に LoadError を設定して false を返す (bpp>0 前提)
